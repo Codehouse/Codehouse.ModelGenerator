@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator", "ModelGenerator\ModelGenerator.csproj", "{E720A820-0C4D-4B0B-BCC8-4249D68E0773}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Tds", "ModelGenerator.Tds\ModelGenerator.Tds.csproj", "{CBB18C93-968A-4F64-9527-9EFF522DDE3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Fortis", "ModelGenerator.Fortis\ModelGenerator.Fortis.csproj", "{0CBD5FDE-5C93-4CC0-934D-47B678652DDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Framework", "ModelGenerator.Framework\ModelGenerator.Framework.csproj", "{C380E536-6B9B-4F9F-9979-86ED357EEC4E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E720A820-0C4D-4B0B-BCC8-4249D68E0773}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E720A820-0C4D-4B0B-BCC8-4249D68E0773}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E720A820-0C4D-4B0B-BCC8-4249D68E0773}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E720A820-0C4D-4B0B-BCC8-4249D68E0773}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBB18C93-968A-4F64-9527-9EFF522DDE3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBB18C93-968A-4F64-9527-9EFF522DDE3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBB18C93-968A-4F64-9527-9EFF522DDE3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBB18C93-968A-4F64-9527-9EFF522DDE3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CBD5FDE-5C93-4CC0-934D-47B678652DDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CBD5FDE-5C93-4CC0-934D-47B678652DDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CBD5FDE-5C93-4CC0-934D-47B678652DDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CBD5FDE-5C93-4CC0-934D-47B678652DDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C380E536-6B9B-4F9F-9979-86ED357EEC4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C380E536-6B9B-4F9F-9979-86ED357EEC4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C380E536-6B9B-4F9F-9979-86ED357EEC4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C380E536-6B9B-4F9F-9979-86ED357EEC4E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
