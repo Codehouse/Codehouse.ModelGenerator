@@ -7,6 +7,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 using GlobExpressions;
 using Microsoft.Extensions.Logging;
@@ -40,7 +43,7 @@ namespace ModelGenerator.Tds
             _logger = logger;
         }
         
-        public IEnumerable<FileSet> FindFilesInPath(string root, string path)
+        public async IAsyncEnumerable<FileSet> FindFilesInPath(string root, string path)
         {
             _logger.LogInformation($"Scanning pattern {path}");
             var projectFiles = Glob.Files(root, path)
@@ -53,12 +56,12 @@ namespace ModelGenerator.Tds
                 var fileSet = ReadTdsProject(projectFilePath);
                 if (fileSet != null)
                 {
-                    yield return fileSet;
+                    yield return await fileSet;
                 }
             }
         }
 
-        private FileSet ReadTdsProject(string projectFilePath)
+        private async Task<FileSet> ReadTdsProject(string projectFilePath)
         {
             var projectName = Path.GetFileNameWithoutExtension(projectFilePath);
             _logger.LogInformation($"Reading {projectName}");
@@ -70,7 +73,8 @@ namespace ModelGenerator.Tds
                     throw new InvalidOperationException($"Could not resolve path from project {projectFolder}");
                 }
 
-                var xml = XDocument.Load(projectFilePath);
+                using var xmlReader = XmlReader.Create(projectFilePath);
+                var xml = await XDocument.LoadAsync(xmlReader, LoadOptions.None, CancellationToken.None);
                 var properties = xml.Root
                                  .Elements(TagNames.PropertyGroup)
                                  .Where(e => !e.HasAttributes)

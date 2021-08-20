@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -31,20 +32,35 @@ namespace ModelGenerator
         
         public async Task RunAsync(CancellationToken stoppingToken)
         {
-            var fileSets = await GetRawItems(stoppingToken);
+            var itemSets = GetRawItems(stoppingToken)
+                .SelectAwait(ParseFilesInFileSet);
             
-            foreach (var fileSet in fileSets)
+            await foreach (var itemSet in itemSets)
             {
-                stoppingToken.ThrowIfCancellationRequested();
-                _logger.LogInformation($"Found {fileSet.Files.Count} files in {fileSet.Name}");
-                foreach (var file in fileSet.Files)
-                {
-                    await _fileParser.ParseFile(file);
-                }
+                _logger.LogInformation($"ItemSet {itemSet.Name}: {itemSet.Items.Count} items");
             }
         }
 
-        private async Task<IEnumerable<FileSet>> GetRawItems(CancellationToken stoppingToken)
+        private async ValueTask<ItemSet> ParseFilesInFileSet(FileSet fileSet)
+        {
+            _logger.LogInformation($"Found {fileSet.Files.Count} files in {fileSet.Name}");
+            var items = await fileSet.Files
+                                     .ToAsyncEnumerable()
+                                     .SelectMany(f => _fileParser.ParseFile(f))
+                                     .Where(i => i != null)
+                                     .ToDictionaryAsync(i => i.Id, i => i);
+
+            return new ItemSet
+            {
+                Id = fileSet.Id,
+                Name = fileSet.Name,
+                ItemPath = fileSet.ItemPath,
+                ModelPath = fileSet.ModelPath,
+                Items = items.ToImmutableDictionary()
+            };
+        }
+
+        private async IAsyncEnumerable<FileSet> GetRawItems(CancellationToken stoppingToken)
         {
             var patterns = _settings.Value.Patterns ?? Enumerable.Empty<string>();
             if (!_settings.Value.Patterns.Any())
@@ -58,7 +74,14 @@ namespace ModelGenerator
                 throw new InvalidOperationException("The root folder does not exist.");
             }
 
-            return patterns.SelectMany(path => _fileScanner.FindFilesInPath(root, path));
+            foreach (var pattern in patterns)
+            {
+                var files = _fileScanner.FindFilesInPath(root, pattern);
+                await foreach (var file in files.WithCancellation(stoppingToken))
+                {
+                    yield return file;
+                }
+            }
         }
 
         private IEnumerable<ItemSet> GetParsedItems(IEnumerable<FileSet> fileSets)
