@@ -8,6 +8,31 @@ namespace ModelGenerator.Tds.Parsing
 {
     public class TdsItemTokenizer : Tokenizer<TdsItemTokens>, ITdsTokenizer
     {
+        private TextParser<TextSpan> ContentParser => Span.WithoutAny(c => c == '\r' || c == '\n')
+                                                          .Then(s => NewLineParser);
+        private TextParser<TextSpan> FieldSeparatorParser => SeparatorParser
+                                                             .Then(s => Span.EqualTo("field"))
+                                                             .Then(s => SeparatorParser);
+
+        private TextParser<TextSpan> ItemSeparatorParser => SeparatorParser
+                                                            .Then(s => Span.EqualTo("item"))
+                                                            .Then(s => SeparatorParser);
+        private TextParser<TextSpan> VersionSeparatorParser => SeparatorParser
+                                                               .Then(s => Span.EqualTo("version"))
+                                                               .Then(s => SeparatorParser);
+
+        private TextParser<TextSpan> PropertyNameParser => Span.WithoutAny(c => c == ':');
+
+        private TextParser<TextSpan> PropertySeparatorParser => Span.EqualTo(":").Then(c => Span.WhiteSpace);
+
+        private TextParser<TextSpan> PropertyValueParser => Span.WithoutAny(c => c == '\r' || c == '\n');
+
+        private TextParser<TextSpan> SeparatorParser => Span.EqualTo("----");
+
+        private TextParser<TextSpan> NewLineParser => Span.EqualTo("\r\n")
+                                                   .Or(Span.EqualTo("\n\r"))
+                                                   .Or(Span.EqualTo("\n"));
+        
         protected override IEnumerable<Result<TdsItemTokens>> Tokenize(TextSpan span, TokenizationState<TdsItemTokens> state)
         {
             var next = SkipWhiteSpace(span);
@@ -16,75 +41,92 @@ namespace ModelGenerator.Tds.Parsing
                 yield break;
             }
 
+            var expectContent = false;
             do
             {
                 if (next.Value == '-')
                 {
-                    yield return LexSeparator(ref next);
-                    yield return LexSeparatorType(ref next);
-                    yield return LexSeparator(ref next);
+                    var itemSeparator = ItemSeparatorParser(next.Location);
+                    if (itemSeparator.HasValue)
+                    {
+                        next = Skip(itemSeparator.Remainder.ConsumeChar(), NewLineParser);
+                        yield return Result.Value(TdsItemTokens.ItemSeparator, itemSeparator.Location, itemSeparator.Remainder);
+                        expectContent = false;
+                        continue;
+                    }
+                    
+                    var fieldSeparator = FieldSeparatorParser(next.Location);
+                    if (fieldSeparator.HasValue)
+                    {
+                        next = Skip(fieldSeparator.Remainder.ConsumeChar(), NewLineParser);
+                        yield return Result.Value(TdsItemTokens.FieldSeparator, fieldSeparator.Location, fieldSeparator.Remainder);
+                        expectContent = false;
+                        continue;
+                    }
+                    
+                    var versionSeparator = VersionSeparatorParser(next.Location);
+                    if (versionSeparator.HasValue)
+                    {
+                        next = Skip(versionSeparator.Remainder.ConsumeChar(), NewLineParser);
+                        yield return Result.Value(TdsItemTokens.VersionSeparator, versionSeparator.Location, versionSeparator.Remainder);
+                        expectContent = false;
+                        continue;
+                    }
                 }
-                else if (char.IsLetter(next.Value))
+
+                var newLine = NewLineParser(next.Location);
+                if (newLine.HasValue)
                 {
-                    yield return LexPropertyName(ref next);
-                    LexPropertySeparator(ref next);
-                    yield return LexPropertyValue(ref next);
+                    next = newLine.Remainder.ConsumeChar();
+                    expectContent = true;
+                    continue;
+                }
+
+                if (expectContent)
+                {
+                    var content = ContentParser(next.Location);
+                    if (content.HasValue)
+                    {
+                        next = content.Remainder.ConsumeChar();
+                        yield return Result.Value(TdsItemTokens.FieldValue, content.Location, content.Remainder);
+                    }
                 }
                 else
                 {
-                    yield return LexContent(ref next);
+                    var propertyName = PropertyNameParser(next.Location);
+                    if (propertyName.HasValue)
+                    {
+                        var intermediate = Skip(propertyName.Remainder.ConsumeChar(), PropertySeparatorParser);
+                        var propertyValue = PropertyValueParser(intermediate.Location);
+                        if (propertyValue.HasValue)
+                        {
+                            next = Skip(propertyValue.Remainder.ConsumeChar(), NewLineParser);
+                            
+                            yield return Result.Value(TdsItemTokens.PropertyName, propertyName.Location, propertyName.Remainder);
+                            yield return Result.Value(TdsItemTokens.PropertyValue, propertyValue.Location, propertyValue.Remainder);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Could not tokenise file: expected property value.");
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Could not tokenise file: expected property name.");
+                    }
                 }
-                    
             } while (next.HasValue);
         }
 
-        private Result<TdsItemTokens> LexContent(ref Result<char> next)
+        private Result<char> Skip(Result<char> input, TextParser<TextSpan> parser)
         {
-            return LexToken(ref next, TdsItemTokens.FieldValue, Span.MatchedBy(Character.ExceptIn('\r', '\n')), true);
-        }
-
-        private Result<TdsItemTokens> LexPropertyValue(ref Result<char> next)
-        {
-            return LexToken(ref next, TdsItemTokens.PropertyValue, Span.MatchedBy(Character.ExceptIn('\r', '\n')), false);
-        }
-
-        private Result<TdsItemTokens> LexPropertySeparator(ref Result<char> next)
-        {
-            return LexToken(ref next, TdsItemTokens.PropertySeparator, Span.MatchedBy(Character.EqualTo(':')), true);
-        }
-
-        private Result<TdsItemTokens> LexPropertyName(ref Result<char> next)
-        {
-            return LexToken(ref next, TdsItemTokens.PropertyName, Span.MatchedBy(Character.LetterOrDigit), false);
-        }
-
-        private Result<TdsItemTokens> LexToken(ref Result<char> next, TdsItemTokens tokenType, TextParser<TextSpan> parser, bool skipWhitespace)
-        {
-            var location = next.Location;
-            var token = parser.Invoke(location);
-
-            next = token.Remainder.ConsumeChar();
-            if (skipWhitespace)
+            var result = parser.Invoke(input.Location);
+            if (!result.HasValue)
             {
-                next = SkipWhiteSpace(next.Location);
+                throw new InvalidOperationException("Could not skip expected token");
             }
-            
-            return Result.Value(tokenType, location, token.Remainder);
-        }
-        
-        private Result<TdsItemTokens> LexSeparator(ref Result<char> next)
-        {
-            return LexToken(ref next, TdsItemTokens.Separator, Span.MatchedBy(Character.EqualTo('-')), true);
-        }
-        
-        private Result<TdsItemTokens> LexSeparatorType(ref Result<char> next)
-        {
-            return LexToken(ref next, TdsItemTokens.SeparatorType, Span.MatchedBy(Character.Letter), true);
-        }
 
-        private Result<char> SkipNewLine(Result<char> next)
-        {
-            throw new NotImplementedException();
+            return result.Remainder.ConsumeChar();
         }
     }
 }

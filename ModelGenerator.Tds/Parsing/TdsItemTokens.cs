@@ -3,12 +3,11 @@
     public enum TdsItemTokens
     {
         None,
-        Separator,
-        SeparatorType,
+        FieldSeparator,
+        ItemSeparator,
+        VersionSeparator,
         PropertyName,
-        PropertySeparator,
         PropertyValue,
-        BlankLine,
         FieldValue
     }
 }
