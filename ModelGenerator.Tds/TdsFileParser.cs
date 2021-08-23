@@ -25,9 +25,26 @@ namespace ModelGenerator.Tds
         public async IAsyncEnumerable<Item> ParseFile(string filePath)
         {
             var rawItem = await File.ReadAllTextAsync(filePath);
-            
-            var tokens = _tokenizer.Tokenize(rawItem);
-            yield return _parser.ParseTokens(tokens);
+            var parsedItems = ParsedItems(filePath, rawItem);
+
+            foreach (var item in parsedItems)
+            {
+                yield return item;
+            }
+        }
+
+        private Item[] ParsedItems(string filePath, string rawItem)
+        {
+            try
+            {
+                var tokens = _tokenizer.Tokenize(rawItem);
+                return _parser.ParseTokens(tokens);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Could not parse file {filePath}");
+                return new Item[0];
+            }
         }
     }
 }

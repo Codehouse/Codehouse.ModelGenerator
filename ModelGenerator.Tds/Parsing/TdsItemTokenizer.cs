@@ -8,31 +8,34 @@ namespace ModelGenerator.Tds.Parsing
 {
     public class TdsItemTokenizer : Tokenizer<TdsItemTokens>, ITdsTokenizer
     {
-        private TextParser<TextSpan> ContentParser => Span.WithoutAny(c => c == '\r' || c == '\n')
-                                                          .Then(s => NewLineParser);
-        private TextParser<TextSpan> FieldSeparatorParser => SeparatorParser
-                                                             .Then(s => Span.EqualTo("field"))
-                                                             .Then(s => SeparatorParser);
+        private static readonly TextParser<TextSpan> _contentParser = Span.WithoutAny(c => c == '\r' || c == '\n')
+                                                                          .Then(s => Parse.Ref(() => _newLineParser));
 
-        private TextParser<TextSpan> ItemSeparatorParser => SeparatorParser
-                                                            .Then(s => Span.EqualTo("item"))
-                                                            .Then(s => SeparatorParser);
-        private TextParser<TextSpan> VersionSeparatorParser => SeparatorParser
-                                                               .Then(s => Span.EqualTo("version"))
-                                                               .Then(s => SeparatorParser);
+        private static readonly TextParser<TextSpan> _fieldSeparatorParser = Parse.Ref(() => _separatorParser)
+                                                                                  .Then(s => Span.EqualTo("field"))
+                                                                                  .Then(s => Parse.Ref(() => _separatorParser));
 
-        private TextParser<TextSpan> PropertyNameParser => Span.WithoutAny(c => c == ':');
+        private static readonly TextParser<TextSpan> _itemSeparatorParser = Parse.Ref(() => _separatorParser)
+                                                                                 .Then(s => Span.EqualTo("item"))
+                                                                                 .Then(s => Parse.Ref(() => _separatorParser));
 
-        private TextParser<TextSpan> PropertySeparatorParser => Span.EqualTo(":").Then(c => Span.WhiteSpace);
+        private static readonly TextParser<TextSpan> _newLineParser = Span.EqualTo("\r\n")
+                                                                          .Or(Span.EqualTo("\n\r"))
+                                                                          .Or(Span.EqualTo("\n"));
 
-        private TextParser<TextSpan> PropertyValueParser => Span.WithoutAny(c => c == '\r' || c == '\n');
+        private static readonly TextParser<TextSpan> _propertyNameParser = Span.WithoutAny(c => c == ':');
 
-        private TextParser<TextSpan> SeparatorParser => Span.EqualTo("----");
+        private static readonly TextParser<TextSpan> _propertySeparatorParser = Span.EqualTo(":")
+                                                                                    .Then(c => Span.WhiteSpace);
 
-        private TextParser<TextSpan> NewLineParser => Span.EqualTo("\r\n")
-                                                   .Or(Span.EqualTo("\n\r"))
-                                                   .Or(Span.EqualTo("\n"));
+        private static readonly TextParser<TextSpan> _propertyValueParser = Span.WithoutAny(c => c == '\r' || c == '\n');
+
+        private static readonly TextParser<TextSpan> _versionSeparatorParser = Parse.Ref(() => _separatorParser)
+                                                                                    .Then(s => Span.EqualTo("version"))
+                                                                                    .Then(s => Parse.Ref(() => _separatorParser));
         
+        private static readonly TextParser<TextSpan> _separatorParser = Span.EqualTo("----");
+
         protected override IEnumerable<Result<TdsItemTokens>> Tokenize(TextSpan span, TokenizationState<TdsItemTokens> state)
         {
             var next = SkipWhiteSpace(span);
@@ -46,35 +49,35 @@ namespace ModelGenerator.Tds.Parsing
             {
                 if (next.Value == '-')
                 {
-                    var itemSeparator = ItemSeparatorParser(next.Location);
+                    var itemSeparator = _itemSeparatorParser(next.Location);
                     if (itemSeparator.HasValue)
                     {
-                        next = Skip(itemSeparator.Remainder.ConsumeChar(), NewLineParser);
+                        next = Skip(itemSeparator.Remainder.ConsumeChar(), _newLineParser);
                         yield return Result.Value(TdsItemTokens.ItemSeparator, itemSeparator.Location, itemSeparator.Remainder);
                         expectContent = false;
                         continue;
                     }
-                    
-                    var fieldSeparator = FieldSeparatorParser(next.Location);
+
+                    var fieldSeparator = _fieldSeparatorParser(next.Location);
                     if (fieldSeparator.HasValue)
                     {
-                        next = Skip(fieldSeparator.Remainder.ConsumeChar(), NewLineParser);
+                        next = Skip(fieldSeparator.Remainder.ConsumeChar(), _newLineParser);
                         yield return Result.Value(TdsItemTokens.FieldSeparator, fieldSeparator.Location, fieldSeparator.Remainder);
                         expectContent = false;
                         continue;
                     }
-                    
-                    var versionSeparator = VersionSeparatorParser(next.Location);
+
+                    var versionSeparator = _versionSeparatorParser(next.Location);
                     if (versionSeparator.HasValue)
                     {
-                        next = Skip(versionSeparator.Remainder.ConsumeChar(), NewLineParser);
+                        next = Skip(versionSeparator.Remainder.ConsumeChar(), _newLineParser);
                         yield return Result.Value(TdsItemTokens.VersionSeparator, versionSeparator.Location, versionSeparator.Remainder);
                         expectContent = false;
                         continue;
                     }
                 }
 
-                var newLine = NewLineParser(next.Location);
+                var newLine = _newLineParser(next.Location);
                 if (newLine.HasValue)
                 {
                     next = newLine.Remainder.ConsumeChar();
@@ -84,7 +87,7 @@ namespace ModelGenerator.Tds.Parsing
 
                 if (expectContent)
                 {
-                    var content = ContentParser(next.Location);
+                    var content = _contentParser(next.Location);
                     if (content.HasValue)
                     {
                         next = content.Remainder.ConsumeChar();
@@ -93,15 +96,15 @@ namespace ModelGenerator.Tds.Parsing
                 }
                 else
                 {
-                    var propertyName = PropertyNameParser(next.Location);
+                    var propertyName = _propertyNameParser(next.Location);
                     if (propertyName.HasValue)
                     {
-                        var intermediate = Skip(propertyName.Remainder.ConsumeChar(), PropertySeparatorParser);
-                        var propertyValue = PropertyValueParser(intermediate.Location);
+                        var intermediate = Skip(propertyName.Remainder.ConsumeChar(), _propertySeparatorParser);
+                        var propertyValue = _propertyValueParser(intermediate.Location);
                         if (propertyValue.HasValue)
                         {
-                            next = Skip(propertyValue.Remainder.ConsumeChar(), NewLineParser);
-                            
+                            next = Skip(propertyValue.Remainder.ConsumeChar(), _newLineParser);
+
                             yield return Result.Value(TdsItemTokens.PropertyName, propertyName.Location, propertyName.Remainder);
                             yield return Result.Value(TdsItemTokens.PropertyValue, propertyValue.Location, propertyValue.Remainder);
                         }

@@ -33,7 +33,8 @@ namespace ModelGenerator
         public async Task RunAsync(CancellationToken stoppingToken)
         {
             var itemSets = GetRawItems(stoppingToken)
-                .SelectAwait(ParseFilesInFileSet);
+                           .Where(f => f != null)
+                           .SelectAwait(ParseFilesInFileSet);
             
             await foreach (var itemSet in itemSets)
             {
@@ -43,21 +44,28 @@ namespace ModelGenerator
 
         private async ValueTask<ItemSet> ParseFilesInFileSet(FileSet fileSet)
         {
-            _logger.LogInformation($"Found {fileSet.Files.Count} files in {fileSet.Name}");
-            var items = await fileSet.Files
-                                     .ToAsyncEnumerable()
-                                     .SelectMany(f => _fileParser.ParseFile(f))
-                                     .Where(i => i != null)
-                                     .ToDictionaryAsync(i => i.Id, i => i);
-
-            return new ItemSet
+            try
             {
-                Id = fileSet.Id,
-                Name = fileSet.Name,
-                ItemPath = fileSet.ItemPath,
-                ModelPath = fileSet.ModelPath,
-                Items = items.ToImmutableDictionary()
-            };
+                _logger.LogInformation($"Found {fileSet.Files.Count} files in {fileSet.Name}");
+                var items = await fileSet.Files
+                                         .ToAsyncEnumerable()
+                                         .SelectMany(f => _fileParser.ParseFile(f))
+                                         .ToDictionaryAsync(i => i.Id, i => i);
+
+                return new ItemSet
+                {
+                    Id = fileSet.Id,
+                    Name = fileSet.Name,
+                    ItemPath = fileSet.ItemPath,
+                    ModelPath = fileSet.ModelPath,
+                    Items = items.ToImmutableDictionary()
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Could not parse files in fileset {fileSet.Name}");
+                throw;
+            }
         }
 
         private async IAsyncEnumerable<FileSet> GetRawItems(CancellationToken stoppingToken)
@@ -77,8 +85,14 @@ namespace ModelGenerator
             foreach (var pattern in patterns)
             {
                 var files = _fileScanner.FindFilesInPath(root, pattern);
-                await foreach (var file in files.WithCancellation(stoppingToken))
+                await foreach (var file in files.Where(f => f != null).WithCancellation(stoppingToken))
                 {
+                    if (file.Files.Count == 0)
+                    {
+                        _logger.LogInformation($"Project {file.Name} contains no items after filtering.");
+                        continue;
+                    }
+                    
                     yield return file;
                 }
             }

@@ -36,11 +36,15 @@ namespace ModelGenerator.Tds
         }
 
         private readonly ILogger<TdsFileScanner> _logger;
-        
+        private readonly IFilePathFilter[] _filePathFilters;
 
-        public TdsFileScanner(ILogger<TdsFileScanner> logger)
+
+        public TdsFileScanner(
+            ILogger<TdsFileScanner> logger,
+            IEnumerable<IFilePathFilter> filePathFilters)
         {
             _logger = logger;
+            _filePathFilters = filePathFilters.ToArray();
         }
         
         public async IAsyncEnumerable<FileSet> FindFilesInPath(string root, string path)
@@ -73,7 +77,7 @@ namespace ModelGenerator.Tds
                     throw new InvalidOperationException($"Could not resolve path from project {projectFolder}");
                 }
 
-                using var xmlReader = XmlReader.Create(projectFilePath);
+                using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings{Async = true});
                 var xml = await XDocument.LoadAsync(xmlReader, LoadOptions.None, CancellationToken.None);
                 var properties = xml.Root
                                  .Elements(TagNames.PropertyGroup)
@@ -98,6 +102,7 @@ namespace ModelGenerator.Tds
                                .Select(DecodeFile)
                                .Select(x => Path.Combine(projectFolder, x))
                                .Where(EnsureItemFileExists)
+                               .Where(f => _filePathFilters.All(filter => filter.Accept(f)))
                                .ToImmutableList();
 
                 return new FileSet

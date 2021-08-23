@@ -11,6 +11,7 @@ namespace ModelGenerator.Tds
         {
             collection.AddSingleton<IFileParser, TdsFileParser>()
                       .AddSingleton<IFileScanner, TdsFileScanner>()
+                      .AddSingleton<ITdsItemParser, TdsItemParser>()
                       .AddSingleton<ITdsTokenizer, TdsItemTokenizer>();
         }
     }

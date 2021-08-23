@@ -7,6 +7,7 @@ namespace ModelGenerator.Framework
     {
         public static void Configure(IServiceCollection collection)
         {
+            collection.AddSingleton<IFilePathFilter, TemplateFilter>();
         }
     }
 }
