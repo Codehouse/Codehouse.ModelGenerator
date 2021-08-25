@@ -7,7 +7,8 @@
         ItemSeparator,
         VersionSeparator,
         PropertyName,
-        PropertyValue,
-        FieldValue
+        PropertySeparator,
+        Content,
+        NewLine
     }
 }

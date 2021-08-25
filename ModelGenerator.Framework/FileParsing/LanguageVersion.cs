@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace ModelGenerator.Framework.FileParsing
 {
+    [DebuggerDisplay("{Language}#{Number}")]
     public record LanguageVersion
     {
         public int Number { get; init; }

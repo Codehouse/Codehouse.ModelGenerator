@@ -68,7 +68,7 @@ namespace ModelGenerator.Tds
         private async Task<FileSet> ReadTdsProject(string projectFilePath)
         {
             var projectName = Path.GetFileNameWithoutExtension(projectFilePath);
-            _logger.LogInformation($"Reading {projectName}");
+            _logger.LogDebug($"Reading {projectName}");
             try
             {
                 var projectFolder = Path.GetDirectoryName(projectFilePath);
@@ -79,18 +79,18 @@ namespace ModelGenerator.Tds
 
                 using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings{Async = true});
                 var xml = await XDocument.LoadAsync(xmlReader, LoadOptions.None, CancellationToken.None);
-                var properties = xml.Root
+                var properties = ToDictionarySafe(xml.Root
                                  .Elements(TagNames.PropertyGroup)
                                  .Where(e => !e.HasAttributes)
                                  .Elements()
-                                 .ToDictionary(e => e.Name.LocalName, e => e.Value);
+                                 .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value)));
 
                 // If the project does not have codegen enabled, skip it.
                 if (!properties.TryGetValue(ElementNames.EnableGeneration, out string enableCodegenString)
                     || !bool.TryParse(enableCodegenString, out bool enableCodegen)
                     || !enableCodegen)
                 {
-                    _logger.LogInformation($"{projectName} has not enabled source generation.");
+                    _logger.LogWarning($"{projectName} has not enabled source generation and will be skipped.");
                     return null;
                 }
 
@@ -119,6 +119,31 @@ namespace ModelGenerator.Tds
                 _logger.LogError(ex, $"Could not parse file {projectName}");
                 return null;
             }
+        }
+
+        private IDictionary<string,string> ToDictionarySafe(IEnumerable<KeyValuePair<string, string>> properties)
+        {
+            Dictionary<string, string> Aggregator(Dictionary<string, string> d, KeyValuePair<string, string> kvp)
+            {
+                if (d.ContainsKey(kvp.Key))
+                {
+                    var currentValue = d[kvp.Key];
+                    if (string.IsNullOrEmpty(currentValue))
+                    {
+                        d[kvp.Key] = kvp.Value;
+                    }
+                }
+                else
+                {
+                    d.Add(kvp.Key, kvp.Value);
+                }
+
+                return d;
+            }
+
+            return properties.Aggregate(
+                new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+                Aggregator);
         }
 
         private string DecodeFile(string s)

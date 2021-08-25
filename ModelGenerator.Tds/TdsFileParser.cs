@@ -38,13 +38,24 @@ namespace ModelGenerator.Tds
             try
             {
                 var tokens = _tokenizer.Tokenize(rawItem);
-                return _parser.ParseTokens(tokens);
+                return _parser.ParseTokens(tokens)
+                              .Select(i => i with {RawFilePath = filePath})
+                              .ToArray();
+            }
+            catch (ParseException ex)
+            {
+                _logger.LogError(ex, $"Could not parse file tokens {filePath}");
+            }
+            catch (TokenisationException ex)
+            {
+                _logger.LogError(ex, $"Could not tokenise file {filePath}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Could not parse file {filePath}");
-                return new Item[0];
             }
+
+            return new Item[0];
         }
     }
 }

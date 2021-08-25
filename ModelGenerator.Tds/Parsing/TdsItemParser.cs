@@ -5,108 +5,106 @@ using ModelGenerator.Framework.FileParsing;
 using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
+using ParseException = ModelGenerator.Framework.FileParsing.ParseException;
 
 namespace ModelGenerator.Tds.Parsing
 {
-    public class TdsItemParser : ITdsItemParser
+    internal class TdsItemParser : ITdsItemParser
     {
-        private static class Parsers
+        public TokenListParser<TdsItemTokens, Item[]> TdsFile =>
+            TdsItem.Many()
+                    .AtEnd();
+
+        private TokenListParser<TdsItemTokens, Field> TdsField =>
+            from startField in Token.EqualTo(TdsItemTokens.FieldSeparator)
+                                    .IgnoreThen(Token.EqualTo(TdsItemTokens.NewLine))
+            from properties in TdsProperties
+            from value in TdsFieldValue
+            select CreateField(properties, value);
+
+        private TokenListParser<TdsItemTokens, Item> TdsItem =>
+            from begin in Token.EqualTo(TdsItemTokens.ItemSeparator)
+                               .IgnoreThen(Token.EqualTo(TdsItemTokens.NewLine))
+            from itemProperties in TdsProperties
+            from sharedFields in TdsField.Many()
+            from versions in TdsVersion.Many()
+            select CreateItem(itemProperties, sharedFields, versions);
+
+        private TokenListParser<TdsItemTokens, Dictionary<string, string>> TdsProperties =>
+            from properties in Token.EqualTo(TdsItemTokens.PropertyName)
+                                    .Apply(_tokenizer.PropertyName)
+                                    .Then(name =>
+                                        // Have found some properties that are missing a value, so made content optional.
+                                        Token.EqualTo(TdsItemTokens.Content).OptionalOrDefault(Token<TdsItemTokens>.Empty)
+                                             .Then(value =>
+                                                 Token.EqualTo(TdsItemTokens.NewLine)
+                                                      .Select(_ => KeyValuePair.Create(
+                                                          name.ToStringValue(),
+                                                          // As content is optional, must check if it's empty first.
+                                                          value.HasValue ? value.ToStringValue() : string.Empty))))
+                                    .Many()
+            from separator in Token.EqualTo(TdsItemTokens.NewLine)
+            select new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
+
+        private TokenListParser<TdsItemTokens, LanguageVersion> TdsVersion =>
+            from begin in Token.EqualTo(TdsItemTokens.VersionSeparator)
+                               .IgnoreThen(Token.EqualTo(TdsItemTokens.NewLine))
+            from versionProperties in TdsProperties
+            from fields in TdsField.Many()
+            select CreateVersion(versionProperties, fields);
+
+        private TokenListParser<TdsItemTokens, string> TdsFieldValue =>
+            from lines in Token.EqualTo(TdsItemTokens.Content).Try()
+                               .Or(Token.EqualTo(TdsItemTokens.NewLine))
+                               .Many()
+            select GetFieldValue(lines);
+        
+        private readonly ITdsTokenizer _tokenizer;
+
+        public TdsItemParser(ITdsTokenizer tokenizer)
         {
-            public static TokenListParser<TdsItemTokens, Item[]> TdsFile =>
-                _tdsItem.Many();
-            
-            private static readonly TokenListParser<TdsItemTokens, Field> _tdsField =
-                from startField in Token.EqualTo(TdsItemTokens.FieldSeparator)
-                from properties in _tdsProperties
-                from value in _tdsFieldValue
-                select CreateField(properties, value);
-
-            private static readonly TokenListParser<TdsItemTokens, string> _tdsFieldValue =
-                from lines in Token.EqualTo(TdsItemTokens.FieldValue).Many()
-                select GetFieldValue(lines);
-
-            private static readonly TokenListParser<TdsItemTokens, Item> _tdsItem =
-                from begin in Token.EqualTo(TdsItemTokens.ItemSeparator)
-                from itemProperties in _tdsProperties
-                from sharedFields in _tdsField.Many()
-                from versions in _tdsVersion.Many()
-                select CreateItem(itemProperties, sharedFields, versions);
-
-            private static readonly TokenListParser<TdsItemTokens, Dictionary<string, string>> _tdsProperties =
-                from properties in Token.EqualTo(TdsItemTokens.PropertyName)
-                                        .Then(name => Token
-                                                      .EqualTo(TdsItemTokens.PropertyValue)
-                                                      .Select(value => KeyValuePair.Create(name.ToStringValue(), value.ToStringValue())))
-                                        .Many()
-                select new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
-
-            private static readonly TokenListParser<TdsItemTokens, LanguageVersion> _tdsVersion =
-                from begin in Token.EqualTo(TdsItemTokens.ItemSeparator)
-                from versionProperties in _tdsProperties
-                from fields in _tdsField.Many()
-                select CreateVersion(versionProperties, fields);
-        }
-
-        private static class PropertyNames
-        {
-            public const string Database = "database";
-            public const string FieldId = "field";
-            public const string Id = "id";
-            public const string Key = "key";
-            public const string Length = "content-length";
-            public const string Language = "language";
-            public const string Name = "name";
-            public const string ParentId = "parent";
-            public const string Path = "path";
-            public const string Revision = "revision";
-            public const string TemplateId = "template";
-            public const string TemplateKey = "templatekey";
-            public const string Version = "version";
+            _tokenizer = tokenizer;
         }
 
         public Item[] ParseTokens(TokenList<TdsItemTokens> tokenList)
         {
-            var parsed = Parsers.TdsFile.TryParse(tokenList);
+            var parsed = TdsFile.TryParse(tokenList);
             if (!parsed.HasValue)
             {
                 ////value = null;
                 ////error = parsed.ToString();
                 ////errorPosition = parsed.ErrorPosition;
-                throw new InvalidOperationException("Could not parse TDS item file");
+                throw new ParseException("Could not parse TDS item file: " + parsed.ErrorMessage); 
             }
 
-            //value = parsed.Value;
-            //error = null;
-            //errorPosition = Position.Empty;
             return parsed.Value;
         }
 
 
         private static Field CreateField(Dictionary<string, string> properties, string value)
         {
-            // TODO: fill in properties name,key
-
             return new Field
             {
-                Id = Guid.Parse(properties[PropertyNames.FieldId]),
+                Id = Guid.Parse(properties[TdsPropertyNames.FieldId]),
+                Name = properties[TdsPropertyNames.Name],
                 Value = value
             };
         }
 
         private static Item CreateItem(Dictionary<string, string> itemProperties, Field[] sharedFields, LanguageVersion[] versions)
         {
-            var id = Guid.Parse(itemProperties[PropertyNames.Id]);
-            var parent = Guid.Parse(itemProperties[PropertyNames.ParentId]);
-            var templateId = Guid.Parse(itemProperties[PropertyNames.TemplateId]);
-            
+            var id = Guid.Parse(itemProperties[TdsPropertyNames.Id]);
+            var parent = Guid.Parse(itemProperties[TdsPropertyNames.ParentId]);
+            var templateId = Guid.Parse(itemProperties[TdsPropertyNames.TemplateId]);
+
             return new Item
             {
                 Id = id,
-                Name = itemProperties[PropertyNames.Name],
+                Name = itemProperties[TdsPropertyNames.Name],
                 Parent = parent,
-                Path = itemProperties[PropertyNames.Path],
+                Path = itemProperties[TdsPropertyNames.Path],
                 TemplateId = templateId,
-                TemplateName = itemProperties[PropertyNames.TemplateKey],
+                TemplateName = itemProperties[TdsPropertyNames.TemplateKey],
                 SharedFields = sharedFields.ToImmutableList(),
                 Versions = versions.ToImmutableList()
             };
@@ -116,9 +114,9 @@ namespace ModelGenerator.Tds.Parsing
         {
             return new LanguageVersion
             {
-                Language = versionProperties[PropertyNames.Language],
-                Number = int.Parse(versionProperties[PropertyNames.Version]),
-                Revision = Guid.Parse(versionProperties[PropertyNames.Revision]), 
+                Language = versionProperties[TdsPropertyNames.Language],
+                Number = int.Parse(versionProperties[TdsPropertyNames.Version]),
+                Revision = Guid.Parse(versionProperties[TdsPropertyNames.Revision]),
                 Fields = fields.ToImmutableDictionary(f => f.Id)
             };
         }
