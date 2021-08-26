@@ -14,12 +14,17 @@ namespace ModelGenerator.Tds
         private readonly ILogger<TdsFileParser> _logger;
         private readonly ITdsTokenizer _tokenizer;
         private readonly ITdsItemParser _parser;
+        private readonly IItemFilter[] _itemFilters;
 
-        public TdsFileParser(ILogger<TdsFileParser> logger, ITdsTokenizer tokenizer, ITdsItemParser parser)
+        public TdsFileParser(ILogger<TdsFileParser> logger,
+            ITdsTokenizer tokenizer,
+            ITdsItemParser parser,
+            IEnumerable<IItemFilter> itemFilters)
         {
             _logger = logger;
             _tokenizer = tokenizer;
             _parser = parser;
+            _itemFilters = itemFilters.ToArray();
         }
         
         public async IAsyncEnumerable<Item> ParseFile(string filePath)
@@ -29,7 +34,10 @@ namespace ModelGenerator.Tds
 
             foreach (var item in parsedItems)
             {
-                yield return item;
+                if (_itemFilters.All(f => f.Accept(item)))
+                {
+                    yield return item;
+                }
             }
         }
 
@@ -52,7 +60,7 @@ namespace ModelGenerator.Tds
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Could not parse file {filePath}");
+                _logger.LogError(ex, $"Unexpected error reading file {filePath}");
             }
 
             return new Item[0];

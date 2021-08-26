@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using ModelGenerator.Framework.FileParsing;
 using Superpower;
 using Superpower.Model;
@@ -55,7 +56,7 @@ namespace ModelGenerator.Tds.Parsing
 
         private TokenListParser<TdsItemTokens, string> TdsFieldValue =>
             from lines in Token.EqualTo(TdsItemTokens.Content).Try()
-                               .Or(Token.EqualTo(TdsItemTokens.NewLine))
+                               .Or(Token.EqualTo(TdsItemTokens.NewLine).Try())
                                .Many()
             select GetFieldValue(lines);
         
@@ -123,7 +124,7 @@ namespace ModelGenerator.Tds.Parsing
 
         private static string GetFieldValue(Token<TdsItemTokens>[] lines)
         {
-            return string.Empty;
+            return string.Join("", lines.SkipLast(1).Select(t => t.ToStringValue()));
         }
     }
 }

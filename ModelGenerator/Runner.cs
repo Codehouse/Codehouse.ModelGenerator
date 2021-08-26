@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
+using ModelGenerator.Framework.ItemModelling;
 
 namespace ModelGenerator
 {
@@ -17,28 +18,37 @@ namespace ModelGenerator
         private readonly IOptions<Settings> _settings;
         private readonly IFileScanner _fileScanner;
         private readonly IFileParser _fileParser;
+        private readonly IDatabaseFactory _databaseFactory;
         private readonly ILogger<Runner> _logger;
+        private readonly ITemplateCollectionFactory _templateFactory;
 
         public Runner(IOptions<Settings> settings,
             IFileScanner fileScanner,
             IFileParser fileParser,
-            ILogger<Runner> logger)
+            IDatabaseFactory databaseFactory,
+            ILogger<Runner> logger,
+            ITemplateCollectionFactory templateFactory)
         {
             _settings = settings;
             _fileScanner = fileScanner;
             _fileParser = fileParser;
+            _databaseFactory = databaseFactory;
             _logger = logger;
+            _templateFactory = templateFactory;
         }
         
         public async Task RunAsync(CancellationToken stoppingToken)
         {
-            var itemSets = GetRawItems(stoppingToken)
-                           .Where(f => f != null)
-                           .SelectAwait(ParseFilesInFileSet);
-            
-            await foreach (var itemSet in itemSets)
+            var itemSets = await GetRawItems(stoppingToken)
+                                 .Where(f => f != null)
+                                 .SelectAwait(ParseFilesInFileSet)
+                                 .ToArrayAsync();
+
+            var database = _databaseFactory.CreateDatabase(itemSets);
+            var templates = _templateFactory.ConstructTemplates(database);
+            foreach (var template in templates.Templates)
             {
-                _logger.LogInformation($"ItemSet {itemSet.Name}: {itemSet.Items.Count} items");
+                _logger.LogInformation(template.Value.Name);
             }
         }
 
@@ -46,7 +56,7 @@ namespace ModelGenerator
         {
             try
             {
-                _logger.LogInformation($"Found {fileSet.Files.Count} files in {fileSet.Name}");
+                _logger.LogDebug($"Found {fileSet.Files.Count} files in {fileSet.Name}");
                 var items = await fileSet.Files
                                          .ToAsyncEnumerable()
                                          .SelectMany(f => _fileParser.ParseFile(f))

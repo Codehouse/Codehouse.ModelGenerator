@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using ModelGenerator.Framework.FileParsing;
 
 namespace ModelGenerator
 {
@@ -16,7 +18,7 @@ namespace ModelGenerator
 
         private static void RegisterServices(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            Framework.ServicesConfigurator.Configure(collection);
+            Framework.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
             Fortis.ServicesConfigurator.Configure(collection);
             Tds.ServicesConfigurator.Configure(collection);
 
