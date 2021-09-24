@@ -5,36 +5,46 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
+using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator
 {
     public class Runner
     {
         private readonly IOptions<Settings> _settings;
+        private readonly ICodeGenerator _codeGenerator;
         private readonly IFileScanner _fileScanner;
         private readonly IFileParser _fileParser;
         private readonly IDatabaseFactory _databaseFactory;
+        private readonly IGenerator<ModelFile> _fileGenerator;
         private readonly ILogger<Runner> _logger;
         private readonly ITemplateCollectionFactory _templateFactory;
+        private readonly ITypeFactory _typeFactory;
 
         public Runner(IOptions<Settings> settings,
+            ICodeGenerator codeGenerator,
             IFileScanner fileScanner,
             IFileParser fileParser,
             IDatabaseFactory databaseFactory,
             ILogger<Runner> logger,
-            ITemplateCollectionFactory templateFactory)
+            ITemplateCollectionFactory templateFactory,
+            ITypeFactory typeFactory)
         {
             _settings = settings;
+            _codeGenerator = codeGenerator;
             _fileScanner = fileScanner;
             _fileParser = fileParser;
             _databaseFactory = databaseFactory;
             _logger = logger;
             _templateFactory = templateFactory;
+            _typeFactory = typeFactory;
         }
         
         public async Task RunAsync(CancellationToken stoppingToken)
@@ -46,9 +56,34 @@ namespace ModelGenerator
 
             var database = _databaseFactory.CreateDatabase(itemSets);
             var templates = _templateFactory.ConstructTemplates(database);
-            foreach (var template in templates.Templates)
+            var typeSets = _typeFactory.CreateTypeSets(templates);
+            
+            foreach (var typeSet in typeSets)
             {
-                _logger.LogInformation(template.Value.Name);
+                var context = new GenerationContext
+                {
+                    Database = database,
+                    Templates = templates,
+                    TypeSet = typeSet
+                };
+                
+                foreach (var modelFile in typeSet.Files)
+                {
+                    GenerateFile(context, modelFile);
+                }
+            }
+        }
+
+        private void GenerateFile(GenerationContext context, ModelFile modelFile)
+        {
+            try
+            {
+                _logger.LogInformation($"Generating {modelFile.FileName}");
+                _codeGenerator.GenerateFile(context, modelFile);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Could not generate file {modelFile.FileName}");
             }
         }
 

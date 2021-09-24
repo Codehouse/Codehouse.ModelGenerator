@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
+using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Framework
 {
@@ -18,10 +20,12 @@ namespace ModelGenerator.Framework
                 .AddSingleton<ITemplateIds, TemplateIds>(sp => sp.GetRequiredService<IOptions<TemplateIds>>().Value);
 
             collection
+                .AddSingleton<ICodeGenerator, CodeGenerator>()
                 .AddSingleton<IDatabaseFactory, DatabaseFactory>()
                 .AddSingleton<IFilePathFilter, FileScanning.TemplateFilter>()
                 .AddSingleton<IItemFilter, FileParsing.TemplateFilter>()
-                .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>();
+                .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
+                .AddSingleton<ITypeFactory, TypeFactory>();
         }
     }
 }
