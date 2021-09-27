@@ -21,6 +21,6 @@ namespace ModelGenerator.Framework
             {
                 throw new Exception($"Could not parse multiref field value of field {field.Name}.", ex);
             }
-        } 
+        }
     }
 }

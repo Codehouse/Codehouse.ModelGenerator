@@ -6,7 +6,7 @@ namespace ModelGenerator.Framework.FileParsing
     {
         Guid BaseTemplates { get; init; }
         Guid DisplayName { get; init; }
-        Guid Title { get; init; }
         Guid FieldType { get; init; }
+        Guid Title { get; init; }
     }
 }

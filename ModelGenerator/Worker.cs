@@ -8,11 +8,10 @@ namespace ModelGenerator
 {
     public class Worker : IHostedService
     {
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<Worker> _logger;
         private readonly Runner _runner;
-
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly TaskCompletionSource _tcs = new TaskCompletionSource();
 
         public Worker(IHostApplicationLifetime lifetime, ILogger<Worker> logger, Runner runner)
@@ -20,24 +19,6 @@ namespace ModelGenerator
             _lifetime = lifetime;
             _logger = logger;
             _runner = runner;
-        }
-        
-        private async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            try
-            {
-                _logger.LogInformation("Executing");
-                await _runner.RunAsync(stoppingToken);
-                _tcs.SetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                _tcs.SetCanceled(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _tcs.SetException(ex);
-            }
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -57,6 +38,24 @@ namespace ModelGenerator
             }
 
             return _tcs.Task;
+        }
+
+        private async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            try
+            {
+                _logger.LogInformation("Executing");
+                await _runner.RunAsync(stoppingToken);
+                _tcs.SetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                _tcs.SetCanceled(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _tcs.SetException(ex);
+            }
         }
     }
 }

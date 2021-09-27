@@ -7,8 +7,8 @@
         public const string FieldId = "field";
         public const string Id = "id";
         public const string Key = "key";
-        public const string Length = "content-length";
         public const string Language = "language";
+        public const string Length = "content-length";
         public const string Master = "master";
         public const string Name = "name";
         public const string ParentId = "parent";

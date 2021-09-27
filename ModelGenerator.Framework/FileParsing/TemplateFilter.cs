@@ -16,7 +16,7 @@ namespace ModelGenerator.Framework.FileParsing
                 templateIds.TemplateField
             };
         }
-        
+
         public bool Accept(Item item)
         {
             return _validIds.Contains(item.TemplateId);

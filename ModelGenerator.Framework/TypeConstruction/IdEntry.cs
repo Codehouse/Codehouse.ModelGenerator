@@ -2,8 +2,8 @@
 {
     public record IdEntry
     {
-        public string ItemName { get; init; }
         public string ItemId { get; init; }
         public string ItemInfo { get; init; }
+        public string ItemName { get; init; }
     }
 }

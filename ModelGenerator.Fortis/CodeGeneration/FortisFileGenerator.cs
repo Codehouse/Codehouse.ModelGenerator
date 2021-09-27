@@ -29,7 +29,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
             yield return SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(model.Namespace))
                                       .WithLeadingTrivia(SyntaxFactory.Comment("// Generated\n\n"))
                                       .AddMembers(GenerateTypes(context, model));
-
         }
 
         private MemberDeclarationSyntax[] GenerateTypes(GenerationContext context, ModelFile model)

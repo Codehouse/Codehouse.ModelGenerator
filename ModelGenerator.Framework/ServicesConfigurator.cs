@@ -6,6 +6,7 @@ using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
+using TemplateFilter = ModelGenerator.Framework.FileParsing.TemplateFilter;
 
 namespace ModelGenerator.Framework
 {
@@ -23,7 +24,7 @@ namespace ModelGenerator.Framework
                 .AddSingleton<ICodeGenerator, CodeGenerator>()
                 .AddSingleton<IDatabaseFactory, DatabaseFactory>()
                 .AddSingleton<IFilePathFilter, FileScanning.TemplateFilter>()
-                .AddSingleton<IItemFilter, FileParsing.TemplateFilter>()
+                .AddSingleton<IItemFilter, TemplateFilter>()
                 .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
                 .AddSingleton<ITypeFactory, TypeFactory>();
         }

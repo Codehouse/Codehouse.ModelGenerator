@@ -20,11 +20,6 @@ namespace ModelGenerator.Tds.Parsing
             _tokenizer = BuildTokenizer();
         }
 
-        private void BuildParsers()
-        {
-            PropertyName = BuildPropertyNameParser(typeof(TdsPropertyNames));  
-        }
-
         public TokenList<TdsItemTokens> Tokenize(string input)
         {
             var result = _tokenizer.TryTokenize(input);
@@ -36,6 +31,11 @@ namespace ModelGenerator.Tds.Parsing
             throw new TokenisationException(result.ErrorMessage);
         }
 
+        private void BuildParsers()
+        {
+            PropertyName = BuildPropertyNameParser(typeof(TdsPropertyNames));
+        }
+
         private TextParser<TextSpan> BuildPropertyNameParser(Type type)
         {
             var properties = type.GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -43,7 +43,7 @@ namespace ModelGenerator.Tds.Parsing
                                  .Cast<string>()
                                  .OrderByDescending(s => s.Length)
                                  .ToArray();
-            
+
             var parser = Span.EqualToIgnoreCase(properties.First()).Try();
             foreach (var property in properties.Skip(1))
             {
@@ -67,7 +67,7 @@ namespace ModelGenerator.Tds.Parsing
             var newLineParser = Span.EqualTo("\r\n").Try()
                                     .Or(Span.EqualTo("\n\r").Try())
                                     .Or(Span.EqualTo("\n").Try());
-            
+
             return new TokenizerBuilder<TdsItemTokens>()
                    .Match(BuildSeparatorParser("item"), TdsItemTokens.ItemSeparator)
                    .Match(BuildSeparatorParser("version"), TdsItemTokens.VersionSeparator)

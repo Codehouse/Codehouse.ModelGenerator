@@ -14,7 +14,7 @@ namespace ModelGenerator.Framework.TypeConstruction
         {
             _log = log;
         }
-        
+
         public IImmutableList<TypeSet> CreateTypeSets(TemplateCollection collection)
         {
             return collection.TemplateSets
@@ -24,35 +24,15 @@ namespace ModelGenerator.Framework.TypeConstruction
                              .ToImmutableList();
         }
 
-        private TypeSet? CreateTypeSet(TemplateCollection templateCollection, TemplateSet templateSet)
-        {
-            if (string.IsNullOrEmpty(templateSet.ModelPath))
-            {
-                _log.LogWarning($"Template set {templateSet.Name} has no model path.");
-                return null;
-            }
-            
-            var files = templateSet.Templates
-                           .Values
-                           .Select(t => CreateFile(templateCollection, templateSet, t))
-                           .ToImmutableList();
-
-            return new TypeSet
-            {
-                Name = templateSet.Name,
-                Files = files
-            };
-        }
-
         private ModelFile CreateFile(TemplateCollection templateCollection, TemplateSet set, Template template)
         {
             var allFields = templateCollection.GetAllFields(template.Id);
-            
+
             var types = new ModelType[]
             {
-                new ModelInterface {Template = template, Name = template.Name, Fields = template.OwnFields},
-                new ModelClass {Template = template, Name = template.Name, Fields = allFields},
-                new ModelIdType {Templates = {template}}
+                new ModelInterface { Template = template, Name = template.Name, Fields = template.OwnFields },
+                new ModelClass { Template = template, Name = template.Name, Fields = allFields },
+                new ModelIdType { Templates = { template } }
             };
 
             // TODO: Work out Imports
@@ -62,6 +42,26 @@ namespace ModelGenerator.Framework.TypeConstruction
                 Path = Path.Combine(set.ModelPath, "Models"),
                 FileName = template.Name + ".cs",
                 Types = types.ToImmutableList()
+            };
+        }
+
+        private TypeSet? CreateTypeSet(TemplateCollection templateCollection, TemplateSet templateSet)
+        {
+            if (string.IsNullOrEmpty(templateSet.ModelPath))
+            {
+                _log.LogWarning($"Template set {templateSet.Name} has no model path.");
+                return null;
+            }
+
+            var files = templateSet.Templates
+                                   .Values
+                                   .Select(t => CreateFile(templateCollection, templateSet, t))
+                                   .ToImmutableList();
+
+            return new TypeSet
+            {
+                Name = templateSet.Name,
+                Files = files
             };
         }
     }

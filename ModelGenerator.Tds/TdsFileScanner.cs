@@ -4,8 +4,6 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,17 +24,19 @@ namespace ModelGenerator.Tds
             public static string ProjectName => "Name";
             public static string ProjectSourcePath => "SourceWebPhysicalPath";
         }
+
         private static class TagNames
         {
-            public static XName PropertyGroup => _ns + "PropertyGroup";
-            public static XName ItemGroup => _ns + "ItemGroup";
             public static XName Item => _ns + "SitecoreItem";
-            
+            public static XName ItemGroup => _ns + "ItemGroup";
+            public static XName PropertyGroup => _ns + "PropertyGroup";
+
             private static readonly XNamespace _ns = "http://schemas.microsoft.com/developer/msbuild/2003";
         }
 
-        private readonly ILogger<TdsFileScanner> _logger;
         private readonly IFilePathFilter[] _filePathFilters;
+
+        private readonly ILogger<TdsFileScanner> _logger;
 
 
         public TdsFileScanner(
@@ -46,7 +46,7 @@ namespace ModelGenerator.Tds
             _logger = logger;
             _filePathFilters = filePathFilters.ToArray();
         }
-        
+
         public async IAsyncEnumerable<FileSet> FindFilesInPath(string root, string path)
         {
             _logger.LogInformation($"Scanning pattern {path}");
@@ -54,7 +54,7 @@ namespace ModelGenerator.Tds
                                    .Select(path => Path.Combine(root, path))
                                    .ToList();
             _logger.LogInformation($"Pattern {path} found {projectFiles.Count} projects");
-            
+
             foreach (var projectFilePath in projectFiles)
             {
                 var fileSet = ReadTdsProject(projectFilePath);
@@ -63,6 +63,27 @@ namespace ModelGenerator.Tds
                     yield return await fileSet;
                 }
             }
+        }
+
+        private string DecodeFile(string s)
+        {
+            return Regex.Replace(s, "%([0-9a-fA-F]{2})", match => DecodeValue(match.Groups[1].Value));
+        }
+
+        private string DecodeValue(string value)
+        {
+            return ((char)byte.Parse(value, NumberStyles.HexNumber)).ToString();
+        }
+
+        private bool EnsureItemFileExists(string itemFilePath)
+        {
+            if (File.Exists(itemFilePath))
+            {
+                return true;
+            }
+
+            _logger.LogWarning($"Item file {itemFilePath} does not exist.");
+            return false;
         }
 
         private async Task<FileSet> ReadTdsProject(string projectFilePath)
@@ -77,17 +98,17 @@ namespace ModelGenerator.Tds
                     throw new InvalidOperationException($"Could not resolve path from project {projectFolder}");
                 }
 
-                using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings{Async = true});
+                using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings { Async = true });
                 var xml = await XDocument.LoadAsync(xmlReader, LoadOptions.None, CancellationToken.None);
                 var properties = ToDictionarySafe(xml.Root
-                                 .Elements(TagNames.PropertyGroup)
-                                 .Where(e => !e.HasAttributes)
-                                 .Elements()
-                                 .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
+                                                     .Elements(TagNames.PropertyGroup)
+                                                     .Where(e => !e.HasAttributes)
+                                                     .Elements()
+                                                     .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
 
                 // If the project does not have codegen enabled, skip it.
-                if (!properties.TryGetValue(ElementNames.EnableGeneration, out string enableCodegenString)
-                    || !bool.TryParse(enableCodegenString, out bool enableCodegen)
+                if (!properties.TryGetValue(ElementNames.EnableGeneration, out var enableCodegenString)
+                    || !bool.TryParse(enableCodegenString, out var enableCodegen)
                     || !enableCodegen)
                 {
                     _logger.LogWarning($"{projectName} has not enabled source generation and will be skipped.");
@@ -121,7 +142,7 @@ namespace ModelGenerator.Tds
             }
         }
 
-        private IDictionary<string,string> ToDictionarySafe(IEnumerable<KeyValuePair<string, string>> properties)
+        private IDictionary<string, string> ToDictionarySafe(IEnumerable<KeyValuePair<string, string>> properties)
         {
             Dictionary<string, string> Aggregator(Dictionary<string, string> d, KeyValuePair<string, string> kvp)
             {
@@ -144,27 +165,6 @@ namespace ModelGenerator.Tds
             return properties.Aggregate(
                 new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 Aggregator);
-        }
-
-        private string DecodeFile(string s)
-        {
-            return Regex.Replace(s, "%([0-9a-fA-F]{2})", match => DecodeValue(match.Groups[1].Value));
-        }
-
-        private string DecodeValue(string value)
-        {
-            return ((char) byte.Parse(value, NumberStyles.HexNumber)).ToString();
-        }
-
-        private bool EnsureItemFileExists(string itemFilePath)
-        {
-            if (File.Exists(itemFilePath))
-            {
-                return true;
-            }
-
-            _logger.LogWarning($"Item file {itemFilePath} does not exist.");
-            return false;
         }
     }
 }

@@ -31,7 +31,7 @@ namespace ModelGenerator.Framework.ItemModelling
                         logger.LogWarning($"Item {item.Path} duplicated between {itemSet.Name} and {itemSetsByItemId[item.Id].Name}.");
                         continue;
                     }
-                    
+
                     items.Add(item.Id, item);
                     itemSetsByItemId.Add(item.Id, itemSet);
 
@@ -45,7 +45,7 @@ namespace ModelGenerator.Framework.ItemModelling
             }
 
             _items = items.ToImmutableDictionary();
-            _children = children.ToImmutableDictionary(k => k.Key, v => (IImmutableList<Item>) v.Value.ToImmutableList());
+            _children = children.ToImmutableDictionary(k => k.Key, v => (IImmutableList<Item>)v.Value.ToImmutableList());
             _itemSetsByName = itemSetsByName.ToImmutableDictionary();
             _itemSetsByItemId = itemSetsByItemId.ToImmutableDictionary();
         }
@@ -64,11 +64,6 @@ namespace ModelGenerator.Framework.ItemModelling
                 : null;
         }
 
-        public IEnumerable<Item> GetItemsWhere(Func<Item, bool> predicate)
-        {
-            return _items.Values.Where(predicate);
-        }
-
         public ItemSet? GetItemSet(string name)
         {
             return _itemSetsByName.ContainsKey(name)
@@ -81,6 +76,11 @@ namespace ModelGenerator.Framework.ItemModelling
             return _itemSetsByItemId.ContainsKey(itemId)
                 ? _itemSetsByItemId[itemId]
                 : null;
+        }
+
+        public IEnumerable<Item> GetItemsWhere(Func<Item, bool> predicate)
+        {
+            return _items.Values.Where(predicate);
         }
     }
 }

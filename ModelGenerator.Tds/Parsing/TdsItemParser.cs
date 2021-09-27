@@ -14,7 +14,7 @@ namespace ModelGenerator.Tds.Parsing
     {
         public TokenListParser<TdsItemTokens, Item[]> TdsFile =>
             TdsItem.Many()
-                    .AtEnd();
+                   .AtEnd();
 
         private TokenListParser<TdsItemTokens, Field> TdsField =>
             from startField in Token.EqualTo(TdsItemTokens.FieldSeparator)
@@ -22,6 +22,12 @@ namespace ModelGenerator.Tds.Parsing
             from properties in TdsProperties
             from value in TdsFieldValue
             select CreateField(properties, value);
+
+        private TokenListParser<TdsItemTokens, string> TdsFieldValue =>
+            from lines in Token.EqualTo(TdsItemTokens.Content).Try()
+                               .Or(Token.EqualTo(TdsItemTokens.NewLine).Try())
+                               .Many()
+            select GetFieldValue(lines);
 
         private TokenListParser<TdsItemTokens, Item> TdsItem =>
             from begin in Token.EqualTo(TdsItemTokens.ItemSeparator)
@@ -54,12 +60,6 @@ namespace ModelGenerator.Tds.Parsing
             from fields in TdsField.Many()
             select CreateVersion(versionProperties, fields);
 
-        private TokenListParser<TdsItemTokens, string> TdsFieldValue =>
-            from lines in Token.EqualTo(TdsItemTokens.Content).Try()
-                               .Or(Token.EqualTo(TdsItemTokens.NewLine).Try())
-                               .Many()
-            select GetFieldValue(lines);
-        
         private readonly ITdsTokenizer _tokenizer;
 
         public TdsItemParser(ITdsTokenizer tokenizer)
@@ -75,7 +75,7 @@ namespace ModelGenerator.Tds.Parsing
                 ////value = null;
                 ////error = parsed.ToString();
                 ////errorPosition = parsed.ErrorPosition;
-                throw new ParseException("Could not parse TDS item file: " + parsed.ErrorMessage); 
+                throw new ParseException("Could not parse TDS item file: " + parsed.ErrorMessage);
             }
 
             return parsed.Value;

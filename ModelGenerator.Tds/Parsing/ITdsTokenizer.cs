@@ -5,7 +5,7 @@ namespace ModelGenerator.Tds.Parsing
 {
     internal interface ITdsTokenizer
     {
-        TokenList<TdsItemTokens> Tokenize(string input);
         TextParser<TextSpan> PropertyName { get; }
+        TokenList<TdsItemTokens> Tokenize(string input);
     }
 }

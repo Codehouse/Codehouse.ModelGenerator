@@ -12,7 +12,7 @@ namespace ModelGenerator.Framework.ItemModelling
         {
             _logger = logger;
         }
-        
+
         public IDatabase CreateDatabase(IEnumerable<ItemSet> itemSets)
         {
             return new Database(_logger, itemSets);

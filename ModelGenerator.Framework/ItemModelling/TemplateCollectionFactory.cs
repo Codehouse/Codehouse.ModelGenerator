@@ -19,7 +19,7 @@ namespace ModelGenerator.Framework.ItemModelling
             this._logger = _logger;
             _templateIds = templateIds;
         }
-        
+
         public TemplateCollection ConstructTemplates(IDatabase database)
         {
             var templateItems = database.GetItemsWhere(i => i.TemplateId == _templateIds.Template);
@@ -36,7 +36,7 @@ namespace ModelGenerator.Framework.ItemModelling
                                })
                                .Prepend(GetWellKnownTemplates())
                                .ToArray();
-            
+
             var templates = templateSets
                             .SelectMany(s => s.Templates.Values)
                             .ToImmutableDictionary(t => t.Id);
@@ -50,6 +50,39 @@ namespace ModelGenerator.Framework.ItemModelling
                 TemplateSets = templateSets.ToImmutableDictionary(s => s.Name),
                 Templates = templates,
                 TemplateHierarchy = hierarchy
+            };
+        }
+
+        private Template CreateTemplate(IDatabase database, Item templateItem)
+        {
+            var sections = database
+                .GetChildren(templateItem.Id);
+            var fields = sections
+                         .SelectMany(section => database.GetChildren(section.Id), (section, field) => new TemplateField
+                         {
+                             Id = field.Id,
+                             Name = field.Name,
+                             Item = field,
+                             DisplayName = field.GetVersionedField(_fieldIds.DisplayName)?.Value,
+                             SectionName = section.Name,
+                             FieldType = templateItem.GetUnversionedField(_fieldIds.FieldType)?.Value,
+                             TemplateId = templateItem.Id
+                         })
+                         .OrderBy(f => f.Name)
+                         .ToImmutableList();
+
+            var baseTemplates = templateItem.SharedFields
+                                            .SingleOrDefault(f => f.Id == _fieldIds.BaseTemplates)
+                                            .GetMultiReferenceValue();
+
+            return new Template
+            {
+                Id = templateItem.Id,
+                Name = templateItem.Name,
+                Item = templateItem,
+                DisplayName = templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
+                OwnFields = fields,
+                BaseTemplateIds = baseTemplates ?? new Guid[0]
             };
         }
 
@@ -98,45 +131,12 @@ namespace ModelGenerator.Framework.ItemModelling
                     }
                 }
             };
-            
+
             return new TemplateSet
             {
                 Id = string.Empty,
                 Name = "Well Known",
                 Templates = templates.ToImmutableDictionary()
-            };
-        }
-
-        private Template CreateTemplate(IDatabase database, Item templateItem)
-        {
-            var sections = database
-                .GetChildren(templateItem.Id);
-            var fields = sections
-                         .SelectMany(section => database.GetChildren(section.Id), (section, field) => new TemplateField
-                         {
-                             Id = field.Id,
-                             Name = field.Name,
-                             Item = field,
-                             DisplayName = field.GetVersionedField(_fieldIds.DisplayName)?.Value,
-                             SectionName = section.Name,
-                             FieldType = templateItem.GetUnversionedField(_fieldIds.FieldType)?.Value,
-                             TemplateId = templateItem.Id
-                         })
-                         .OrderBy(f => f.Name)
-                         .ToImmutableList();
-
-            var baseTemplates = templateItem.SharedFields
-                                            .SingleOrDefault(f => f.Id == _fieldIds.BaseTemplates)
-                                            .GetMultiReferenceValue();
-            
-            return new Template
-            {
-                Id = templateItem.Id,
-                Name = templateItem.Name,
-                Item = templateItem,
-                DisplayName = templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
-                OwnFields = fields,
-                BaseTemplateIds = baseTemplates ?? new Guid[0]
             };
         }
     }

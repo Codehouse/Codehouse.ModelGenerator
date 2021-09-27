@@ -31,13 +31,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
             yield return type;
         }
 
-        private MemberDeclarationSyntax[] GenerateMembers(ModelInterface model, IImmutableList<TemplateField> templateOwnFields)
-        {
-            return templateOwnFields
-                   .Select(f => GenerateMember(model, f))
-                   .ToArray();
-        }
-
         private MemberDeclarationSyntax GenerateMember(ModelInterface model, TemplateField templateField)
         {
             return SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName("string"), templateField.Name)
@@ -47,7 +40,13 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                                  .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                                     SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                                  .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-            
+        }
+
+        private MemberDeclarationSyntax[] GenerateMembers(ModelInterface model, IImmutableList<TemplateField> templateOwnFields)
+        {
+            return templateOwnFields
+                   .Select(f => GenerateMember(model, f))
+                   .ToArray();
         }
     }
 }

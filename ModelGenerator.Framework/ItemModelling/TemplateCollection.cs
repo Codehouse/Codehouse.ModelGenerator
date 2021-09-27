@@ -7,12 +7,12 @@ namespace ModelGenerator.Framework.ItemModelling
 {
     public class TemplateCollection
     {
-        public IImmutableDictionary<string, TemplateSet> TemplateSets { get; init; }
-        public IImmutableDictionary<Guid, Template> Templates { get; init; }
         public IImmutableDictionary<Guid, IImmutableList<Template>> TemplateHierarchy { get; init; }
+        public IImmutableDictionary<Guid, Template> Templates { get; init; }
+        public IImmutableDictionary<string, TemplateSet> TemplateSets { get; init; }
 
         private readonly IDictionary<Guid, IImmutableList<TemplateField>> _allFieldsLookup = new Dictionary<Guid, IImmutableList<TemplateField>>();
-        
+
         public IImmutableList<TemplateField> GetAllFields(Guid templateId)
         {
             return GetAllFields(new HashSet<Guid>(), templateId);
@@ -36,7 +36,7 @@ namespace ModelGenerator.Framework.ItemModelling
             {
                 return _allFieldsLookup[templateId];
             }
-            
+
             var template = Templates[templateId];
             var fields = template.BaseTemplateIds
                                  .SelectMany(t => GetAllFields(visitedTemplates, t))
@@ -45,7 +45,7 @@ namespace ModelGenerator.Framework.ItemModelling
                                  .Select(g => g.First())
                                  .OrderBy(f => f.Name)
                                  .ToImmutableList();
-            
+
             _allFieldsLookup.Add(templateId, fields);
             return fields;
         }

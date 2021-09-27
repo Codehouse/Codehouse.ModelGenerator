@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Tds.Parsing;
@@ -11,12 +10,13 @@ namespace ModelGenerator.Tds
 {
     internal class TdsFileParser : IFileParser
     {
-        private readonly ILogger<TdsFileParser> _logger;
-        private readonly ITdsTokenizer _tokenizer;
-        private readonly ITdsItemParser _parser;
         private readonly IItemFilter[] _itemFilters;
+        private readonly ILogger<TdsFileParser> _logger;
+        private readonly ITdsItemParser _parser;
+        private readonly ITdsTokenizer _tokenizer;
 
-        public TdsFileParser(ILogger<TdsFileParser> logger,
+        public TdsFileParser(
+            ILogger<TdsFileParser> logger,
             ITdsTokenizer tokenizer,
             ITdsItemParser parser,
             IEnumerable<IItemFilter> itemFilters)
@@ -26,7 +26,7 @@ namespace ModelGenerator.Tds
             _parser = parser;
             _itemFilters = itemFilters.ToArray();
         }
-        
+
         public async IAsyncEnumerable<Item> ParseFile(string filePath)
         {
             var rawItem = await File.ReadAllTextAsync(filePath);
@@ -47,7 +47,7 @@ namespace ModelGenerator.Tds
             {
                 var tokens = _tokenizer.Tokenize(rawItem);
                 return _parser.ParseTokens(tokens)
-                              .Select(i => i with {RawFilePath = filePath})
+                              .Select(i => i with { RawFilePath = filePath })
                               .ToArray();
             }
             catch (ParseException ex)

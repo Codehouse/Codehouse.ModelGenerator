@@ -9,10 +9,10 @@ namespace ModelGenerator.Framework.ItemModelling
     public record Template
     {
         public Guid[] BaseTemplateIds { get; init; }
+        public string DisplayName { get; init; }
         public Guid Id { get; init; }
         public Item Item { get; init; }
         public string Name { get; init; }
-        public string DisplayName { get; init; }
         public IImmutableList<TemplateField> OwnFields { get; init; }
     }
 }
