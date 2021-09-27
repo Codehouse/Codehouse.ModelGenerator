@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace ModelGenerator.Framework.FileParsing
 {
+    [DebuggerDisplay("ItemSet: {Name} {Id}")]
     public class ItemSet
     {
         public string Id { get; init; }

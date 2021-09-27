@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace ModelGenerator.Framework.FileParsing
 {
-    [DebuggerDisplay("{Name} {Id}")]
+    [DebuggerDisplay("Field: {Name} {Id}")]
     public record Field
     {
         public Guid Id { get; init; }

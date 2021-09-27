@@ -47,7 +47,7 @@ namespace ModelGenerator.Framework.ItemModelling
 
             return new TemplateCollection
             {
-                TemplateSets = templateSets.ToImmutableDictionary(s => s.Id),
+                TemplateSets = templateSets.ToImmutableDictionary(s => s.Name),
                 Templates = templates,
                 TemplateHierarchy = hierarchy
             };
@@ -82,7 +82,7 @@ namespace ModelGenerator.Framework.ItemModelling
                         Id = standardTemplateId,
                         Name = "Standard Template",
                         DisplayName = "Standard Template",
-                        OwnFields = new ImmutableArray<TemplateField>(),
+                        OwnFields = ImmutableList<TemplateField>.Empty,
                         BaseTemplateIds = new Guid[0]
                     }
                 },
@@ -93,7 +93,7 @@ namespace ModelGenerator.Framework.ItemModelling
                         Id = folderTemplateId,
                         Name = "Folder",
                         DisplayName = "Folder",
-                        OwnFields = new ImmutableArray<TemplateField>(),
+                        OwnFields = ImmutableList<TemplateField>.Empty,
                         BaseTemplateIds = new Guid[0]
                     }
                 }
@@ -116,10 +116,13 @@ namespace ModelGenerator.Framework.ItemModelling
                          {
                              Id = field.Id,
                              Name = field.Name,
-                             DisplayName = field.Name, // TODO: Find display name/title
+                             Item = field,
+                             DisplayName = field.GetVersionedField(_fieldIds.DisplayName)?.Value,
                              SectionName = section.Name,
-                             FieldType = string.Empty // TODO find field type
+                             FieldType = templateItem.GetUnversionedField(_fieldIds.FieldType)?.Value,
+                             TemplateId = templateItem.Id
                          })
+                         .OrderBy(f => f.Name)
                          .ToImmutableList();
 
             var baseTemplates = templateItem.SharedFields
@@ -130,7 +133,8 @@ namespace ModelGenerator.Framework.ItemModelling
             {
                 Id = templateItem.Id,
                 Name = templateItem.Name,
-                DisplayName = string.Empty, // TODO find display name
+                Item = templateItem,
+                DisplayName = templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
                 OwnFields = fields,
                 BaseTemplateIds = baseTemplates ?? new Guid[0]
             };

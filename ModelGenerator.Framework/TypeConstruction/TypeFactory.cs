@@ -19,12 +19,12 @@ namespace ModelGenerator.Framework.TypeConstruction
         {
             return collection.TemplateSets
                              .Values
-                             .Select(CreateTypeSet)
+                             .Select(s => CreateTypeSet(collection, s))
                              .Where(s => s != null)
                              .ToImmutableList();
         }
 
-        private TypeSet? CreateTypeSet(TemplateSet templateSet)
+        private TypeSet? CreateTypeSet(TemplateCollection templateCollection, TemplateSet templateSet)
         {
             if (string.IsNullOrEmpty(templateSet.ModelPath))
             {
@@ -34,7 +34,7 @@ namespace ModelGenerator.Framework.TypeConstruction
             
             var files = templateSet.Templates
                            .Values
-                           .Select(t => CreateFile(templateSet, t))
+                           .Select(t => CreateFile(templateCollection, templateSet, t))
                            .ToImmutableList();
 
             return new TypeSet
@@ -44,12 +44,14 @@ namespace ModelGenerator.Framework.TypeConstruction
             };
         }
 
-        private ModelFile CreateFile(TemplateSet set, Template template)
+        private ModelFile CreateFile(TemplateCollection templateCollection, TemplateSet set, Template template)
         {
+            var allFields = templateCollection.GetAllFields(template.Id);
+            
             var types = new ModelType[]
             {
                 new ModelInterface {Template = template, Name = template.Name, Fields = template.OwnFields},
-                new ModelClass {Template = template, Name = template.Name, Fields = template.OwnFields},
+                new ModelClass {Template = template, Name = template.Name, Fields = allFields},
                 new ModelIdType {Templates = {template}}
             };
 

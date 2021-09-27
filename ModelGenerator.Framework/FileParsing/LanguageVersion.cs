@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace ModelGenerator.Framework.FileParsing
 {
-    [DebuggerDisplay("{Language}#{Number}")]
+    [DebuggerDisplay("Version: {Language}#{Number}")]
     public record LanguageVersion
     {
         public int Number { get; init; }

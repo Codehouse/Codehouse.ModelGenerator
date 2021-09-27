@@ -83,7 +83,7 @@ namespace ModelGenerator.Tds
                                  .Elements(TagNames.PropertyGroup)
                                  .Where(e => !e.HasAttributes)
                                  .Elements()
-                                 .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value)));
+                                 .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
 
                 // If the project does not have codegen enabled, skip it.
                 if (!properties.TryGetValue(ElementNames.EnableGeneration, out string enableCodegenString)

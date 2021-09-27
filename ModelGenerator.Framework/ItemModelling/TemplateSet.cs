@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace ModelGenerator.Framework.ItemModelling
 {
+    [DebuggerDisplay("TemplateSet: {Name} {Id}")]
     public class TemplateSet
     {
         public string Id { get; init; }

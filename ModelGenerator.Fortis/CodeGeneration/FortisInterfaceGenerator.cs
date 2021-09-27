@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ModelGenerator.Framework.CodeGeneration;
@@ -10,9 +9,9 @@ using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class FortisInterfaceGenerator : IGenerator<ModelInterface>
+    public class FortisInterfaceGenerator : IGenerator<ModelInterface, MemberDeclarationSyntax>
     {
-        public IEnumerable<SyntaxNode> GenerateCode(GenerationContext context, ModelInterface model)
+        public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelInterface model)
         {
             var type = SyntaxFactory.InterfaceDeclaration(model.Name)
                                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
