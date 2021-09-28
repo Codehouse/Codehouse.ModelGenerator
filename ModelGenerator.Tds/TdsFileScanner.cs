@@ -27,6 +27,7 @@ namespace ModelGenerator.Tds
 
         private static class TagNames
         {
+            public static XName CodeGenReference => _ns + "CodeGenReferencedProject";
             public static XName Item => _ns + "SitecoreItem";
             public static XName ItemGroup => _ns + "ItemGroup";
             public static XName PropertyGroup => _ns + "PropertyGroup";
@@ -126,13 +127,20 @@ namespace ModelGenerator.Tds
                                .Where(f => _filePathFilters.All(filter => filter.Accept(f)))
                                .ToImmutableList();
 
+                var references = xml.Root
+                                    .Elements(TagNames.ItemGroup)
+                                    .Elements(TagNames.CodeGenReference)
+                                    .Select(e => e.Value)
+                                    .ToImmutableArray();
+
                 return new FileSet
                 {
                     Files = files,
                     Id = properties[ElementNames.ProjectId],
                     Name = properties[ElementNames.ProjectName],
                     ItemPath = projectFolder,
-                    ModelPath = Path.GetFullPath(Path.Combine(projectFolder, properties[ElementNames.ProjectSourcePath]))
+                    ModelPath = Path.GetFullPath(Path.Combine(projectFolder, properties[ElementNames.ProjectSourcePath])),
+                    References = references
                 };
             }
             catch (Exception ex)

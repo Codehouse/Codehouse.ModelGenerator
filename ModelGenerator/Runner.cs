@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelGenerator.Framework.CodeGeneration;
@@ -18,17 +17,17 @@ namespace ModelGenerator
 {
     public class Runner
     {
-        private readonly IOptions<Settings> _settings;
         private readonly ICodeGenerator _codeGenerator;
-        private readonly IFileScanner _fileScanner;
-        private readonly IFileParser _fileParser;
         private readonly IDatabaseFactory _databaseFactory;
-        private readonly IGenerator<ModelFile> _fileGenerator;
+        private readonly IFileParser _fileParser;
+        private readonly IFileScanner _fileScanner;
         private readonly ILogger<Runner> _logger;
+        private readonly IOptions<Settings> _settings;
         private readonly ITemplateCollectionFactory _templateFactory;
         private readonly ITypeFactory _typeFactory;
 
-        public Runner(IOptions<Settings> settings,
+        public Runner(
+            IOptions<Settings> settings,
             ICodeGenerator codeGenerator,
             IFileScanner fileScanner,
             IFileParser fileParser,
@@ -46,18 +45,25 @@ namespace ModelGenerator
             _templateFactory = templateFactory;
             _typeFactory = typeFactory;
         }
-        
+
         public async Task RunAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Locating and parsing items.");
             var itemSets = await GetRawItems(stoppingToken)
                                  .Where(f => f != null)
                                  .SelectAwait(ParseFilesInFileSet)
                                  .ToArrayAsync();
 
+            _logger.LogInformation("Constructing database.");
             var database = _databaseFactory.CreateDatabase(itemSets);
-            var templates = _templateFactory.ConstructTemplates(database);
-            var typeSets = _typeFactory.CreateTypeSets(templates);
             
+            _logger.LogInformation("Constructing template structure.");
+            var templates = _templateFactory.ConstructTemplates(database);
+            
+            _logger.LogInformation("Constructing type sets.");
+            var typeSets = _typeFactory.CreateTypeSets(templates);
+
+            _logger.LogInformation("Outputting types.");
             foreach (var typeSet in typeSets)
             {
                 var context = new GenerationContext
@@ -66,7 +72,8 @@ namespace ModelGenerator
                     Templates = templates,
                     TypeSet = typeSet
                 };
-                
+
+                _logger.LogInformation($"Generating files for {typeSet.Name} ({typeSet.Files.Count})");
                 foreach (var modelFile in typeSet.Files)
                 {
                     GenerateFile(context, modelFile);
@@ -78,38 +85,11 @@ namespace ModelGenerator
         {
             try
             {
-                _logger.LogInformation($"Generating {modelFile.FileName}");
                 _codeGenerator.GenerateFile(context, modelFile);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Could not generate file {modelFile.FileName}");
-            }
-        }
-
-        private async ValueTask<ItemSet> ParseFilesInFileSet(FileSet fileSet)
-        {
-            try
-            {
-                _logger.LogDebug($"Found {fileSet.Files.Count} files in {fileSet.Name}");
-                var items = await fileSet.Files
-                                         .ToAsyncEnumerable()
-                                         .SelectMany(f => _fileParser.ParseFile(f))
-                                         .ToDictionaryAsync(i => i.Id, i => i);
-
-                return new ItemSet
-                {
-                    Id = fileSet.Id,
-                    Name = fileSet.Name,
-                    ItemPath = fileSet.ItemPath,
-                    ModelPath = fileSet.ModelPath,
-                    Items = items.ToImmutableDictionary()
-                };
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Could not parse files in fileset {fileSet.Name}");
-                throw;
             }
         }
 
@@ -137,15 +117,37 @@ namespace ModelGenerator
                         _logger.LogInformation($"Project {file.Name} contains no items after filtering.");
                         continue;
                     }
-                    
+
                     yield return file;
                 }
             }
         }
 
-        private IEnumerable<ItemSet> GetParsedItems(IEnumerable<FileSet> fileSets)
+        private async ValueTask<ItemSet> ParseFilesInFileSet(FileSet fileSet)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _logger.LogDebug($"Found {fileSet.Files.Count} files in {fileSet.Name}");
+                var items = await fileSet.Files
+                                         .ToAsyncEnumerable()
+                                         .SelectMany(f => _fileParser.ParseFile(fileSet, f))
+                                         .ToDictionaryAsync(i => i.Id, i => i);
+
+                return new ItemSet
+                {
+                    Id = fileSet.Id,
+                    Name = fileSet.Name,
+                    ItemPath = fileSet.ItemPath,
+                    ModelPath = fileSet.ModelPath,
+                    References = fileSet.References,
+                    Items = items.ToImmutableDictionary()
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Could not parse files in fileset {fileSet.Name}");
+                throw;
+            }
         }
     }
 }

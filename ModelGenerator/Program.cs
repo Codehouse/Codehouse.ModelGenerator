@@ -18,7 +18,7 @@ namespace ModelGenerator
         private static void RegisterServices(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
-            Fortis.ServicesConfigurator.Configure(collection);
+            Fortis.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
             Tds.ServicesConfigurator.Configure(collection);
 
             collection.AddOptions()

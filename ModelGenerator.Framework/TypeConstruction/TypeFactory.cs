@@ -58,10 +58,16 @@ namespace ModelGenerator.Framework.TypeConstruction
                                    .Select(t => CreateFile(templateCollection, templateSet, t))
                                    .ToImmutableList();
 
+            var referencedSets = templateCollection.TemplateSets
+                                                   .Values
+                                                   .Where(s => templateSet.References.Contains(s.Id))
+                                                   .ToImmutableArray();
+            
             return new TypeSet
             {
                 Name = templateSet.Name,
-                Files = files
+                Files = files,
+                References = referencedSets
             };
         }
     }

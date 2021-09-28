@@ -31,6 +31,7 @@ namespace ModelGenerator.Framework.ItemModelling
                                    Name = g.Key.Name,
                                    ItemPath = g.Key.ItemPath,
                                    ModelPath = g.Key.ModelPath,
+                                   References = g.Key.References,
                                    Templates = g.Select(i => CreateTemplate(database, i))
                                                 .ToImmutableDictionary(t => t.Id)
                                })
@@ -47,7 +48,7 @@ namespace ModelGenerator.Framework.ItemModelling
 
             return new TemplateCollection
             {
-                TemplateSets = templateSets.ToImmutableDictionary(s => s.Name),
+                TemplateSets = templateSets.ToImmutableDictionary(s => s.Id),
                 Templates = templates,
                 TemplateHierarchy = hierarchy
             };
@@ -82,7 +83,9 @@ namespace ModelGenerator.Framework.ItemModelling
                 Item = templateItem,
                 DisplayName = templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
                 OwnFields = fields,
-                BaseTemplateIds = baseTemplates ?? new Guid[0]
+                BaseTemplateIds = baseTemplates ?? new Guid[0],
+                Path = templateItem.Path,
+                SetId = templateItem.SetId
             };
         }
 

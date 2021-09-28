@@ -13,6 +13,7 @@ namespace ModelGenerator.Framework.FileParsing
         public Guid Parent { get; init; }
         public string Path { get; init; }
         public string RawFilePath { get; init; }
+        public string SetId { get; set; }
         public ImmutableList<Field> SharedFields { get; init; }
         public Guid TemplateId { get; init; }
         public string TemplateName { get; init; }

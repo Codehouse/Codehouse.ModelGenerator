@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.FileParsing;
+using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Tds.Parsing;
 
 namespace ModelGenerator.Tds
@@ -27,10 +28,10 @@ namespace ModelGenerator.Tds
             _itemFilters = itemFilters.ToArray();
         }
 
-        public async IAsyncEnumerable<Item> ParseFile(string filePath)
+        public async IAsyncEnumerable<Item> ParseFile(FileSet fileSet, string filePath)
         {
             var rawItem = await File.ReadAllTextAsync(filePath);
-            var parsedItems = ParsedItems(filePath, rawItem);
+            var parsedItems = ParsedItems(fileSet, filePath, rawItem);
 
             foreach (var item in parsedItems)
             {
@@ -41,13 +42,13 @@ namespace ModelGenerator.Tds
             }
         }
 
-        private Item[] ParsedItems(string filePath, string rawItem)
+        private Item[] ParsedItems(FileSet fileSet, string filePath, string rawItem)
         {
             try
             {
                 var tokens = _tokenizer.Tokenize(rawItem);
                 return _parser.ParseTokens(tokens)
-                              .Select(i => i with { RawFilePath = filePath })
+                              .Select(i => i with { RawFilePath = filePath, SetId = fileSet.Id })
                               .ToArray();
             }
             catch (ParseException ex)

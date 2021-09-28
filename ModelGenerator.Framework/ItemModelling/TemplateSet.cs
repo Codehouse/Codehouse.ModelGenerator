@@ -11,6 +11,7 @@ namespace ModelGenerator.Framework.ItemModelling
         public string ItemPath { get; init; }
         public string ModelPath { get; init; }
         public string Name { get; init; }
+        public ImmutableArray<string> References { get; set; }
         public IImmutableDictionary<Guid, Template> Templates { get; init; }
     }
 }

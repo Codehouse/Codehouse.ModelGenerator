@@ -14,5 +14,7 @@ namespace ModelGenerator.Framework.ItemModelling
         public Item Item { get; init; }
         public string Name { get; init; }
         public IImmutableList<TemplateField> OwnFields { get; init; }
+        public string Path { get; init; }
+        public string SetId { get; init; }
     }
 }
