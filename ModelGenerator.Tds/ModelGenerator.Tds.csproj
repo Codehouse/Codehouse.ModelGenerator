@@ -2,19 +2,20 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ModelGenerator.Framework\ModelGenerator.Framework.csproj"/>
+        <ProjectReference Include="..\ModelGenerator.Framework\ModelGenerator.Framework.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Glob" Version="1.1.8"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0"/>
-        <PackageReference Include="Superpower" Version="2.3.0"/>
-        <PackageReference Include="System.Interactive.Async" Version="5.0.0"/>
+        <PackageReference Include="Glob" Version="1.1.8" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+        <PackageReference Include="Superpower" Version="2.3.0" />
+        <PackageReference Include="System.Interactive.Async" Version="5.0.0" />
     </ItemGroup>
 
 </Project>

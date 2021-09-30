@@ -59,14 +59,14 @@ namespace ModelGenerator.Framework.ItemModelling
             var sections = database
                 .GetChildren(templateItem.Id);
             var fields = sections
-                         .SelectMany(section => database.GetChildren(section.Id), (section, field) => new TemplateField
+                         .SelectMany(section => database.GetChildren(section.Id), (section, fieldItem) => new TemplateField
                          {
-                             Id = field.Id,
-                             Name = field.Name,
-                             Item = field,
-                             DisplayName = field.GetVersionedField(_fieldIds.DisplayName)?.Value,
+                             Id = fieldItem.Id,
+                             Name = fieldItem.Name,
+                             Item = fieldItem,
+                             DisplayName = fieldItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
                              SectionName = section.Name,
-                             FieldType = templateItem.GetUnversionedField(_fieldIds.FieldType)?.Value,
+                             FieldType = fieldItem.GetUnversionedField(_fieldIds.FieldType)?.Value,
                              TemplateId = templateItem.Id
                          })
                          .OrderBy(f => f.Name)

@@ -49,6 +49,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
                              .Union(model.Types
                                          .OfType<ModelInterface>()
                                          .SelectMany(model1 => _interfaceGenerator.GenerateCode(context, model1)))
+                             .Union(model.Types
+                                         .OfType<ModelClass>()
+                                         .SelectMany(model1 => _classGenerator.GenerateCode(context, model1)))
                              .ToArray();
         }
     }

@@ -35,7 +35,6 @@ namespace ModelGenerator.Framework.TypeConstruction
                 new ModelIdType { Templates = { template } }
             };
 
-            // TODO: Work out Imports
             return new ModelFile
             {
                 Namespace = set.Name + ".Models",

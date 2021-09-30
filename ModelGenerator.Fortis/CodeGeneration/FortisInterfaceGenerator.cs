@@ -7,37 +7,39 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class FortisInterfaceGenerator : IGenerator<ModelInterface, MemberDeclarationSyntax>
     {
-        private const string FortisModelTemplateMappingAttribute = "Fortis.Model.TemplateMapping";
-        private const string SitecoreIndexFieldAttribute = "Sitecore.ContentSearch.IndexField";
-        private readonly TypeNameGenerator _typeNameGeneratorm;
+        private readonly IFieldTypeResolver _fieldTypeResolver;
+        private readonly TypeNameGenerator _typeNameGenerator;
         private readonly XmlDocGenerator _xmlDocGenerator;
+        private const string FortisModelTemplateMappingAttribute = "Fortis.Model.TemplateMapping";
 
-        public FortisInterfaceGenerator(TypeNameGenerator typeNameGeneratorm, XmlDocGenerator xmlDocGenerator)
+        public FortisInterfaceGenerator(IFieldTypeResolver fieldTypeResolver, TypeNameGenerator typeNameGenerator, XmlDocGenerator xmlDocGenerator)
         {
-            _typeNameGeneratorm = typeNameGeneratorm;
+            _fieldTypeResolver = fieldTypeResolver;
+            _typeNameGenerator = typeNameGenerator;
             _xmlDocGenerator = xmlDocGenerator;
         }
-        
+
         public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelInterface model)
         {
-            // TODO: Base interface types
-            var type = SyntaxFactory.InterfaceDeclaration(_typeNameGeneratorm.GetInterfaceName(model.Template))
-                                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                                    .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
-                                    .AddSingleAttributes(
-                                        SyntaxFactory.Attribute(SyntaxFactory.ParseName(FortisModelTemplateMappingAttribute))
-                                                     .AddArgumentListArguments(
-                                                         SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(model.Template.Id.ToString("B").ToUpperInvariant()))),
-                                                         SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("InterfaceMap")))
-                                                     )
-                                    )
-                                    .AddMembers(GenerateMembers(model, model.Template.OwnFields))
-                                    .WithLeadingTrivia(_xmlDocGenerator.GenerateInterfaceComment(model.Template));
+            var type = InterfaceDeclaration(_typeNameGenerator.GetInterfaceName(model.Template))
+                       .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                       .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
+                       .AddSingleAttributes(
+                           Attribute(ParseName(FortisModelTemplateMappingAttribute))
+                               .AddArgumentListArguments(
+                                   AttributeArgument(IdLiteral(model.Template.Id)),
+                                   AttributeArgument(StringLiteral("InterfaceMap"))
+                               )
+                       )
+                       .AddMembers(GenerateFields(model, model.Template.OwnFields))
+                       .WithLeadingTrivia(_xmlDocGenerator.GenerateInterfaceComment(model.Template));
 
             yield return type;
         }
@@ -50,50 +52,38 @@ namespace ModelGenerator.Fortis.CodeGeneration
                            .Where(id => templates[id].SetId != null)
                            .Select(id => GetBaseTypeName(template, templates[id], context.Templates))
                            .Prepend("IItem")
-                           .Select(typeName => SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(typeName)))
+                           .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
                            .ToArray();
+        }
+
+        private IEnumerable<MemberDeclarationSyntax> GenerateField(ModelInterface model, TemplateField templateField)
+        {
+            yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), templateField.Name)
+                         .AddAccessorListAccessors(AutoGet())
+                         .AddSingleAttributes(SitecoreIndexField(templateField.Name))
+                         .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
+
+            var valueType = _fieldTypeResolver.GetFieldValueType(templateField);
+            if (valueType != null)
+            {
+                yield return PropertyDeclaration(ParseTypeName(valueType), templateField.Name + "Value")
+                             .AddAccessorListAccessors(AutoGet())
+                             .AddSingleAttributes(SitecoreIndexField(templateField.Name))
+                             .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
+            }
+        }
+
+        private MemberDeclarationSyntax[] GenerateFields(ModelInterface model, IImmutableList<TemplateField> templateOwnFields)
+        {
+            return templateOwnFields
+                   .SelectMany(f => GenerateField(model, f))
+                   .ToArray();
         }
 
         private string GetBaseTypeName(Template currentTemplate, Template baseTemplate, TemplateCollection collection)
         {
             var baseTemplateSet = collection.TemplateSets[baseTemplate.SetId];
-            return _typeNameGeneratorm.GetRelativeInterfaceName(currentTemplate, baseTemplate, baseTemplateSet);
-        }
-
-        private IEnumerable<MemberDeclarationSyntax> GenerateMember(ModelInterface model, TemplateField templateField)
-        {
-            // TODO: Resolve field type to Fortis type
-            yield return SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName("string"), templateField.Name)
-                                      .AddAccessorListAccessors(
-                                          SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                       .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))
-                                      .AddSingleAttributes(
-                                          SyntaxFactory.Attribute(SyntaxFactory.ParseName(SitecoreIndexFieldAttribute))
-                                                       .AddArgumentListArguments(
-                                                           SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(templateField.Name.ToLowerInvariant())))
-                                                       )
-                                      )
-                                      .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
-            
-            // TODO: Resolve field type to value type
-            yield return SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName("string"), templateField.Name + "Value")
-                                      .AddAccessorListAccessors(
-                                          SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                       .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))
-                                      .AddSingleAttributes(
-                                          SyntaxFactory.Attribute(SyntaxFactory.ParseName(SitecoreIndexFieldAttribute))
-                                                       .AddArgumentListArguments(
-                                                           SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(templateField.Name.ToLowerInvariant())))
-                                                       )
-                                      )
-                                      .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
-        }
-
-        private MemberDeclarationSyntax[] GenerateMembers(ModelInterface model, IImmutableList<TemplateField> templateOwnFields)
-        {
-            return templateOwnFields
-                   .SelectMany(f => GenerateMember(model, f))
-                   .ToArray();
+            return _typeNameGenerator.GetRelativeInterfaceName(currentTemplate, baseTemplate, baseTemplateSet);
         }
     }
 }
