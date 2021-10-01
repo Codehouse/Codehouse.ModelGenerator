@@ -16,13 +16,15 @@ namespace ModelGenerator.Fortis.CodeGeneration
     public class FortisClassGenerator : IGenerator<ModelClass, MemberDeclarationSyntax>
     {
         private const string FortisModelTemplateMappingAttribute = "Fortis.Model.TemplateMapping";
-        private const string SitecorePredefinedQueryAttribute = "Sitecore.ContentSearch.Linq.PredefinedQuery";
-        private readonly IFieldTypeResolver _fieldTypeResolver;
+        private const string SitecorePredefinedQueryAttribute = "Sitecore.ContentSearch.PredefinedQuery";
+        private readonly FieldNameResolver _fieldNameResolver;
+        private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly TypeNameGenerator _typeNameGenerator;
         private readonly XmlDocGenerator _xmlDocGenerator;
 
-        public FortisClassGenerator(IFieldTypeResolver fieldTypeResolver, TypeNameGenerator typeNameGenerator, XmlDocGenerator xmlDocGenerator)
+        public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameGenerator typeNameGenerator, XmlDocGenerator xmlDocGenerator)
         {
+            _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
             _typeNameGenerator = typeNameGenerator;
             _xmlDocGenerator = xmlDocGenerator;
@@ -170,10 +172,11 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         private IEnumerable<MemberDeclarationSyntax> GenerateProperty(ModelClass model, TemplateField templateField)
         {
-            yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), templateField.Name)
+            yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
                          .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
                          .AddAccessorListAccessors(
                              AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                 .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
                                  .WithExpressionBody( // GetField<TField>("FieldName", "fieldname")
                                      ArrowExpressionClause(
                                          InvocationExpression(
@@ -186,7 +189,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                              )
                                      )
                                  )
-                                 .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
+                                 .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
                          )
                          .AddSingleAttributes(SitecoreIndexField(templateField.Name))
                          .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
@@ -194,19 +197,20 @@ namespace ModelGenerator.Fortis.CodeGeneration
             var valueType = _fieldTypeResolver.GetFieldValueType(templateField);
             if (valueType != null)
             {
-                yield return PropertyDeclaration(ParseTypeName(valueType), templateField.Name + "Value")
-                             //.AddAccessorListAccessors(
-                             //    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                yield return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
+                             .AddAccessorListAccessors(
+                                 AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                     .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
                                      .WithExpressionBody(
                                          ArrowExpressionClause(
                                              MemberAccessExpression(
                                                  SyntaxKind.SimpleMemberAccessExpression,
-                                                 IdentifierName(templateField.Name),
+                                                 IdentifierName(_fieldNameResolver.GetFieldName(templateField)),
                                                  IdentifierName("Value"))
                                          )
                                      )
-                                     .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
-                             //)
+                                     .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
+                             )
                              .AddSingleAttributes(SitecoreIndexField(templateField.Name))
                              .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
             }

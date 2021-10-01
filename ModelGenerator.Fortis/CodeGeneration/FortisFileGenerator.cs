@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.TypeConstruction;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
@@ -30,29 +31,35 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         public IEnumerable<SyntaxNode> GenerateCode(GenerationContext context, ModelFile model)
         {
-            yield return SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(model.Namespace))
-                                      .WithLeadingTrivia(SyntaxFactory.Comment("// Generated\n\n"))
+            yield return NamespaceDeclaration(ParseName(model.Namespace))
+                                      .WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty))
                                       .AddUsings(GenerateUsings(context, model))
                                       .AddMembers(GenerateTypes(context, model));
+        }
+
+        private IEnumerable<MemberDeclarationSyntax> GenerateType(GenerationContext context, ModelType model)
+        {
+            return model switch
+            {
+                ModelClass type => _classGenerator.GenerateCode(context, type),
+                ModelIdType type => _idGenerator.GenerateCode(context, type),
+                ModelInterface type => _interfaceGenerator.GenerateCode(context, type),
+                _ => throw new NotSupportedException($"Unknown model type: {model.GetType().Name}")
+            };
+        }
+
+        private MemberDeclarationSyntax[] GenerateTypes(GenerationContext context, ModelFile model)
+        {
+            return model.Types
+                        .SelectMany(t => GenerateType(context, t))
+                        .ToArray();
         }
 
         private UsingDirectiveSyntax[] GenerateUsings(GenerationContext context, ModelFile model)
         {
             return _settings.NamespaceImports
-                            .Select(ns => SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(ns)))
+                            .Select(ns => UsingDirective(ParseName(ns)))
                             .ToArray();
-        }
-
-        private MemberDeclarationSyntax[] GenerateTypes(GenerationContext context, ModelFile model)
-        {
-            return Enumerable.Empty<MemberDeclarationSyntax>()
-                             .Union(model.Types
-                                         .OfType<ModelInterface>()
-                                         .SelectMany(model1 => _interfaceGenerator.GenerateCode(context, model1)))
-                             .Union(model.Types
-                                         .OfType<ModelClass>()
-                                         .SelectMany(model1 => _classGenerator.GenerateCode(context, model1)))
-                             .ToArray();
         }
     }
 }

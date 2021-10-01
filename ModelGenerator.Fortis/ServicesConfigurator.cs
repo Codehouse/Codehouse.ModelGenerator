@@ -17,7 +17,8 @@ namespace ModelGenerator.Fortis
                 .Configure<FortisSettings>(opts => configuration.GetSection("Fortis").Bind(opts))
                 .AddSingleton(sp => sp.GetRequiredService<IOptions<FortisSettings>>().Value);
                 
-            collection.AddSingleton<IFieldTypeResolver, FieldTypeResolver>()
+            collection.AddSingleton<FieldNameResolver>()
+                      .AddSingleton<FieldTypeResolver>()
                       .AddSingleton<IGenerator<ModelClass, MemberDeclarationSyntax>, FortisClassGenerator>()
                       .AddSingleton<IGenerator<ModelFile>, FortisFileGenerator>()
                       .AddSingleton<IGenerator<ModelIdType, MemberDeclarationSyntax>, FortisIdGenerator>()

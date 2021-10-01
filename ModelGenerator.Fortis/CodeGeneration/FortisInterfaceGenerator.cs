@@ -14,13 +14,15 @@ namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class FortisInterfaceGenerator : IGenerator<ModelInterface, MemberDeclarationSyntax>
     {
-        private readonly IFieldTypeResolver _fieldTypeResolver;
+        private readonly FieldNameResolver _fieldNameResolver;
+        private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly TypeNameGenerator _typeNameGenerator;
         private readonly XmlDocGenerator _xmlDocGenerator;
         private const string FortisModelTemplateMappingAttribute = "Fortis.Model.TemplateMapping";
 
-        public FortisInterfaceGenerator(IFieldTypeResolver fieldTypeResolver, TypeNameGenerator typeNameGenerator, XmlDocGenerator xmlDocGenerator)
+        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameGenerator typeNameGenerator, XmlDocGenerator xmlDocGenerator)
         {
+            _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
             _typeNameGenerator = typeNameGenerator;
             _xmlDocGenerator = xmlDocGenerator;
@@ -33,10 +35,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                        .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
                        .AddSingleAttributes(
                            Attribute(ParseName(FortisModelTemplateMappingAttribute))
-                               .AddArgumentListArguments(
-                                   AttributeArgument(IdLiteral(model.Template.Id)),
-                                   AttributeArgument(StringLiteral("InterfaceMap"))
-                               )
+                               .AddSimpleArguments(IdLiteral(model.Template.Id), StringLiteral("InterfaceMap"))
                        )
                        .AddMembers(GenerateFields(model, model.Template.OwnFields))
                        .WithLeadingTrivia(_xmlDocGenerator.GenerateInterfaceComment(model.Template));
@@ -58,7 +57,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         private IEnumerable<MemberDeclarationSyntax> GenerateField(ModelInterface model, TemplateField templateField)
         {
-            yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), templateField.Name)
+            yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
                          .AddAccessorListAccessors(AutoGet())
                          .AddSingleAttributes(SitecoreIndexField(templateField.Name))
                          .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
@@ -66,7 +65,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             var valueType = _fieldTypeResolver.GetFieldValueType(templateField);
             if (valueType != null)
             {
-                yield return PropertyDeclaration(ParseTypeName(valueType), templateField.Name + "Value")
+                yield return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
                              .AddAccessorListAccessors(AutoGet())
                              .AddSingleAttributes(SitecoreIndexField(templateField.Name))
                              .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));

@@ -6,6 +6,14 @@ namespace ModelGenerator.Framework.CodeGeneration
 {
     public static class SyntaxExtensions
     {
+        public static AttributeSyntax AddSimpleArguments(this AttributeSyntax member, params ExpressionSyntax[] expressionArguments)
+        {
+            var arguments = expressionArguments
+                            .Select(SyntaxFactory.AttributeArgument)
+                            .ToArray();
+            return member.AddArgumentListArguments(arguments);
+        }
+        
         public static AccessorDeclarationSyntax AddSingleAttributes(this AccessorDeclarationSyntax member, params AttributeSyntax[] attributes)
         {
             var attributeLists = attributes

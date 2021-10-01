@@ -10,7 +10,8 @@ namespace ModelGenerator.Fortis.CodeGeneration
     {
         public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelIdType model)
         {
-            throw new NotImplementedException();
+            // TODO: Implement ID class
+            yield break;
         }
     }
 }
