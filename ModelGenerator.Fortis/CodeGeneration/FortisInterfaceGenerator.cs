@@ -16,21 +16,21 @@ namespace ModelGenerator.Fortis.CodeGeneration
     {
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
-        private readonly TypeNameGenerator _typeNameGenerator;
+        private readonly TypeNameResolver _typeNameResolver;
         private readonly XmlDocGenerator _xmlDocGenerator;
         private const string FortisModelTemplateMappingAttribute = "Fortis.Model.TemplateMapping";
 
-        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameGenerator typeNameGenerator, XmlDocGenerator xmlDocGenerator)
+        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, XmlDocGenerator xmlDocGenerator)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
-            _typeNameGenerator = typeNameGenerator;
+            _typeNameResolver = typeNameResolver;
             _xmlDocGenerator = xmlDocGenerator;
         }
 
         public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelInterface model)
         {
-            var type = InterfaceDeclaration(_typeNameGenerator.GetInterfaceName(model.Template))
+            var type = InterfaceDeclaration(_typeNameResolver.GetInterfaceName(model.Template))
                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
                        .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
                        .AddSingleAttributes(
@@ -82,7 +82,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private string GetBaseTypeName(Template currentTemplate, Template baseTemplate, TemplateCollection collection)
         {
             var baseTemplateSet = collection.TemplateSets[baseTemplate.SetId];
-            return _typeNameGenerator.GetRelativeInterfaceName(currentTemplate, baseTemplate, baseTemplateSet);
+            return _typeNameResolver.GetRelativeInterfaceName(currentTemplate, baseTemplate, baseTemplateSet);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.ItemModelling;
@@ -10,10 +11,12 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly FortisSettings.FieldTypeMappingSettings _settings;
         private readonly IImmutableDictionary<string, string> _fieldTypeLookup;
         private readonly IImmutableDictionary<string, string> _fieldValueLookup;
+        private readonly ImmutableDictionary<string, string> _fieldParameterLookup;
 
         public FieldTypeResolver(FortisSettings settings)
         {
             _settings = settings.FieldTypeMappings;
+            _fieldParameterLookup = _settings.FieldParameterMappings.ToImmutableDictionary();
             _fieldTypeLookup = MappingInverter.InvertMapping(_settings.ConcreteFieldTypes, StringComparer.OrdinalIgnoreCase);
             _fieldValueLookup = MappingInverter.InvertMapping(_settings.FieldValueMappings, StringComparer.OrdinalIgnoreCase);
         }
@@ -43,6 +46,17 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
 
             return null;
+        }
+
+        public string GetFieldParameterType(TemplateField field)
+        {
+            var concreteFieldType = GetFieldConcreteType(field);
+            if (_fieldParameterLookup.TryGetValue(concreteFieldType, out string fieldType))
+            {
+                return fieldType;
+            }
+
+            throw new NotSupportedException($"Field type '{field.FieldType}' cannot be used in rendering parameters.");
         }
     }
 }

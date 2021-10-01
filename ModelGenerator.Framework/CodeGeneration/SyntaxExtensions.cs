@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -13,37 +15,31 @@ namespace ModelGenerator.Framework.CodeGeneration
                             .ToArray();
             return member.AddArgumentListArguments(arguments);
         }
-        
-        public static AccessorDeclarationSyntax AddSingleAttributes(this AccessorDeclarationSyntax member, params AttributeSyntax[] attributes)
+
+        public static T AddSingleAttributes<T>(this T syntax, params AttributeSyntax[] attributes)
+            where T : SyntaxNode
         {
             var attributeLists = attributes
                                  .Select(a => SyntaxFactory.AttributeList().AddAttributes(a))
                                  .ToArray();
-            return member.AddAttributeLists(attributeLists);
+            SyntaxNode node = syntax switch
+            {
+                AccessorDeclarationSyntax accessor => accessor.AddAttributeLists(attributeLists),
+                ClassDeclarationSyntax @class => @class.AddAttributeLists(attributeLists),
+                InterfaceDeclarationSyntax @interface => @interface.AddAttributeLists(attributeLists),
+                PropertyDeclarationSyntax property => property.AddAttributeLists(attributeLists),
+                _ => throw new NotSupportedException($"Unsupported syntax type: {syntax.GetType().Name}.")
+            };
+
+            return (T)node;
         }
-        
-        public static ClassDeclarationSyntax AddSingleAttributes(this ClassDeclarationSyntax member, params AttributeSyntax[] attributes)
+
+        public static T If<T>(this T syntax, bool condition, Func<T, T> mutation)
+            where T: SyntaxNode
         {
-            var attributeLists = attributes
-                                 .Select(a => SyntaxFactory.AttributeList().AddAttributes(a))
-                                 .ToArray();
-            return member.AddAttributeLists(attributeLists);
-        }
-        
-        public static MemberDeclarationSyntax AddSingleAttributes(this MemberDeclarationSyntax member, params AttributeSyntax[] attributes)
-        {
-            var attributeLists = attributes
-                                 .Select(a => SyntaxFactory.AttributeList().AddAttributes(a))
-                                 .ToArray();
-            return member.AddAttributeLists(attributeLists);
-        }
-        
-        public static InterfaceDeclarationSyntax AddSingleAttributes(this InterfaceDeclarationSyntax member, params AttributeSyntax[] attributes)
-        {
-            var attributeLists = attributes
-                                 .Select(a => SyntaxFactory.AttributeList().AddAttributes(a))
-                                 .ToArray();
-            return member.AddAttributeLists(attributeLists);
+            return condition
+                ? mutation.Invoke(syntax)
+                : syntax;
         }
     }
 }

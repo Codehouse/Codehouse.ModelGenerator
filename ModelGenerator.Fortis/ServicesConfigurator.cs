@@ -23,7 +23,7 @@ namespace ModelGenerator.Fortis
                       .AddSingleton<IGenerator<ModelFile>, FortisFileGenerator>()
                       .AddSingleton<IGenerator<ModelIdType, MemberDeclarationSyntax>, FortisIdGenerator>()
                       .AddSingleton<IGenerator<ModelInterface, MemberDeclarationSyntax>, FortisInterfaceGenerator>()
-                      .AddSingleton<TypeNameGenerator>()
+                      .AddSingleton<TypeNameResolver>()
                       .AddSingleton<XmlDocGenerator>();
         }
     }

@@ -16,5 +16,11 @@ namespace ModelGenerator.Framework.ItemModelling
         public IImmutableList<TemplateField> OwnFields { get; init; }
         public string Path { get; init; }
         public string SetId { get; init; }
+        public TemplateTypes TemplateType { get; init; }
+
+        public bool IsRenderingParameters()
+        {
+            return TemplateType == TemplateTypes.RenderingParameter;
+        }
     }
 }

@@ -10,6 +10,7 @@ using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
+using AttributeSyntax = Microsoft.CodeAnalysis.VisualBasic.Syntax.AttributeSyntax;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
@@ -19,20 +20,20 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private const string SitecorePredefinedQueryAttribute = "Sitecore.ContentSearch.PredefinedQuery";
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
-        private readonly TypeNameGenerator _typeNameGenerator;
+        private readonly TypeNameResolver _typeNameResolver;
         private readonly XmlDocGenerator _xmlDocGenerator;
 
-        public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameGenerator typeNameGenerator, XmlDocGenerator xmlDocGenerator)
+        public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, XmlDocGenerator xmlDocGenerator)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
-            _typeNameGenerator = typeNameGenerator;
+            _typeNameResolver = typeNameResolver;
             _xmlDocGenerator = xmlDocGenerator;
         }
 
         public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelClass model)
         {
-            var type = ClassDeclaration(_typeNameGenerator.GetClassName(model.Template))
+            var type = ClassDeclaration(_typeNameResolver.GetClassName(model.Template))
                        .AddModifiers(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.PartialKeyword))
                        .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
                        .AddSingleAttributes(
@@ -83,7 +84,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         private IEnumerable<MemberDeclarationSyntax> GenerateConstructors(ModelClass model)
         {
-            var className = _typeNameGenerator.GetClassName(model.Template);
+            var className = _typeNameResolver.GetClassName(model.Template);
             
             // Ctor with ISpawnProvider
             yield return ConstructorDeclaration(Identifier(className))
@@ -172,32 +173,31 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         private IEnumerable<MemberDeclarationSyntax> GenerateProperty(ModelClass model, TemplateField templateField)
         {
+            var isRenderingParameters = model.Template.IsRenderingParameters();
+            var concreteType = isRenderingParameters
+                ? _fieldTypeResolver.GetFieldParameterType(templateField)
+                : _fieldTypeResolver.GetFieldConcreteType(templateField);
+
             yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
                          .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
                          .AddAccessorListAccessors(
                              AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                  .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
-                                 .WithExpressionBody( // GetField<TField>("FieldName", "fieldname")
-                                     ArrowExpressionClause(
-                                         InvocationExpression(
-                                                 GenericName(Identifier("GetField"))
-                                                     .AddTypeArgumentListArguments(IdentifierName(_fieldTypeResolver.GetFieldConcreteType(templateField)))
-                                             )
-                                             .AddArgumentListArguments(
-                                                 Argument(StringLiteral(templateField.Name)),
-                                                 Argument(StringLiteral(templateField.Name.ToLowerInvariant()))
-                                             )
-                                     )
+                                 .WithExpressionBody(
+                                     ArrowExpressionClause(GetFieldInvocation(isRenderingParameters, templateField, concreteType))
                                  )
                                  .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
                          )
-                         .AddSingleAttributes(SitecoreIndexField(templateField.Name))
+                         .If(
+                             !isRenderingParameters,
+                             property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
                          .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
 
             var valueType = _fieldTypeResolver.GetFieldValueType(templateField);
             if (valueType != null)
             {
                 yield return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
+                             .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddAccessorListAccessors(
                                  AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                      .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
@@ -211,9 +211,29 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                      )
                                      .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
                              )
-                             .AddSingleAttributes(SitecoreIndexField(templateField.Name))
+                             .If(
+                                 !isRenderingParameters,
+                                 property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
                              .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
             }
+        }
+
+        private static InvocationExpressionSyntax GetFieldInvocation(bool isRenderingParameter, TemplateField templateField, string? concreteType)
+        {
+            var arguments = Enumerable.Empty<ArgumentSyntax>()
+                                      .Append(Argument(StringLiteral(templateField.Name)));
+            if (!isRenderingParameter)
+            {
+                arguments = arguments.Append(Argument(StringLiteral(templateField.Name.ToLowerInvariant())));
+            }
+            
+            // GetField<TField>("FieldName", "fieldname") for normal templates
+            // GetField<TField>("FieldName") for rendering parameter templates
+            return InvocationExpression(
+                    GenericName(Identifier("GetField"))
+                        .AddTypeArgumentListArguments(IdentifierName(concreteType))
+                )
+                .AddArgumentListArguments(arguments.ToArray());
         }
 
         private SimpleBaseTypeSyntax[] GenerateBaseTypes(GenerationContext context, Template template)
@@ -223,7 +243,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                            .Where(id => templates.ContainsKey(id))
                            .Where(id => templates[id].SetId != null)
                            .Select(id => GetBaseTypeName(template, templates[id], context.Templates))
-                           .Prepend(_typeNameGenerator.GetInterfaceName(template))
+                           .Prepend(_typeNameResolver.GetInterfaceName(template))
                            .Prepend("FortisItem")
                            .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
                            .ToArray();
@@ -232,7 +252,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private string GetBaseTypeName(Template currentTemplate, Template baseTemplate, TemplateCollection collection)
         {
             var baseTemplateSet = collection.TemplateSets[baseTemplate.SetId];
-            return _typeNameGenerator.GetRelativeInterfaceName(currentTemplate, baseTemplate, baseTemplateSet);
+            return _typeNameResolver.GetRelativeInterfaceName(currentTemplate, baseTemplate, baseTemplateSet);
         }
     }
 }

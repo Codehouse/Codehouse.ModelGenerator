@@ -85,7 +85,8 @@ namespace ModelGenerator.Framework.ItemModelling
                 OwnFields = fields,
                 BaseTemplateIds = baseTemplates ?? new Guid[0],
                 Path = templateItem.Path,
-                SetId = templateItem.SetId
+                SetId = templateItem.SetId,
+                TemplateType = GetTemplateType(templateItem, baseTemplates)
             };
         }
 
@@ -103,6 +104,19 @@ namespace ModelGenerator.Framework.ItemModelling
                     })
                     .Where(t => t != null)
                     .ToImmutableList();
+        }
+
+        private TemplateTypes GetTemplateType(Item templateItem, Guid[]? baseTemplates)
+        {
+            // TODO: Check for indirect RP template inheritance
+            if (baseTemplates != null && baseTemplates.Contains(_templateIds.RenderingParameters))
+            {
+                return TemplateTypes.RenderingParameter;
+            }
+
+            return templateItem.Name.StartsWith('_')
+                ? TemplateTypes.Interface
+                : TemplateTypes.Concrete;
         }
 
         private TemplateSet GetWellKnownTemplates()

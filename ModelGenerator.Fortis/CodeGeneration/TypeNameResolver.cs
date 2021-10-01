@@ -2,7 +2,7 @@
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class TypeNameGenerator
+    public class TypeNameResolver
     {
         public string GetClassName(Template template)
         {
@@ -22,13 +22,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
         public string GetInterfaceName(Template template)
         {
             return "I" + template.Name.TrimStart('_');
-        }
-
-        public string GetRelativeClassName(Template relativeTemplate, Template template, TemplateSet set)
-        {
-            return relativeTemplate.SetId == template.SetId
-                ? GetClassName(template)
-                : GetFullyQualifiedClassName(template, set);
         }
 
         public string GetRelativeInterfaceName(Template relativeTemplate, Template template, TemplateSet set)
