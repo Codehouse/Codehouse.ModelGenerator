@@ -46,11 +46,13 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private SimpleBaseTypeSyntax[] GenerateBaseTypes(GenerationContext context, Template template)
         {
             var templates = context.Templates.Templates;
+            var isRenderingParameters = context.Templates.IsRenderingParameters(template.Id);
+            
             return template.BaseTemplateIds
                            .Where(id => templates.ContainsKey(id))
                            .Where(id => templates[id].SetId != null)
                            .Select(id => GetBaseTypeName(template, templates[id], context.Templates))
-                           .Prepend("IItem")
+                           .Prepend(isRenderingParameters ? "IRenderingParameter" : "IItem")
                            .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
                            .ToArray();
         }

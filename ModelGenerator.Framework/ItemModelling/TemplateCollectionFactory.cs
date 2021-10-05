@@ -31,6 +31,7 @@ namespace ModelGenerator.Framework.ItemModelling
                                    Name = g.Key.Name,
                                    ItemPath = g.Key.ItemPath,
                                    ModelPath = g.Key.ModelPath,
+                                   Namespace = g.Key.Namespace,
                                    References = g.Key.References,
                                    Templates = g.Select(i => CreateTemplate(database, i))
                                                 .ToImmutableDictionary(t => t.Id)
@@ -46,7 +47,7 @@ namespace ModelGenerator.Framework.ItemModelling
                             .Select(t => KeyValuePair.Create(t.Id, GetBaseTemplates(t, templates)))
                             .ToImmutableDictionary();
 
-            return new TemplateCollection
+            return new TemplateCollection(_templateIds)
             {
                 TemplateSets = templateSets.ToImmutableDictionary(s => s.Id),
                 Templates = templates,
@@ -85,8 +86,7 @@ namespace ModelGenerator.Framework.ItemModelling
                 OwnFields = fields,
                 BaseTemplateIds = baseTemplates ?? new Guid[0],
                 Path = templateItem.Path,
-                SetId = templateItem.SetId,
-                TemplateType = GetTemplateType(templateItem, baseTemplates)
+                SetId = templateItem.SetId
             };
         }
 
@@ -104,19 +104,6 @@ namespace ModelGenerator.Framework.ItemModelling
                     })
                     .Where(t => t != null)
                     .ToImmutableList();
-        }
-
-        private TemplateTypes GetTemplateType(Item templateItem, Guid[]? baseTemplates)
-        {
-            // TODO: Check for indirect RP template inheritance
-            if (baseTemplates != null && baseTemplates.Contains(_templateIds.RenderingParameters))
-            {
-                return TemplateTypes.RenderingParameter;
-            }
-
-            return templateItem.Name.StartsWith('_')
-                ? TemplateTypes.Interface
-                : TemplateTypes.Concrete;
         }
 
         private TemplateSet GetWellKnownTemplates()

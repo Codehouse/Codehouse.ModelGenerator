@@ -137,6 +137,7 @@ namespace ModelGenerator
                 {
                     Id = fileSet.Id,
                     Name = fileSet.Name,
+                    Namespace = fileSet.Namespace,
                     ItemPath = fileSet.ItemPath,
                     ModelPath = fileSet.ModelPath,
                     References = fileSet.References,

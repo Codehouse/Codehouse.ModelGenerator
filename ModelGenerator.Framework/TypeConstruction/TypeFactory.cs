@@ -32,12 +32,12 @@ namespace ModelGenerator.Framework.TypeConstruction
             {
                 new ModelInterface { Template = template, Name = template.Name, Fields = template.OwnFields },
                 new ModelClass { Template = template, Name = template.Name, Fields = allFields },
-                new ModelIdType { Templates = { template } }
+                new ModelIdType { Template = template }
             };
 
             return new ModelFile
             {
-                Namespace = set.Name + ".Models",
+                Namespace = set.Namespace,
                 Path = Path.Combine(set.ModelPath, "Models"),
                 FileName = template.Name + ".cs",
                 Types = types.ToImmutableList()

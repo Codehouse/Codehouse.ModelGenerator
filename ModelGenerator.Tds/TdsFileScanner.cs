@@ -138,6 +138,7 @@ namespace ModelGenerator.Tds
                     Files = files,
                     Id = properties[ElementNames.ProjectId],
                     Name = properties[ElementNames.ProjectName],
+                    Namespace = properties[ElementNames.ProjectName].Replace(".Master", ".Models"),
                     ItemPath = projectFolder,
                     ModelPath = Path.GetFullPath(Path.Combine(projectFolder, properties[ElementNames.ProjectSourcePath])),
                     References = references

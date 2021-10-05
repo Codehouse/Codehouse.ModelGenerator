@@ -12,6 +12,7 @@ namespace ModelGenerator.Framework.FileParsing
         public IImmutableDictionary<Guid, Item> Items { get; init; }
         public string ModelPath { get; init; }
         public string Name { get; init; }
-        public ImmutableArray<string> References { get; set; }
+        public string Namespace { get; init; }
+        public ImmutableArray<string> References { get; init; }
     }
 }

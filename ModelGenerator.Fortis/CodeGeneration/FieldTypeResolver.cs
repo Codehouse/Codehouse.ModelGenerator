@@ -21,7 +21,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _fieldValueLookup = MappingInverter.InvertMapping(_settings.FieldValueMappings, StringComparer.OrdinalIgnoreCase);
         }
         
-        // TODO: Resolve field types for rendering parameters
         public string GetFieldInterfaceType(TemplateField field)
         {
             return "I" + GetFieldConcreteType(field);

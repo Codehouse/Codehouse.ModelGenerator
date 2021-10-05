@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using ModelGenerator.Framework.FileParsing;
 
 namespace ModelGenerator.Framework.ItemModelling
 {
@@ -12,10 +13,46 @@ namespace ModelGenerator.Framework.ItemModelling
         public IImmutableDictionary<string, TemplateSet> TemplateSets { get; init; }
 
         private readonly IDictionary<Guid, IImmutableList<TemplateField>> _allFieldsLookup = new Dictionary<Guid, IImmutableList<TemplateField>>();
+        private readonly ITemplateIds _templateIds;
+
+        public TemplateCollection(ITemplateIds templateIds)
+        {
+            _templateIds = templateIds;
+        }
 
         public IImmutableList<TemplateField> GetAllFields(Guid templateId)
         {
             return GetAllFields(new HashSet<Guid>(), templateId);
+        }
+        
+        public bool IsRenderingParameters(Guid templateId)
+        {
+            return GetTemplateType(templateId) == TemplateTypes.RenderingParameter;
+        }
+
+        public TemplateTypes GetTemplateType(Guid templateId)
+        {
+            if (!Templates.ContainsKey(templateId))
+            {
+                throw new ArgumentException($"Unknown template ID {templateId}", nameof(templateId));
+            }
+            
+            // TODO: Check for indirect RP template inheritance
+            if (templateId == _templateIds.RenderingParameters)
+            {
+                return TemplateTypes.RenderingParameter;
+            }
+
+            var baseTemplates = TemplateHierarchy[templateId];
+            if (baseTemplates != null && baseTemplates.Any(t => t.Id == _templateIds.RenderingParameters))
+            {
+                return TemplateTypes.RenderingParameter;
+            }
+
+            var template = Templates[templateId];
+            return template.Name.StartsWith('_')
+                ? TemplateTypes.Interface
+                : TemplateTypes.Concrete;
         }
 
         private IImmutableList<TemplateField> GetAllFields(HashSet<Guid> visitedTemplates, Guid templateId)

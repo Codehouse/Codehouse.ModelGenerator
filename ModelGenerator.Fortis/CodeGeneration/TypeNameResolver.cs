@@ -6,22 +6,17 @@ namespace ModelGenerator.Fortis.CodeGeneration
     {
         public string GetClassName(Template template)
         {
-            return template.Name.TrimStart('_');
-        }
-
-        public string GetFullyQualifiedClassName(Template template, TemplateSet set)
-        {
-            return set.Name + "." + GetClassName(template);
+            return template.Name.TrimStart('_').Replace(" ", string.Empty);
         }
 
         public string GetFullyQualifiedInterfaceName(Template template, TemplateSet set)
         {
-            return set.Name + ".I" + template.Name.TrimStart('_');
+            return set.Namespace + "." + GetInterfaceName(template);
         }
 
         public string GetInterfaceName(Template template)
         {
-            return "I" + template.Name.TrimStart('_');
+            return "I" + GetClassName(template);
         }
 
         public string GetRelativeInterfaceName(Template relativeTemplate, Template template, TemplateSet set)
