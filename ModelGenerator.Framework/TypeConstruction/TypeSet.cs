@@ -7,6 +7,7 @@ namespace ModelGenerator.Framework.TypeConstruction
     {
         public IImmutableList<ModelFile> Files { get; init; }
         public string Name { get; init; }
+        public string Namespace { get; init; }
         public ImmutableArray<TemplateSet> References { get; set; }
     }
 }

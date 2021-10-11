@@ -6,12 +6,20 @@ namespace ModelGenerator.Fortis.Configuration
     {
         public record FieldTypeMappingSettings
         {
-            public Dictionary<string, string[]> ConcreteFieldTypes { get; init; }
+            public Dictionary<string, string[]> ConcreteFieldTypes { get; } = new Dictionary<string, string[]>();
             public string FallBackFieldType { get; init; }
-            public Dictionary<string, string> FieldParameterMappings { get; init; }
-            public Dictionary<string, string[]> FieldValueMappings { get; init; }
+            public Dictionary<string, string> FieldParameterMappings { get; } = new Dictionary<string, string>();
+            public Dictionary<string, string[]> FieldValueMappings { get; } = new Dictionary<string, string[]>();
         }
-        public FieldTypeMappingSettings FieldTypeMappings { get; init; }
+
+        public record QuirkSettings
+        {
+            public bool PartialInterfaces { get; init; }
+        }
+
+        public FieldTypeMappingSettings FieldTypeMappings { get; } = new FieldTypeMappingSettings();
+        public string ModelNamespace { get; init; }
         public string[] NamespaceImports { get; init; }
+        public QuirkSettings Quirks { get; } = new QuirkSettings();
     }
 }

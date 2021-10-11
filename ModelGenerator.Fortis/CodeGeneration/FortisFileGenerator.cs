@@ -15,26 +15,40 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly IGenerator<ModelClass, MemberDeclarationSyntax> _classGenerator;
         private readonly IGenerator<ModelIdType, MemberDeclarationSyntax> _idGenerator;
         private readonly IGenerator<ModelInterface, MemberDeclarationSyntax> _interfaceGenerator;
+        private readonly TypeNameResolver _typeNameResolver;
         private readonly FortisSettings _settings;
 
         public FortisFileGenerator(
             FortisSettings settings,
             IGenerator<ModelClass, MemberDeclarationSyntax> classGenerator,
             IGenerator<ModelIdType, MemberDeclarationSyntax> idGenerator,
-            IGenerator<ModelInterface, MemberDeclarationSyntax> interfaceGenerator)
+            IGenerator<ModelInterface, MemberDeclarationSyntax> interfaceGenerator,
+            TypeNameResolver typeNameResolver)
         {
             _settings = settings;
             _classGenerator = classGenerator;
             _idGenerator = idGenerator;
             _interfaceGenerator = interfaceGenerator;
+            _typeNameResolver = typeNameResolver;
         }
 
         public IEnumerable<SyntaxNode> GenerateCode(GenerationContext context, ModelFile model)
         {
-            yield return NamespaceDeclaration(ParseName(model.Namespace))
-                                      .WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty))
-                                      .AddUsings(GenerateUsings(context, model))
-                                      .AddMembers(GenerateTypes(context, model));
+            yield return CompilationUnit()
+                         .AddUsings(GenerateUsings(context))
+                         .AddMembers(GenerateNamespaces(context, model).ToArray());
+        }
+
+        private IEnumerable<NamespaceDeclarationSyntax> GenerateNamespaces(GenerationContext context, ModelFile model)
+        {
+            var namespaceTypeGroups = model.Types
+                                           .GroupBy(t => _typeNameResolver.GetNamespace(context.TypeSet, t.Template));
+            foreach (var namespaceTypeGroup in namespaceTypeGroups)
+            {
+                yield return NamespaceDeclaration(ParseName(namespaceTypeGroup.Key))
+                                          .WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty))
+                                          .AddMembers(GenerateTypes(context, namespaceTypeGroup));
+            }
         }
 
         private IEnumerable<MemberDeclarationSyntax> GenerateType(GenerationContext context, ModelType model)
@@ -48,14 +62,14 @@ namespace ModelGenerator.Fortis.CodeGeneration
             };
         }
 
-        private MemberDeclarationSyntax[] GenerateTypes(GenerationContext context, ModelFile model)
+        private MemberDeclarationSyntax[] GenerateTypes(GenerationContext context, IEnumerable<ModelType> modelTypes)
         {
-            return model.Types
-                        .SelectMany(t => GenerateType(context, t))
-                        .ToArray();
+            return modelTypes
+                   .SelectMany(t => GenerateType(context, t))
+                   .ToArray();
         }
 
-        private UsingDirectiveSyntax[] GenerateUsings(GenerationContext context, ModelFile model)
+        private UsingDirectiveSyntax[] GenerateUsings(GenerationContext context)
         {
             return _settings.NamespaceImports
                             .Select(ns => UsingDirective(ParseName(ns)))

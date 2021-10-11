@@ -42,16 +42,11 @@ namespace ModelGenerator.Framework.ItemModelling
             var templates = templateSets
                             .SelectMany(s => s.Templates.Values)
                             .ToImmutableDictionary(t => t.Id);
-            var hierarchy = templateSets
-                            .SelectMany(s => s.Templates.Values)
-                            .Select(t => KeyValuePair.Create(t.Id, GetBaseTemplates(t, templates)))
-                            .ToImmutableDictionary();
 
             return new TemplateCollection(_templateIds)
             {
                 TemplateSets = templateSets.ToImmutableDictionary(s => s.Id),
-                Templates = templates,
-                TemplateHierarchy = hierarchy
+                Templates = templates
             };
         }
 
@@ -85,25 +80,21 @@ namespace ModelGenerator.Framework.ItemModelling
                 DisplayName = templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
                 OwnFields = fields,
                 BaseTemplateIds = baseTemplates ?? new Guid[0],
+                LocalNamespace = ResolveLocalNamespace(templateItem),
                 Path = templateItem.Path,
                 SetId = templateItem.SetId
             };
         }
 
-        private IImmutableList<Template> GetBaseTemplates(Template t, ImmutableDictionary<Guid, Template> templates)
+        private string ResolveLocalNamespace(Item templateItem)
         {
-            return t.BaseTemplateIds.Select(id =>
-                    {
-                        if (templates.ContainsKey(id))
-                        {
-                            return templates[id];
-                        }
-
-                        _logger.LogWarning($"Unknown base template {id} on template {t.Name} ({t.Id})");
-                        return null;
-                    })
-                    .Where(t => t != null)
-                    .ToImmutableList();
+            // TODO: This should be configurable (or work same as TDS)
+            // TDS determines what the longest common path is and discards it.
+            var pathParts = templateItem.Path
+                                        .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                                        .Skip(4)
+                                        .SkipLast(1);
+            return string.Join('.', pathParts).Replace(" ", string.Empty);
         }
 
         private TemplateSet GetWellKnownTemplates()

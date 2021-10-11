@@ -85,7 +85,7 @@ namespace ModelGenerator
         {
             try
             {
-                _codeGenerator.GenerateFile(context, modelFile);
+                _codeGenerator.GenerateFile(context, _settings.Value.ModelFolder, modelFile);
             }
             catch (Exception ex)
             {

@@ -38,7 +38,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                        .ToArray();
             
             return ClassDeclaration(Identifier("FieldIds"))
-                   .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword), Token(SyntaxKind.StaticKeyword))
+                   .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword))
                    .AddMembers(
                        ClassDeclaration(Identifier(_typeNameResolver.GetClassName(model.Template)))
                            .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
@@ -50,7 +50,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private ClassDeclarationSyntax GenerateTemplateIdClass(GenerationContext context, ModelIdType model)
         {
             return ClassDeclaration(Identifier("TemplateIds"))
-                   .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword), Token(SyntaxKind.StaticKeyword))
+                   .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword))
                    .AddMembers(GenerateIdProperty(model.Template));
         }
 
@@ -61,13 +61,14 @@ namespace ModelGenerator.Fortis.CodeGeneration
         }
         private PropertyDeclarationSyntax GenerateIdProperty(Template template)
         {
-            return GenerateIdProperty(_typeNameResolver.GetClassName(template), template.Id)
+            return GenerateIdProperty(_typeNameResolver.GetTypeName(template), template.Id)
                 .WithLeadingTrivia(_xmlDocGenerator.GenerateTemplateIdComment(template));
         }
 
         private PropertyDeclarationSyntax GenerateIdProperty(string name, Guid value)
         {
             return PropertyDeclaration(IdentifierName("Guid"), name)
+                   .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
                    .AddAccessorListAccessors(AutoGet())
                    .WithInitializer(
                        EqualsValueClause(

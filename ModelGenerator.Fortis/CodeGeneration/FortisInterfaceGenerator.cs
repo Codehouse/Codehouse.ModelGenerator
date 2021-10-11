@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
@@ -17,14 +18,16 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly TypeNameResolver _typeNameResolver;
+        private readonly FortisSettings _settings;
         private readonly XmlDocGenerator _xmlDocGenerator;
-        private const string FortisModelTemplateMappingAttribute = "Fortis.Model.TemplateMapping";
+        private const string FortisModelTemplateMappingAttribute = "TemplateMapping";
 
-        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, XmlDocGenerator xmlDocGenerator)
+        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, XmlDocGenerator xmlDocGenerator)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
             _typeNameResolver = typeNameResolver;
+            _settings = settings;
             _xmlDocGenerator = xmlDocGenerator;
         }
 
@@ -32,6 +35,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         {
             var type = InterfaceDeclaration(_typeNameResolver.GetInterfaceName(model.Template))
                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                       .If(_settings.Quirks.PartialInterfaces, i => i.AddModifiers(Token(SyntaxKind.PartialKeyword)))
                        .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
                        .AddSingleAttributes(
                            Attribute(ParseName(FortisModelTemplateMappingAttribute))

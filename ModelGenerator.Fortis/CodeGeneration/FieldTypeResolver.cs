@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.ItemModelling;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class FieldTypeResolver : IFieldTypeResolver
+    public class FieldTypeResolver
     {
         private readonly FortisSettings.FieldTypeMappingSettings _settings;
         private readonly IImmutableDictionary<string, string> _fieldTypeLookup;

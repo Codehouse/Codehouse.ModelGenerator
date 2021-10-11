@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -18,6 +20,18 @@ namespace ModelGenerator.Framework.CodeGeneration
         public static LiteralExpressionSyntax IdLiteral(Guid value)
         {
             return StringLiteral(value.ToString("B").ToUpperInvariant());
+        }
+        
+        public static SyntaxTrivia NewLineTrivia()
+        {   
+            return EndOfLine(String.Empty);
+        }
+        
+        public static SyntaxTrivia[] NewLineTrivia(int count)
+        {   
+            return Enumerable.Range(0, count)
+                             .Select(i => NewLineTrivia())
+                             .ToArray();
         }
 
         public static AttributeSyntax SitecoreIndexField(string fieldName)

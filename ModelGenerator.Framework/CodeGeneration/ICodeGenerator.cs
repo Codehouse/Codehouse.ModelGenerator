@@ -4,6 +4,6 @@ namespace ModelGenerator.Framework.CodeGeneration
 {
     public interface ICodeGenerator
     {
-        void GenerateFile(GenerationContext context, ModelFile modelFile);
+        void GenerateFile(GenerationContext context, string modelFolder, ModelFile modelFile);
     }
 }

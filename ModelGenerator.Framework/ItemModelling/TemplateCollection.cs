@@ -8,11 +8,10 @@ namespace ModelGenerator.Framework.ItemModelling
 {
     public class TemplateCollection
     {
-        public IImmutableDictionary<Guid, IImmutableList<Template>> TemplateHierarchy { get; init; }
         public IImmutableDictionary<Guid, Template> Templates { get; init; }
         public IImmutableDictionary<string, TemplateSet> TemplateSets { get; init; }
 
-        private readonly IDictionary<Guid, IImmutableList<TemplateField>> _allFieldsLookup = new Dictionary<Guid, IImmutableList<TemplateField>>();
+        private readonly IDictionary<Guid, Guid[]> _baseTemplateLookup = new Dictionary<Guid, Guid[]>();
         private readonly ITemplateIds _templateIds;
 
         public TemplateCollection(ITemplateIds templateIds)
@@ -20,11 +19,26 @@ namespace ModelGenerator.Framework.ItemModelling
             _templateIds = templateIds;
         }
 
-        public IImmutableList<TemplateField> GetAllFields(Guid templateId)
+        public IEnumerable<TemplateField> GetAllFields(Guid templateId)
         {
-            return GetAllFields(new HashSet<Guid>(), templateId);
+            if (!Templates.ContainsKey(templateId))
+            {
+                return Enumerable.Empty<TemplateField>();
+            }
+
+            return GetAllBaseTemplates(templateId)
+                   .Prepend(Templates[templateId])
+                   .SelectMany(t => t.OwnFields)
+                   .OrderBy(f => f.Name);
         }
-        
+
+        public IEnumerable<Template> GetAllBaseTemplates(Guid templateId)
+        {
+            return GetAllBaseTemplates(new HashSet<Guid>(), templateId)
+                   .Where(t => Templates.ContainsKey(t))
+                   .Select(t => Templates[t]);
+        }
+
         public bool IsRenderingParameters(Guid templateId)
         {
             return GetTemplateType(templateId) == TemplateTypes.RenderingParameter;
@@ -43,8 +57,8 @@ namespace ModelGenerator.Framework.ItemModelling
                 return TemplateTypes.RenderingParameter;
             }
 
-            var baseTemplates = TemplateHierarchy[templateId];
-            if (baseTemplates != null && baseTemplates.Any(t => t.Id == _templateIds.RenderingParameters))
+            var baseTemplates = GetAllBaseTemplates(templateId);
+            if (baseTemplates.Any(t => t.Id == _templateIds.RenderingParameters))
             {
                 return TemplateTypes.RenderingParameter;
             }
@@ -55,36 +69,31 @@ namespace ModelGenerator.Framework.ItemModelling
                 : TemplateTypes.Concrete;
         }
 
-        private IImmutableList<TemplateField> GetAllFields(HashSet<Guid> visitedTemplates, Guid templateId)
+        private IEnumerable<Guid> GetAllBaseTemplates(HashSet<Guid> visitedTemplates, Guid templateId)
         {
             if (!Templates.ContainsKey(templateId))
             {
-                return ImmutableList<TemplateField>.Empty;
+                return Enumerable.Empty<Guid>();
             }
 
-            if (visitedTemplates.Contains(templateId))
+            if (!visitedTemplates.Contains(templateId))
             {
-                // Potential circular reference
-                return ImmutableList<TemplateField>.Empty;
+                visitedTemplates.Add(templateId);
             }
-
-            visitedTemplates.Add(templateId);
-            if (_allFieldsLookup.ContainsKey(templateId))
+            
+            if (_baseTemplateLookup.ContainsKey(templateId))
             {
-                return _allFieldsLookup[templateId];
+                return _baseTemplateLookup[templateId];
             }
-
+            
             var template = Templates[templateId];
-            var fields = template.BaseTemplateIds
-                                 .SelectMany(t => GetAllFields(visitedTemplates, t))
-                                 .Union(template.OwnFields)
-                                 .GroupBy(f => f.Id)
-                                 .Select(g => g.First())
-                                 .OrderBy(f => f.Name)
-                                 .ToImmutableList();
-
-            _allFieldsLookup.Add(templateId, fields);
-            return fields;
+            var templates = template.BaseTemplateIds
+                                    .SelectMany(t => GetAllBaseTemplates(visitedTemplates, t))
+                                    .Union(template.BaseTemplateIds)
+                                    .Distinct()
+                                    .ToArray();
+            _baseTemplateLookup.Add(templateId, templates);
+            return templates;
         }
     }
 }

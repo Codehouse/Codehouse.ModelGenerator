@@ -12,6 +12,7 @@ namespace ModelGenerator.Framework.ItemModelling
         public string DisplayName { get; init; }
         public Guid Id { get; init; }
         public Item Item { get; init; }
+        public string LocalNamespace { get; init; }
         public string Name { get; init; }
         public IImmutableList<TemplateField> OwnFields { get; init; }
         public string Path { get; init; }

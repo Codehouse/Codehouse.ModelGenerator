@@ -26,7 +26,7 @@ namespace ModelGenerator.Framework.TypeConstruction
 
         private ModelFile CreateFile(TemplateCollection templateCollection, TemplateSet set, Template template)
         {
-            var allFields = templateCollection.GetAllFields(template.Id);
+            var allFields = templateCollection.GetAllFields(template.Id).ToImmutableList();
 
             var types = new ModelType[]
             {
@@ -37,9 +37,8 @@ namespace ModelGenerator.Framework.TypeConstruction
 
             return new ModelFile
             {
-                Namespace = set.Namespace,
-                Path = Path.Combine(set.ModelPath, "Models"),
-                FileName = template.Name + ".cs",
+                RootPath = set.ModelPath,
+                FileName = template.Name + ".Generated.cs",
                 Types = types.ToImmutableList()
             };
         }
@@ -66,6 +65,7 @@ namespace ModelGenerator.Framework.TypeConstruction
             {
                 Name = templateSet.Name,
                 Files = files,
+                Namespace = templateSet.Namespace,
                 References = referencedSets
             };
         }

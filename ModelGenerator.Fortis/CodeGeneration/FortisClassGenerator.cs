@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,14 +9,13 @@ using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
-using AttributeSyntax = Microsoft.CodeAnalysis.VisualBasic.Syntax.AttributeSyntax;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class FortisClassGenerator : IGenerator<ModelClass, MemberDeclarationSyntax>
     {
-        private const string FortisModelTemplateMappingAttribute = "Fortis.Model.TemplateMapping";
-        private const string SitecorePredefinedQueryAttribute = "Sitecore.ContentSearch.PredefinedQuery";
+        private const string FortisModelTemplateMappingAttribute = "TemplateMapping";
+        private const string SitecorePredefinedQueryAttribute = "PredefinedQuery";
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly TypeNameResolver _typeNameResolver;
@@ -60,7 +58,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             yield return type;
         }
 
-        private MemberDeclarationSyntax[] GenerateMembers(GenerationContext context, ModelClass model, IImmutableList<TemplateField> fields)
+        private MemberDeclarationSyntax[] GenerateMembers(GenerationContext context, ModelClass model, IEnumerable<TemplateField> fields)
         {
             return GenerateClassFields(context, model)
                    .Union(GenerateConstructors(context, model))
@@ -269,17 +267,16 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         private SimpleBaseTypeSyntax[] GenerateBaseTypes(GenerationContext context, Template template)
         {
-            var templates = context.Templates.Templates;
             var isRenderingParameters = context.Templates.IsRenderingParameters(template.Id);
-            
-            return template.BaseTemplateIds
-                           .Where(id => templates.ContainsKey(id))
-                           .Where(id => templates[id].SetId != null)
-                           .Select(id => GetBaseTypeName(template, templates[id], context.Templates))
-                           .Prepend(_typeNameResolver.GetInterfaceName(template))
-                           .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")
-                           .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
-                           .ToArray();
+            var baseTemplates = context.Templates.GetAllBaseTemplates(template.Id);
+
+            return baseTemplates
+                   .Where(t => t.SetId != null)
+                   .Select(t => GetBaseTypeName(template, t, context.Templates))
+                   .Prepend(_typeNameResolver.GetInterfaceName(template))
+                   .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")
+                   .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
+                   .ToArray();
         }
 
         private string GetBaseTypeName(Template currentTemplate, Template baseTemplate, TemplateCollection collection)

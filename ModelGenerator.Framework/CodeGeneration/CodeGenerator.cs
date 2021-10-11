@@ -13,11 +13,18 @@ namespace ModelGenerator.Framework.CodeGeneration
             _fileGenerator = fileGenerator;
         }
 
-        public void GenerateFile(GenerationContext context, ModelFile modelFile)
+        public void GenerateFile(GenerationContext context, string modelFolder, ModelFile modelFile)
         {
             var syntaxNodes = _fileGenerator.GenerateCode(context, modelFile);
+            
+            var directory = Path.Combine(modelFile.RootPath, modelFolder);
+            var filePath = Path.Combine(directory, modelFile.FileName);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-            using var file = new StreamWriter(Path.Combine(modelFile.Path, modelFile.FileName), false);
+            using var file = new StreamWriter(filePath, false);
             foreach (var syntaxNode in syntaxNodes)
             {
                 syntaxNode.NormalizeWhitespace()
