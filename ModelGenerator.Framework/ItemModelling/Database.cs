@@ -21,6 +21,10 @@ namespace ModelGenerator.Framework.ItemModelling
             var itemSetsByItemId = new Dictionary<Guid, ItemSet>();
             var itemSetsByName = new Dictionary<string, ItemSet>(StringComparer.OrdinalIgnoreCase);
 
+            // TODO: Well-known items
+            var root = new Item { Name = "sitecore", Id = Guid.Parse("{11111111-1111-1111-1111-111111111111}"), Hints = ImmutableDictionary<HintTypes, string>.Empty};
+            items.Add(root.Id, root);
+            
             foreach (var itemSet in itemSets)
             {
                 itemSetsByName.Add(itemSet.Name, itemSet);

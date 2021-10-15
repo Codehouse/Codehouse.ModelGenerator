@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
@@ -28,10 +29,10 @@ namespace ModelGenerator.Tds
             _itemFilters = itemFilters.ToArray();
         }
 
-        public async IAsyncEnumerable<Item> ParseFile(FileSet fileSet, string filePath)
+        public async IAsyncEnumerable<Item> ParseFile(FileSet fileSet, ItemFile file)
         {
-            var rawItem = await File.ReadAllTextAsync(filePath);
-            var parsedItems = ParsedItems(fileSet, filePath, rawItem);
+            var rawItem = await File.ReadAllTextAsync(file.Path);
+            var parsedItems = ParsedItems(fileSet, file, rawItem);
 
             foreach (var item in parsedItems)
             {
@@ -42,29 +43,43 @@ namespace ModelGenerator.Tds
             }
         }
 
-        private Item[] ParsedItems(FileSet fileSet, string filePath, string rawItem)
+        private Item[] ParsedItems(FileSet fileSet, ItemFile file, string rawItem)
         {
             try
             {
+                var hints = ParseHints(file);
                 var tokens = _tokenizer.Tokenize(rawItem);
                 return _parser.ParseTokens(tokens)
-                              .Select(i => i with { RawFilePath = filePath, SetId = fileSet.Id })
+                              .Select(i => i with { Hints = hints, RawFilePath = file.Path, SetId = fileSet.Id })
                               .ToArray();
             }
             catch (ParseException ex)
             {
-                _logger.LogError(ex, $"Could not parse file tokens {filePath}");
+                _logger.LogError(ex, $"Could not parse file tokens {file.Path}");
             }
             catch (TokenisationException ex)
             {
-                _logger.LogError(ex, $"Could not tokenise file {filePath}");
+                _logger.LogError(ex, $"Could not tokenise file {file.Path}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unexpected error reading file {filePath}");
+                _logger.LogError(ex, $"Unexpected error reading file {file.Path}");
             }
 
-            return new Item[0];
+            return Array.Empty<Item>();
+        }
+
+        private ImmutableDictionary<HintTypes, string> ParseHints(ItemFile file)
+        {
+            if (!file.Properties.ContainsKey("CodeGenNamespace"))
+            {
+                return ImmutableDictionary<HintTypes, string>.Empty;
+            }
+
+            return new Dictionary<HintTypes, string>
+            {
+                { HintTypes.Namespace, file.Properties["CodeGenNamespace"] }
+            }.ToImmutableDictionary();
         }
     }
 }

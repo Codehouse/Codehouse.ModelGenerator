@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using ModelGenerator.Fortis.Configuration;
+using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
 
@@ -8,10 +9,12 @@ namespace ModelGenerator.Fortis.CodeGeneration
     public class TypeNameResolver
     {
         private readonly FortisSettings _fortisSettings;
+        private readonly Settings _settings;
 
-        public TypeNameResolver(FortisSettings fortisSettings)
+        public TypeNameResolver(FortisSettings fortisSettings, Settings settings)
         {
             _fortisSettings = fortisSettings;
+            _settings = settings;
         }
         
         public string GetClassName(Template template)
@@ -43,7 +46,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         public string GetRelativeInterfaceName(Template relativeTemplate, Template template, TemplateSet set)
         {
             return relativeTemplate.SetId == template.SetId
-                ? JoinNamespace(_fortisSettings.ModelNamespace, template.LocalNamespace, GetInterfaceName(template))
+                ? JoinNamespace(_settings.ModelNamespace, template.LocalNamespace, GetInterfaceName(template))
                 : GetFullyQualifiedInterfaceName(template, set);
         }
 

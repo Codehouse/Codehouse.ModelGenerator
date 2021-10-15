@@ -5,6 +5,6 @@ namespace ModelGenerator.Framework.FileParsing
 {
     public interface IFileParser
     {
-        IAsyncEnumerable<Item> ParseFile(FileSet fileSet, string filePath);
+        IAsyncEnumerable<Item> ParseFile(FileSet fileSet, ItemFile file);
     }
 }

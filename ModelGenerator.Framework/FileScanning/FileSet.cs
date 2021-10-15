@@ -4,7 +4,7 @@ namespace ModelGenerator.Framework.FileScanning
 {
     public record FileSet
     {
-        public IImmutableList<string> Files { get; init; }
+        public IImmutableList<ItemFile> Files { get; init; }
         public string Id { get; init; }
         public string ItemPath { get; init; }
         public string ModelPath { get; init; }

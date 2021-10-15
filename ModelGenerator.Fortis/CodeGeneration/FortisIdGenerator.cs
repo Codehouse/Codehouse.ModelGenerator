@@ -40,7 +40,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             return ClassDeclaration(Identifier("FieldIds"))
                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword))
                    .AddMembers(
-                       ClassDeclaration(Identifier(_typeNameResolver.GetClassName(model.Template)))
+                       ClassDeclaration(Identifier(_typeNameResolver.GetTypeName(model.Template)))
                            .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
                            .AddMembers(fieldProperties)
                            .WithLeadingTrivia(_xmlDocGenerator.GenerateTemplateIdComment(model.Template))

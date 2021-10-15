@@ -13,10 +13,10 @@ namespace ModelGenerator.Framework.ItemModelling
         private readonly ILogger<TemplateCollectionFactory> _logger;
         private readonly ITemplateIds _templateIds;
 
-        public TemplateCollectionFactory(IFieldIds fieldIds, ILogger<TemplateCollectionFactory> _logger, ITemplateIds templateIds)
+        public TemplateCollectionFactory(IFieldIds fieldIds, ILogger<TemplateCollectionFactory> logger, ITemplateIds templateIds)
         {
             _fieldIds = fieldIds;
-            this._logger = _logger;
+            _logger = logger;
             _templateIds = templateIds;
         }
 
@@ -25,17 +25,7 @@ namespace ModelGenerator.Framework.ItemModelling
             var templateItems = database.GetItemsWhere(i => i.TemplateId == _templateIds.Template);
             var templateSets = templateItems
                                .GroupBy(i => database.GetItemSetForItem(i.Id))
-                               .Select(g => new TemplateSet
-                               {
-                                   Id = g.Key.Id,
-                                   Name = g.Key.Name,
-                                   ItemPath = g.Key.ItemPath,
-                                   ModelPath = g.Key.ModelPath,
-                                   Namespace = g.Key.Namespace,
-                                   References = g.Key.References,
-                                   Templates = g.Select(i => CreateTemplate(database, i))
-                                                .ToImmutableDictionary(t => t.Id)
-                               })
+                               .Select(g => CreateTemplateSet(database, g))
                                .Prepend(GetWellKnownTemplates())
                                .ToArray();
 
@@ -50,10 +40,24 @@ namespace ModelGenerator.Framework.ItemModelling
             };
         }
 
+        protected string CreateNamespaceFromPath(string path, int trimFromStart, int trimFromEnd)
+        {
+            var pathParts = path
+                            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                            .Skip(trimFromStart)
+                            .SkipLast(trimFromEnd);
+            return string.Join('.', pathParts).Replace(" ", string.Empty);
+        }
+
+        protected virtual string ResolveLocalNamespace(IDatabase database, Item templateItem)
+        {
+            // TODO: This should be configurable (or work same as TDS)
+            return CreateNamespaceFromPath(templateItem.Path, 4, 1);
+        }
+
         private Template CreateTemplate(IDatabase database, Item templateItem)
         {
-            var sections = database
-                .GetChildren(templateItem.Id);
+            var sections = database.GetChildren(templateItem.Id);
             var fields = sections
                          .SelectMany(section => database.GetChildren(section.Id), (section, fieldItem) => new TemplateField
                          {
@@ -80,25 +84,33 @@ namespace ModelGenerator.Framework.ItemModelling
                 DisplayName = templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
                 OwnFields = fields,
                 BaseTemplateIds = baseTemplates ?? new Guid[0],
-                LocalNamespace = ResolveLocalNamespace(templateItem),
+                LocalNamespace = ResolveLocalNamespace(database, templateItem),
                 Path = templateItem.Path,
                 SetId = templateItem.SetId
             };
         }
 
-        private string ResolveLocalNamespace(Item templateItem)
+        private TemplateSet CreateTemplateSet(IDatabase database, IGrouping<ItemSet?, Item> grouping)
         {
-            // TODO: This should be configurable (or work same as TDS)
-            // TDS determines what the longest common path is and discards it.
-            var pathParts = templateItem.Path
-                                        .Split('/', StringSplitOptions.RemoveEmptyEntries)
-                                        .Skip(4)
-                                        .SkipLast(1);
-            return string.Join('.', pathParts).Replace(" ", string.Empty);
+            var items = grouping.ToArray();
+            var groupName = grouping.Key;
+
+            return new TemplateSet
+            {
+                Id = groupName.Id,
+                Name = groupName.Name,
+                ItemPath = groupName.ItemPath,
+                ModelPath = groupName.ModelPath,
+                Namespace = groupName.Namespace,
+                References = groupName.References,
+                Templates = items.Select(i => CreateTemplate(database, i))
+                                 .ToImmutableDictionary(t => t.Id)
+            };
         }
 
         private TemplateSet GetWellKnownTemplates()
         {
+            // TODO: Make well-known templates configurable.
             var folderTemplateId = Guid.Parse("{A87A00B1-E6DB-45AB-8B54-636FEC3B5523}");
             var standardTemplateId = Guid.Parse("{1930BBEB-7805-471A-A3BE-4858AC7CF696}");
             var templates = new Dictionary<Guid, Template>

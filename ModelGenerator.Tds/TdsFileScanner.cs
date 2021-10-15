@@ -66,7 +66,7 @@ namespace ModelGenerator.Tds
             }
         }
 
-        private string DecodeFile(string s)
+        private string DecodeFilePath(string s)
         {
             return Regex.Replace(s, "%([0-9a-fA-F]{2})", match => DecodeValue(match.Groups[1].Value));
         }
@@ -78,6 +78,11 @@ namespace ModelGenerator.Tds
 
         private bool EnsureItemFileExists(string itemFilePath)
         {
+            if (string.IsNullOrEmpty(itemFilePath))
+            {
+                return false;
+            }
+            
             if (File.Exists(itemFilePath))
             {
                 return true;
@@ -107,6 +112,7 @@ namespace ModelGenerator.Tds
                                                      .Elements()
                                                      .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
 
+                // TODO: Remove this check as codegen will eventually be off anyway.
                 // If the project does not have codegen enabled, skip it.
                 if (!properties.TryGetValue(ElementNames.EnableGeneration, out var enableCodegenString)
                     || !bool.TryParse(enableCodegenString, out var enableCodegen)
@@ -119,12 +125,10 @@ namespace ModelGenerator.Tds
                 var files = xml.Root
                                .Elements(TagNames.ItemGroup)
                                .Elements(TagNames.Item)
-                               .Select(e => e.Attribute("Include")?.Value)
-                               .Where(x => !string.IsNullOrEmpty(x))
-                               .Select(DecodeFile)
-                               .Select(x => Path.Combine(projectFolder, x))
-                               .Where(EnsureItemFileExists)
-                               .Where(f => _filePathFilters.All(filter => filter.Accept(f)))
+                               .Select(e => CreateItemFile(projectFolder, e))
+                               .Where(f => f != null)
+                               .Where(f => EnsureItemFileExists(f.Path))
+                               .Where(f => _filePathFilters.All(filter => filter.Accept(f.Path)))
                                .ToImmutableList();
 
                 var references = xml.Root
@@ -151,6 +155,21 @@ namespace ModelGenerator.Tds
             }
         }
 
+        private ItemFile? CreateItemFile(string projectFolder, XElement element)
+        {
+            var path = DecodeFilePath(element.Attribute("Include")?.Value);
+            if (string.IsNullOrEmpty(path))
+            {
+                return null;
+            }
+
+            var properties = ToDictionarySafe(element.Elements()
+                                    .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
+                                    .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
+
+            return new ItemFile(Path.Combine(projectFolder, path), properties);
+        }
+
         private IDictionary<string, string> ToDictionarySafe(IEnumerable<KeyValuePair<string, string>> properties)
         {
             Dictionary<string, string> Aggregator(Dictionary<string, string> d, KeyValuePair<string, string> kvp)
@@ -158,7 +177,7 @@ namespace ModelGenerator.Tds
                 if (d.ContainsKey(kvp.Key))
                 {
                     var currentValue = d[kvp.Key];
-                    if (string.IsNullOrEmpty(currentValue))
+                    if (string.IsNullOrWhiteSpace(currentValue))
                     {
                         d[kvp.Key] = kvp.Value;
                     }

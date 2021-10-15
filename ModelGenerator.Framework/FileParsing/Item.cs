@@ -8,6 +8,7 @@ namespace ModelGenerator.Framework.FileParsing
     [DebuggerDisplay("Item: {Name} {Id}")]
     public record Item
     {
+        public ImmutableDictionary<HintTypes, string> Hints { get; init; }
         public Guid Id { get; init; }
         public string Name { get; init; }
         public Guid Parent { get; init; }
@@ -37,6 +38,11 @@ namespace ModelGenerator.Framework.FileParsing
             return version != null && version.Fields.ContainsKey(fieldId)
                 ? version.Fields[fieldId]
                 : null;
+        }
+
+        public bool HasHint(HintTypes hintType)
+        {
+            return Hints.ContainsKey(hintType);
         }
     }
 }

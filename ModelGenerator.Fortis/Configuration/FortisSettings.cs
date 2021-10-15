@@ -14,11 +14,11 @@ namespace ModelGenerator.Fortis.Configuration
 
         public record QuirkSettings
         {
+            public bool LocalNamespaceForIds { get; init; }
             public bool PartialInterfaces { get; init; }
         }
 
         public FieldTypeMappingSettings FieldTypeMappings { get; } = new FieldTypeMappingSettings();
-        public string ModelNamespace { get; init; }
         public string[] NamespaceImports { get; init; }
         public QuirkSettings Quirks { get; } = new QuirkSettings();
     }

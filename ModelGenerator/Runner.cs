@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelGenerator.Framework.CodeGeneration;
+using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
