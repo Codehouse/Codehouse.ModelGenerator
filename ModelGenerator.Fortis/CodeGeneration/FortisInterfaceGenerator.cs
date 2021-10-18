@@ -13,7 +13,7 @@ using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class FortisInterfaceGenerator : IGenerator<ModelInterface, MemberDeclarationSyntax>
+    public class FortisInterfaceGenerator
     {
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
@@ -31,7 +31,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _xmlDocGenerator = xmlDocGenerator;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelInterface model)
+        public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelType model)
         {
             var type = InterfaceDeclaration(_typeNameResolver.GetInterfaceName(model.Template))
                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
@@ -61,7 +61,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                            .ToArray();
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenerateField(ModelInterface model, TemplateField templateField)
+        private IEnumerable<MemberDeclarationSyntax> GenerateField(ModelType model, TemplateField templateField)
         {
             yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
                          .AddAccessorListAccessors(AutoGet())
@@ -78,7 +78,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
-        private MemberDeclarationSyntax[] GenerateFields(ModelInterface model, IImmutableList<TemplateField> templateOwnFields)
+        private MemberDeclarationSyntax[] GenerateFields(ModelType model, IImmutableList<TemplateField> templateOwnFields)
         {
             return templateOwnFields
                    .SelectMany(f => GenerateField(model, f))

@@ -18,6 +18,7 @@ namespace ModelGenerator
 {
     public class Runner
     {
+        // TODO: Separate out into individual classes.
         private readonly ICodeGenerator _codeGenerator;
         private readonly IDatabaseFactory _databaseFactory;
         private readonly IFileParser _fileParser;
@@ -49,6 +50,8 @@ namespace ModelGenerator
 
         public async Task RunAsync(CancellationToken stoppingToken)
         {
+            // TODO: Ditch AsyncEnumerable
+            // TODO: Add progress reporting/indicators
             _logger.LogInformation("Locating and parsing items.");
             var itemSets = await GetRawItems(stoppingToken)
                                  .Where(f => f != null)

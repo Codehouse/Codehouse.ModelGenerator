@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Framework.CodeGeneration
 {
-    public interface IGenerator<T> : IGenerator<T, SyntaxNode>
+    public interface IFileGenerator
     {
-    }
-
-    public interface IGenerator<TModel, TNode>
-    {
-        IEnumerable<TNode> GenerateCode(GenerationContext context, TModel model);
+        CompilationUnitSyntax GenerateCode(GenerationContext context, ModelFile model);
     }
 }

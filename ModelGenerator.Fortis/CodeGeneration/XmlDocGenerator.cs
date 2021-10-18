@@ -6,6 +6,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class XmlDocGenerator
     {
+        // TODO: Read templates from YML config
         /// <summary>
         /// Requires arguments:
         /// <list type="number">

@@ -7,7 +7,6 @@ using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
-using TemplateFilter = ModelGenerator.Framework.FileParsing.TemplateFilter;
 
 namespace ModelGenerator.Framework
 {

@@ -2,10 +2,5 @@
 
 namespace ModelGenerator.Framework.TypeConstruction
 {
-    public record ModelType
-    {
-        // TODO: Remove different subclasses for different Fortis type requirements 
-        public string Name { get; init; }
-        public Template Template { get; init; }
-    }
+    public record ModelType(string Name, Template Template, TemplateSet TemplateSet);
 }

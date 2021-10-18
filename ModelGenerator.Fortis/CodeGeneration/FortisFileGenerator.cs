@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -10,19 +9,19 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class FortisFileGenerator : IGenerator<ModelFile>
+    public class FortisFileGenerator : IFileGenerator
     {
-        private readonly IGenerator<ModelClass, MemberDeclarationSyntax> _classGenerator;
-        private readonly IGenerator<ModelIdType, MemberDeclarationSyntax> _idGenerator;
-        private readonly IGenerator<ModelInterface, MemberDeclarationSyntax> _interfaceGenerator;
+        private readonly FortisClassGenerator _classGenerator;
+        private readonly FortisIdGenerator _idGenerator;
+        private readonly FortisInterfaceGenerator _interfaceGenerator;
         private readonly TypeNameResolver _typeNameResolver;
         private readonly FortisSettings _settings;
 
         public FortisFileGenerator(
             FortisSettings settings,
-            IGenerator<ModelClass, MemberDeclarationSyntax> classGenerator,
-            IGenerator<ModelIdType, MemberDeclarationSyntax> idGenerator,
-            IGenerator<ModelInterface, MemberDeclarationSyntax> interfaceGenerator,
+            FortisClassGenerator classGenerator,
+            FortisIdGenerator idGenerator,
+            FortisInterfaceGenerator interfaceGenerator,
             TypeNameResolver typeNameResolver)
         {
             _settings = settings;
@@ -32,11 +31,11 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _typeNameResolver = typeNameResolver;
         }
 
-        public IEnumerable<SyntaxNode> GenerateCode(GenerationContext context, ModelFile model)
+        public CompilationUnitSyntax GenerateCode(GenerationContext context, ModelFile model)
         {
-            yield return CompilationUnit()
-                         .AddUsings(GenerateUsings(context))
-                         .AddMembers(GenerateNamespaces(context, model).ToArray());
+            return CompilationUnit()
+                   .AddUsings(GenerateUsings())
+                   .AddMembers(GenerateNamespaces(context, model).ToArray());
         }
 
         private IEnumerable<NamespaceDeclarationSyntax> GenerateNamespaces(GenerationContext context, ModelFile model)
@@ -45,31 +44,35 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                            .GroupBy(t => _typeNameResolver.GetNamespace(context.TypeSet, t.Template));
             foreach (var namespaceTypeGroup in namespaceTypeGroups)
             {
+                var members = namespaceTypeGroup
+                    .SelectMany(t => GenerateTypes(context, t))
+                    .ToArray();
+                
                 yield return NamespaceDeclaration(ParseName(namespaceTypeGroup.Key))
                                           .WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty))
-                                          .AddMembers(GenerateTypes(context, namespaceTypeGroup));
+                                          .AddMembers(members);
+            }
+
+            if (!_settings.Quirks.LocalNamespaceForIds)
+            {
+                yield return NamespaceDeclaration(ParseName(context.TypeSet.Namespace))
+                    .AddMembers(_idGenerator.GenerateCode(context, model.Types).ToArray());
             }
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenerateType(GenerationContext context, ModelType model)
+        private IEnumerable<MemberDeclarationSyntax> GenerateTypes(GenerationContext context, ModelType model)
         {
-            return model switch
+            var types = _interfaceGenerator.GenerateCode(context, model)
+                                           .Union(_classGenerator.GenerateCode(context, model));
+            if (_settings.Quirks.LocalNamespaceForIds)
             {
-                ModelClass type => _classGenerator.GenerateCode(context, type),
-                ModelIdType type => _idGenerator.GenerateCode(context, type),
-                ModelInterface type => _interfaceGenerator.GenerateCode(context, type),
-                _ => throw new NotSupportedException($"Unknown model type: {model.GetType().Name}")
-            };
+                types = types.Union(_idGenerator.GenerateCode(context, model));
+            }
+
+            return types;
         }
 
-        private MemberDeclarationSyntax[] GenerateTypes(GenerationContext context, IEnumerable<ModelType> modelTypes)
-        {
-            return modelTypes
-                   .SelectMany(t => GenerateType(context, t))
-                   .ToArray();
-        }
-
-        private UsingDirectiveSyntax[] GenerateUsings(GenerationContext context)
+        private UsingDirectiveSyntax[] GenerateUsings()
         {
             return _settings.NamespaceImports
                             .Select(ns => UsingDirective(ParseName(ns)))

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.ItemModelling;
@@ -24,15 +23,11 @@ namespace ModelGenerator.Framework.TypeConstruction
                              .ToImmutableList();
         }
 
-        private ModelFile CreateFile(TemplateCollection templateCollection, TemplateSet set, Template template)
+        private ModelFile CreateFile(TemplateSet set, Template template)
         {
-            var allFields = templateCollection.GetAllFields(template.Id).ToImmutableList();
-
-            var types = new ModelType[]
+            var types = new []
             {
-                new ModelInterface { Template = template, Name = template.Name, Fields = template.OwnFields },
-                new ModelClass { Template = template, Name = template.Name, Fields = allFields },
-                new ModelIdType { Template = template }
+                new ModelType(template.Name, template, set)
             };
 
             return new ModelFile
@@ -53,7 +48,7 @@ namespace ModelGenerator.Framework.TypeConstruction
 
             var files = templateSet.Templates
                                    .Values
-                                   .Select(t => CreateFile(templateCollection, templateSet, t))
+                                   .Select(t => CreateFile(templateSet, t))
                                    .ToImmutableList();
 
             var referencedSets = templateCollection.TemplateSets

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ModelGenerator.Framework;
-using ModelGenerator.Framework.Configuration;
 
 namespace ModelGenerator
 {
@@ -12,6 +9,8 @@ namespace ModelGenerator
     {
         public static async Task Main(string[] args)
         {
+            // TODO: Convert config to YML
+            // TODO: Add config layer for working directory
             await Host.CreateDefaultBuilder(args)
                       .ConfigureServices(RegisterServices)
                       .RunConsoleAsync();

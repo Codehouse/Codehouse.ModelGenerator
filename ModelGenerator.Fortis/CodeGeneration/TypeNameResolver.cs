@@ -24,7 +24,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         public string GetFullyQualifiedInterfaceName(Template template, TemplateSet set)
         {
-            // TODO: Apply model namespace setting here instead of in model construction.
             return JoinNamespace(set.Namespace, template.LocalNamespace, GetInterfaceName(template));
         }
 
