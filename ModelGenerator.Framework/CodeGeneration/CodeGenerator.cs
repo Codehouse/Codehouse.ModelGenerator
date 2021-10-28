@@ -18,24 +18,23 @@ namespace ModelGenerator.Framework.CodeGeneration
             _logger = logger;
         }
 
-        public void GenerateFile(GenerationContext context, string modelFolder, ModelFile modelFile)
+        public FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
         {
             var syntax = GenerateCode(context, modelFile);
             if (syntax == null)
             {
-                return;
+                return null;
             }
             
-            WriteCode(modelFolder, modelFile, syntax);
+            return WriteCode(modelFile, syntax);
         }
 
-        private static void WriteCode(string modelFolder, ModelFile modelFile, SyntaxNode syntax)
+        private static FileInfo WriteCode(ModelFile modelFile, SyntaxNode syntax)
         {
-            var directory = Path.Combine(modelFile.RootPath, modelFolder);
-            var filePath = Path.Combine(directory, modelFile.FileName);
-            if (!Directory.Exists(directory))
+            var filePath = Path.Combine(modelFile.RootPath, modelFile.FileName);
+            if (!Directory.Exists(modelFile.RootPath))
             {
-                Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(modelFile.RootPath);
             }
 
             using var file = new StreamWriter(filePath, false);
@@ -43,6 +42,7 @@ namespace ModelGenerator.Framework.CodeGeneration
                   .WriteTo(file);
 
             file.Flush();
+            return new FileInfo(filePath);
         }
 
         private CompilationUnitSyntax? GenerateCode(GenerationContext context, ModelFile modelFile)

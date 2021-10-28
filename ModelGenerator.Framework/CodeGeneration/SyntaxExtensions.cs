@@ -3,11 +3,23 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ModelGenerator.Framework.ItemModelling;
 
 namespace ModelGenerator.Framework.CodeGeneration
 {
     public static class SyntaxExtensions
     {
+        public static ConstructorInitializerSyntax AddArgumentList(this ConstructorInitializerSyntax syntax, params string?[] names)
+        {
+            var arguments = names
+                            .Select(n => n is null
+                                ? SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
+                                : (ExpressionSyntax) SyntaxFactory.IdentifierName(n))
+                            .Select(SyntaxFactory.Argument)
+                            .ToArray();
+            return syntax.AddArgumentListArguments(arguments);
+        }
+        
         public static AttributeSyntax AddSimpleArguments(this AttributeSyntax member, params ExpressionSyntax[] expressionArguments)
         {
             var arguments = expressionArguments
@@ -40,6 +52,14 @@ namespace ModelGenerator.Framework.CodeGeneration
             return condition
                 ? mutation.Invoke(syntax)
                 : syntax;
+        }
+
+        public static ConstructorDeclarationSyntax WithBaseInitializer(this ConstructorDeclarationSyntax syntax, params string[] names)
+        {
+            return syntax.WithInitializer(
+                SyntaxFactory.ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
+                             .AddArgumentList(names)
+            );
         }
     }
 }

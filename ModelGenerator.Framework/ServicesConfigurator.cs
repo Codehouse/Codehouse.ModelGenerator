@@ -22,7 +22,9 @@ namespace ModelGenerator.Framework
                 .Configure<TemplateIds>(opts => configuration.GetSection(nameof(TemplateIds)).Bind(opts))
                 .AddSingleton<ITemplateIds, TemplateIds>(sp => sp.GetRequiredService<IOptions<TemplateIds>>().Value)
                 .Configure<Settings>(opts => configuration.GetSection(nameof(Settings)).Bind(opts))
-                .AddSingleton(sp => sp.GetRequiredService<IOptions<Settings>>().Value);
+                .AddSingleton(sp => sp.GetRequiredService<IOptions<Settings>>().Value)
+                .Configure<XmlDocumentationSettings>(opts => configuration.GetSection("XmlDocumentation").Bind(opts))
+                .AddSingleton(sp => sp.GetRequiredService<IOptions<XmlDocumentationSettings>>().Value);
 
             collection
                 .AddSingleton<ICodeGenerator, CodeGenerator>()
@@ -31,7 +33,8 @@ namespace ModelGenerator.Framework
                 .AddSingleton<IItemFilter, PathFilter>()
                 //.AddSingleton<IItemFilter, TemplateFilter>()
                 .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
-                .AddSingleton<ITypeFactory, TypeFactory>();
+                .AddSingleton<ITypeFactory, TypeFactory>()
+                .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
         }
     }
 }

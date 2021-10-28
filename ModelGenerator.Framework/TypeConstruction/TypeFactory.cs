@@ -1,6 +1,8 @@
 ﻿using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.ItemModelling;
 
 namespace ModelGenerator.Framework.TypeConstruction
@@ -8,10 +10,12 @@ namespace ModelGenerator.Framework.TypeConstruction
     public class TypeFactory : ITypeFactory
     {
         private readonly ILogger<TypeFactory> _log;
+        private readonly Settings _settings;
 
-        public TypeFactory(ILogger<TypeFactory> log)
+        public TypeFactory(ILogger<TypeFactory> log, Settings settings)
         {
             _log = log;
+            _settings = settings;
         }
 
         public IImmutableList<TypeSet> CreateTypeSets(TemplateCollection collection)
@@ -23,7 +27,7 @@ namespace ModelGenerator.Framework.TypeConstruction
                              .ToImmutableList();
         }
 
-        private ModelFile CreateFile(TemplateSet set, Template template)
+        private ModelFile CreateFile(TemplateSet set, Template template, string rootPath)
         {
             var types = new []
             {
@@ -32,7 +36,7 @@ namespace ModelGenerator.Framework.TypeConstruction
 
             return new ModelFile
             {
-                RootPath = set.ModelPath,
+                RootPath = rootPath,
                 FileName = template.Name + ".Generated.cs",
                 Types = types.ToImmutableList()
             };
@@ -46,9 +50,10 @@ namespace ModelGenerator.Framework.TypeConstruction
                 return null;
             }
 
+            var rootPath = Path.Combine(templateSet.ModelPath, _settings.ModelFolder);
             var files = templateSet.Templates
                                    .Values
-                                   .Select(t => CreateFile(templateSet, t))
+                                   .Select(t => CreateFile(templateSet, t, rootPath))
                                    .ToImmutableList();
 
             var referencedSets = templateCollection.TemplateSets
@@ -61,7 +66,8 @@ namespace ModelGenerator.Framework.TypeConstruction
                 Name = templateSet.Name,
                 Files = files,
                 Namespace = templateSet.Namespace,
-                References = referencedSets
+                References = referencedSets,
+                RootPath = rootPath
             };
         }
     }

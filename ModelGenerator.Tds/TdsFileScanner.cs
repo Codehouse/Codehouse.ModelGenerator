@@ -112,16 +112,6 @@ namespace ModelGenerator.Tds
                                                      .Elements()
                                                      .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
 
-                // TODO: Remove this check as codegen will eventually be off anyway.
-                // If the project does not have codegen enabled, skip it.
-                if (!properties.TryGetValue(ElementNames.EnableGeneration, out var enableCodegenString)
-                    || !bool.TryParse(enableCodegenString, out var enableCodegen)
-                    || !enableCodegen)
-                {
-                    _logger.LogWarning($"{projectName} has not enabled source generation and will be skipped.");
-                    return null;
-                }
-
                 var files = xml.Root
                                .Elements(TagNames.ItemGroup)
                                .Elements(TagNames.Item)

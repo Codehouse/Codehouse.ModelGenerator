@@ -12,17 +12,16 @@ using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class FortisClassGenerator
+    public class FortisClassGenerator : FortisTypeGeneratorBase
     {
-        private const string FortisModelTemplateMappingAttribute = "TemplateMapping";
         private const string SitecorePredefinedQueryAttribute = "PredefinedQuery";
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly FortisSettings _settings;
         private readonly TypeNameResolver _typeNameResolver;
-        private readonly XmlDocGenerator _xmlDocGenerator;
+        private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
-        public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, TypeNameResolver typeNameResolver, XmlDocGenerator xmlDocGenerator)
+        public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
@@ -37,11 +36,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                        .AddModifiers(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.PartialKeyword))
                        .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
                        .AddSingleAttributes(
-                           Attribute(ParseName(FortisModelTemplateMappingAttribute))
-                               .AddArgumentListArguments(
-                                   AttributeArgument(IdLiteral(model.Template.Id)),
-                                   AttributeArgument(StringLiteral(string.Empty))
-                               ),
+                           CreateTemplateMappingAttribute(context, model.Template),
                            Attribute(ParseName(SitecorePredefinedQueryAttribute))
                                .AddArgumentListArguments(
                                    AttributeArgument(StringLiteral("TemplateId")),
@@ -54,12 +49,25 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                    AttributeArgument(TypeOfExpression(ParseTypeName("Guid")))
                                )
                            )
-                       .AddMembers(GenerateMembers(context, model, context.Templates.GetAllFields(model.Template.Id)))
-                       .WithLeadingTrivia(_xmlDocGenerator.GenerateClassComment(model.Template));
+                       .AddMembers(GenerateClassFields(context, model).ToArray())
+                       .AddMembers(GenerateConstructors(context, model).ToArray())
+                       .AddMembers(context.Templates.GetAllFields(model.Template.Id)
+                                          .SelectMany(f => GenerateProperty(context, model, f))
+                                          .ToArray())
+                       .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
 
             yield return type;
         }
 
+        private AttributeSyntax CreateTemplateMappingAttribute(GenerationContext context, Template template)
+        {
+            var mappingType = context.Templates.GetTemplateType(template.Id) == TemplateTypes.RenderingParameter
+                ? "RenderingParameter"
+                : string.Empty;
+
+            return CreateTemplateMappingAttribute(template.Id, mappingType);
+        }
+        
         private MemberDeclarationSyntax[] GenerateMembers(GenerationContext context, ModelType model, IEnumerable<TemplateField> fields)
         {
             return GenerateClassFields(context, model)
@@ -76,14 +84,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 yield break;
             }
             
-            yield return FieldDeclaration(
-                VariableDeclaration(ParseTypeName("Item"))
-                    .WithVariables(
-                        SingletonSeparatedList(
-                            VariableDeclarator(Identifier("_item"))
-                        )
-                    )
-                )
+            yield return FieldDeclaration(ParseTypeName("Item"), "_item")
                 .AddModifiers(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
                 .WithTrailingTrivia(EndOfLine(string.Empty));
         }
@@ -98,94 +99,52 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 yield return ConstructorDeclaration(Identifier(className))
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
-                                 Parameter(Identifier("parameters"))
-                                     .WithType(ParseTypeName("Dictionary<string, string>")),
-                                 Parameter(Identifier("spawnProvider"))
-                                     .WithType(ParseTypeName("ISpawnProvider"))
+                                 Parameter("parameters", "Dictionary<string, string>"),
+                                 Parameter("spawnProvider", "ISpawnProvider")
                              )
-                             .WithInitializer(
-                                 ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                     .AddArgumentListArguments(
-                                         Argument(IdentifierName("parameters")),
-                                         Argument(IdentifierName("spawnProvider"))
-                                     )
-                             )
+                             .WithBaseInitializer("parameters", "spawnProvider")
                              .WithBody(Block());
             }
             else
             {
-
                 // Ctor with ISpawnProvider
                 yield return ConstructorDeclaration(Identifier(className))
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
-                                 Parameter(Identifier("spawnProvider"))
-                                     .WithType(ParseTypeName("ISpawnProvider"))
+                                 Parameter("spawnProvider", "ISpawnProvider")
                              )
-                             .WithInitializer(
-                                 ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                     .AddArgumentListArguments(
-                                         Argument(LiteralExpression(SyntaxKind.NullLiteralExpression)),
-                                         Argument(IdentifierName("spawnProvider"))
-                                     )
-                             )
+                             .WithBaseInitializer(null, "spawnProvider")
                              .WithBody(Block());
 
                 // Ctor with id, ISpawnProvider
                 yield return ConstructorDeclaration(Identifier(className))
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
-                                 Parameter(Identifier("id"))
-                                     .WithType(ParseTypeName("Guid")),
-                                 Parameter(Identifier("spawnProvider"))
-                                     .WithType(ParseTypeName("ISpawnProvider"))
+                                 Parameter("id", "Guid"),
+                                 Parameter("spawnProvider", "ISpawnProvider")
                              )
-                             .WithInitializer(
-                                 ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                     .AddArgumentListArguments(
-                                         Argument(IdentifierName("id")),
-                                         Argument(IdentifierName("spawnProvider"))
-                                     )
-                             )
+                             .WithBaseInitializer("id", "spawnProvider")
                              .WithBody(Block());
 
                 // Ctor with id, field dictionary, ISpawnProvider
                 yield return ConstructorDeclaration(Identifier(className))
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
-                                 Parameter(Identifier("id"))
-                                     .WithType(ParseTypeName("Guid")),
-                                 Parameter(Identifier("lazyFields"))
-                                     .WithType(ParseTypeName("Dictionary<string, object>")),
-                                 Parameter(Identifier("spawnProvider"))
-                                     .WithType(ParseTypeName("ISpawnProvider"))
+                                 Parameter("id", "Guid"),
+                                 Parameter("lazyFields", "Dictionary<string, object>"),
+                                 Parameter("spawnProvider", "ISpawnProvider")
                              )
-                             .WithInitializer(
-                                 ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                     .AddArgumentListArguments(
-                                         Argument(IdentifierName("id")),
-                                         Argument(IdentifierName("lazyFields")),
-                                         Argument(IdentifierName("spawnProvider"))
-                                     )
-                             )
+                             .WithBaseInitializer("id", "lazyFields", "spawnProvider")
                              .WithBody(Block());
 
                 // Ctor with item, ISpawnProvider
                 yield return ConstructorDeclaration(Identifier(className))
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
-                                 Parameter(Identifier("item"))
-                                     .WithType(ParseTypeName("Item")),
-                                 Parameter(Identifier("spawnProvider"))
-                                     .WithType(ParseTypeName("ISpawnProvider"))
+                                 Parameter("item", "Item"),
+                                 Parameter("spawnProvider", "ISpawnProvider")
                              )
-                             .WithInitializer(
-                                 ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                     .AddArgumentListArguments(
-                                         Argument(IdentifierName("item")),
-                                         Argument(IdentifierName("spawnProvider"))
-                                     )
-                             )
+                             .WithBaseInitializer("item", "spawnProvider")
                              .WithBody(
                                  Block()
                                      .AddStatements(
@@ -207,7 +166,11 @@ namespace ModelGenerator.Fortis.CodeGeneration
             var concreteType = isRenderingParameters
                 ? _fieldTypeResolver.GetFieldParameterType(templateField)
                 : _fieldTypeResolver.GetFieldConcreteType(templateField);
-
+            var template = model.Template.Id == templateField.TemplateId
+                ? model.Template
+                : context.Templates.Templates[templateField.TemplateId];
+            var fieldComment = _xmlDocGenerator.GetFieldComment(template, templateField);
+            
             // TODO: Fix spacing on property accessors.
             yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
                          .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
@@ -222,7 +185,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                          .If(
                              !isRenderingParameters,
                              property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
-                         .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
+                         .WithLeadingTrivia(fieldComment);
 
             var valueType = _fieldTypeResolver.GetFieldValueType(templateField);
             if (valueType != null)
@@ -245,26 +208,8 @@ namespace ModelGenerator.Fortis.CodeGeneration
                              .If(
                                  !isRenderingParameters,
                                  property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
-                             .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
+                             .WithLeadingTrivia(fieldComment);
             }
-        }
-
-        private static InvocationExpressionSyntax GetFieldInvocation(bool isRenderingParameter, TemplateField templateField, string? concreteType)
-        {
-            var arguments = Enumerable.Empty<ArgumentSyntax>()
-                                      .Append(Argument(StringLiteral(templateField.Name)));
-            if (!isRenderingParameter)
-            {
-                arguments = arguments.Append(Argument(StringLiteral(templateField.Name.ToLowerInvariant())));
-            }
-            
-            // GetField<TField>("FieldName", "fieldname") for normal templates
-            // GetField<TField>("FieldName") for rendering parameter templates
-            return InvocationExpression(
-                    GenericName(Identifier("GetField"))
-                        .AddTypeArgumentListArguments(IdentifierName(concreteType))
-                )
-                .AddArgumentListArguments(arguments.ToArray());
         }
 
         private SimpleBaseTypeSyntax[] GenerateBaseTypes(GenerationContext context, Template template)

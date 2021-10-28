@@ -9,5 +9,6 @@ namespace ModelGenerator.Framework.TypeConstruction
         public string Name { get; init; }
         public string Namespace { get; init; }
         public ImmutableArray<TemplateSet> References { get; set; }
+        public string RootPath { get; init; }
     }
 }

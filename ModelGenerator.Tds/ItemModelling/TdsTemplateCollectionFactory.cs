@@ -23,6 +23,7 @@ namespace ModelGenerator.Tds.ItemModelling
 
         protected override string ResolveLocalNamespace(IDatabase database, Item templateItem)
         {
+            // TODO the original TDS functionality wasn't reverse-engineered successfully.  This is as far as I got.
             var namespaces = BuildLocalNamespaceStack(database, new List<string>(), templateItem.Parent);
             if (namespaces.Count == 0 || namespaces[0] == "sitecore")
             {
@@ -72,7 +73,6 @@ namespace ModelGenerator.Tds.ItemModelling
 
         private int CountCommonFolderDepth(IEnumerable<Item> items)
         {
-            // TODO this might be fairly TDS-specific.  Consider if this should be a TDS override.
             var pathFragmentsCollection = items
                                           .Where(i => i.TemplateId == _templateIds.Template)
                                           .Select(i => i.Path)

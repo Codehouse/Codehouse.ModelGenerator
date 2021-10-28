@@ -21,8 +21,7 @@ namespace ModelGenerator.Fortis
                       .AddSingleton<IFileGenerator, FortisFileGenerator>()
                       .AddSingleton<FortisIdGenerator>()
                       .AddSingleton<FortisInterfaceGenerator>()
-                      .AddSingleton<TypeNameResolver>()
-                      .AddSingleton<XmlDocGenerator>();
+                      .AddSingleton<TypeNameResolver>();
         }
     }
 }

@@ -70,6 +70,7 @@ namespace ModelGenerator
             _logger.LogInformation("Outputting types.");
             foreach (var typeSet in typeSets)
             {
+                var generatedFiles = new List<FileInfo>();
                 var context = new GenerationContext
                 {
                     Database = database,
@@ -80,20 +81,37 @@ namespace ModelGenerator
                 _logger.LogInformation($"Generating files for {typeSet.Name} ({typeSet.Files.Count})");
                 foreach (var modelFile in typeSet.Files)
                 {
-                    GenerateFile(context, modelFile);
+                    var file = GenerateFile(context, modelFile);
+                    if (file != null)
+                    {
+                        generatedFiles.Add(file);
+                    }
+                }
+
+                var oldFiles = Directory.GetFiles(typeSet.RootPath, "*.cs", SearchOption.AllDirectories)
+                         .Except(generatedFiles.Select(f => f.FullName))
+                         .ToArray();
+                if (oldFiles.Length > 0)
+                {
+                    _logger.LogInformation($"Cleaning up {oldFiles.Length} files.");
+                    foreach (var oldFile in oldFiles)
+                    {
+                        File.Delete(oldFile);
+                    }
                 }
             }
         }
 
-        private void GenerateFile(GenerationContext context, ModelFile modelFile)
+        private FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
         {
             try
             {
-                _codeGenerator.GenerateFile(context, _settings.Value.ModelFolder, modelFile);
+                return _codeGenerator.GenerateFile(context, modelFile);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Could not generate file {modelFile.FileName}");
+                return null;
             }
         }
 

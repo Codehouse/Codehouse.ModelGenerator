@@ -16,10 +16,15 @@ namespace ModelGenerator.Framework.CodeGeneration
             return AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                 .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
+
+        public static FieldDeclarationSyntax FieldDeclaration(TypeSyntax typeName, string name)
+        {
+            return SyntaxFactory.FieldDeclaration(VariableDeclaration(typeName, name));
+        }
         
         public static LiteralExpressionSyntax IdLiteral(Guid value)
         {
-            return StringLiteral(value.ToString("B").ToUpperInvariant());
+            return StringLiteral(value.ToSitecoreId());
         }
         
         public static SyntaxTrivia NewLineTrivia()
@@ -34,6 +39,12 @@ namespace ModelGenerator.Framework.CodeGeneration
                              .ToArray();
         }
 
+        public static ParameterSyntax Parameter(string name, string typeName)
+        {
+            return SyntaxFactory.Parameter(Identifier(name))
+                                .WithType(ParseTypeName(typeName));
+        }
+
         public static AttributeSyntax SitecoreIndexField(string fieldName)
         {
             return Attribute(ParseName(SitecoreIndexFieldAttribute))
@@ -45,6 +56,12 @@ namespace ModelGenerator.Framework.CodeGeneration
         public static LiteralExpressionSyntax StringLiteral(string value)
         {
             return LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+        }
+
+        public static VariableDeclarationSyntax VariableDeclaration(TypeSyntax typeName, string name)
+        {
+            return SyntaxFactory.VariableDeclaration(typeName)
+                .AddVariables(VariableDeclarator(Identifier(name)));
         }
     }
 }

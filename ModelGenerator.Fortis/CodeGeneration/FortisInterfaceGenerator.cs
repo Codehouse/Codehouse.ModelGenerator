@@ -13,16 +13,15 @@ using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class FortisInterfaceGenerator
+    public class FortisInterfaceGenerator : FortisTypeGeneratorBase
     {
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly TypeNameResolver _typeNameResolver;
         private readonly FortisSettings _settings;
-        private readonly XmlDocGenerator _xmlDocGenerator;
-        private const string FortisModelTemplateMappingAttribute = "TemplateMapping";
+        private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
-        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, XmlDocGenerator xmlDocGenerator)
+        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, IXmlDocumentationGenerator xmlDocGenerator)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
@@ -37,14 +36,20 @@ namespace ModelGenerator.Fortis.CodeGeneration
                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
                        .If(_settings.Quirks.PartialInterfaces, i => i.AddModifiers(Token(SyntaxKind.PartialKeyword)))
                        .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
-                       .AddSingleAttributes(
-                           Attribute(ParseName(FortisModelTemplateMappingAttribute))
-                               .AddSimpleArguments(IdLiteral(model.Template.Id), StringLiteral("InterfaceMap"))
-                       )
+                       .AddSingleAttributes(CreateTemplateMappingAttribute(context, model.Template))
                        .AddMembers(GenerateFields(model, model.Template.OwnFields))
-                       .WithLeadingTrivia(_xmlDocGenerator.GenerateInterfaceComment(model.Template));
+                       .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
 
             yield return type;
+        }
+
+        private AttributeSyntax CreateTemplateMappingAttribute(GenerationContext context, Template template)
+        {
+            var mappingType = context.Templates.GetTemplateType(template.Id) == TemplateTypes.RenderingParameter
+                ? "InterfaceRenderingParameter"
+                : "InterfaceMap";
+
+            return CreateTemplateMappingAttribute(template.Id, mappingType);
         }
 
         private SimpleBaseTypeSyntax[] GenerateBaseTypes(GenerationContext context, Template template)
@@ -66,7 +71,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
                          .AddAccessorListAccessors(AutoGet())
                          .AddSingleAttributes(SitecoreIndexField(templateField.Name))
-                         .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
+                         .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(model.Template, templateField));
 
             var valueType = _fieldTypeResolver.GetFieldValueType(templateField);
             if (valueType != null)
@@ -74,7 +79,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 yield return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
                              .AddAccessorListAccessors(AutoGet())
                              .AddSingleAttributes(SitecoreIndexField(templateField.Name))
-                             .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldComment(model.Template, templateField));
+                             .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(model.Template, templateField));
             }
         }
 

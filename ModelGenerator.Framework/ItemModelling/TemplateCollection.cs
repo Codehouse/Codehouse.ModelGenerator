@@ -51,7 +51,6 @@ namespace ModelGenerator.Framework.ItemModelling
                 throw new ArgumentException($"Unknown template ID {templateId}", nameof(templateId));
             }
             
-            // TODO: Check for indirect RP template inheritance
             if (templateId == _templateIds.RenderingParameters)
             {
                 return TemplateTypes.RenderingParameter;

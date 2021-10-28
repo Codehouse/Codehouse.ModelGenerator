@@ -12,13 +12,13 @@ using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public class FortisIdGenerator
+    public class FortisIdGenerator : FortisTypeGeneratorBase
     {
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly TypeNameResolver _typeNameResolver;
-        private readonly XmlDocGenerator _xmlDocGenerator;
+        private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
-        public FortisIdGenerator(FieldNameResolver fieldNameResolver, TypeNameResolver typeNameResolver, XmlDocGenerator xmlDocGenerator)
+        public FortisIdGenerator(FieldNameResolver fieldNameResolver, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
         {
             _fieldNameResolver = fieldNameResolver;
             _typeNameResolver = typeNameResolver;
@@ -33,11 +33,15 @@ namespace ModelGenerator.Fortis.CodeGeneration
         public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, IEnumerable<ModelType> models)
         {
             yield return GenerateTemplateIdClass(context, models);
-            yield return GenerateFieldIdClasses(context, models);
+            
+            if (models.SelectMany(m => m.Template.OwnFields).Any())
+            {
+                yield return GenerateFieldIdClasses(context, models);
+            }
         }
 
         private ClassDeclarationSyntax GenerateFieldIdClasses(GenerationContext context, IEnumerable<ModelType> models)
-        {
+        {   
             var innerClasses = models
                                .Select(m => GenerateFieldIdInnerClass(context, m))
                                .ToArray();
@@ -50,25 +54,25 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private ClassDeclarationSyntax GenerateFieldIdInnerClass(GenerationContext context, ModelType model)
         {
             var fieldProperties = model.Template.OwnFields
-                                       .Select(GenerateIdProperty)
+                                       .Select(p => GenerateIdProperty(model.Template, p))
                                        .ToArray();
 
             return ClassDeclaration(Identifier(_typeNameResolver.GetTypeName(model.Template)))
                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
                    .AddMembers(fieldProperties)
-                   .WithLeadingTrivia(_xmlDocGenerator.GenerateTemplateIdComment(model.Template));
+                   .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
         }
 
-        private PropertyDeclarationSyntax GenerateIdProperty(TemplateField field)
+        private PropertyDeclarationSyntax GenerateIdProperty(Template template, TemplateField field)
         {
             return GenerateIdProperty(_fieldNameResolver.GetFieldName(field), field.Id)
-                .WithLeadingTrivia(_xmlDocGenerator.GenerateFieldIdComment(field));
+                .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, field));
         }
 
         private PropertyDeclarationSyntax GenerateIdProperty(Template template)
         {
             return GenerateIdProperty(_typeNameResolver.GetTypeName(template), template.Id)
-                .WithLeadingTrivia(_xmlDocGenerator.GenerateTemplateIdComment(template));
+                .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(template));
         }
 
         private PropertyDeclarationSyntax GenerateIdProperty(string name, Guid value)
