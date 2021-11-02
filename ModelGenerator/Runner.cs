@@ -7,11 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ModelGenerator.Framework.Activities;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
+using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator
@@ -22,28 +24,31 @@ namespace ModelGenerator
         private readonly ICodeGenerator _codeGenerator;
         private readonly IDatabaseFactory _databaseFactory;
         private readonly IFileParser _fileParser;
-        private readonly IFileScanner _fileScanner;
         private readonly ILogger<Runner> _logger;
+        private readonly IProgressTracker _progressTracker;
         private readonly IOptions<Settings> _settings;
+        private readonly ProgressStep<FileScanActivity> _fileScanActivity;
         private readonly ITemplateCollectionFactory _templateFactory;
         private readonly ITypeFactory _typeFactory;
 
         public Runner(
             IOptions<Settings> settings,
+            ProgressStep<FileScanActivity> fileScanActivity,
             ICodeGenerator codeGenerator,
-            IFileScanner fileScanner,
             IFileParser fileParser,
             IDatabaseFactory databaseFactory,
             ILogger<Runner> logger,
+            IProgressTracker progressTracker,
             ITemplateCollectionFactory templateFactory,
             ITypeFactory typeFactory)
         {
             _settings = settings;
+            _fileScanActivity = fileScanActivity;
             _codeGenerator = codeGenerator;
-            _fileScanner = fileScanner;
             _fileParser = fileParser;
             _databaseFactory = databaseFactory;
             _logger = logger;
+            _progressTracker = progressTracker;
             _templateFactory = templateFactory;
             _typeFactory = typeFactory;
         }
@@ -52,11 +57,15 @@ namespace ModelGenerator
         {
             // TODO: Ditch AsyncEnumerable
             // TODO: Add progress reporting/indicators
-            _logger.LogInformation("Locating and parsing items.");
-            var itemSets = await GetRawItems(stoppingToken)
-                                 .Where(f => f != null)
-                                 .SelectAwait(ParseFilesInFileSet)
-                                 .ToArrayAsync();
+            using var job = _progressTracker.CreateJob("Starting up");
+
+            var fileSets = await GetFileSets(job, stoppingToken);
+            //var itemSets = await GetItemSets(job, fileSets, stoppingToken);
+
+            var itemSets = await fileSets
+                           .ToAsyncEnumerable()
+                           .SelectAwait(ParseFilesInFileSet)
+                           .ToArrayAsync();
 
             _logger.LogInformation("Constructing database.");
             var database = _databaseFactory.CreateDatabase(itemSets);
@@ -102,6 +111,22 @@ namespace ModelGenerator
             }
         }
 
+        private async Task<ICollection<ItemSet>> GetItemSets(Job job, ICollection<FileSet> fileSets, CancellationToken stoppingToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async Task<ICollection<FileSet>> GetFileSets(Job job, CancellationToken stoppingToken)
+        {
+            // TODO: Make TDS settings TDS-specific.
+            job.Description = "Locating files";
+            _logger.LogInformation("Locating item files.");
+            _fileScanActivity.Activity.SetRoot(_settings.Value.Root);
+            _fileScanActivity.Activity.SetInput(_settings.Value.Patterns);
+            await _fileScanActivity.ExecuteAsync(stoppingToken);
+            return _fileScanActivity.Activity.GetOutput();
+        }
+
         private FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
         {
             try
@@ -112,36 +137,6 @@ namespace ModelGenerator
             {
                 _logger.LogError(ex, $"Could not generate file {modelFile.FileName}");
                 return null;
-            }
-        }
-
-        private async IAsyncEnumerable<FileSet> GetRawItems(CancellationToken stoppingToken)
-        {
-            var patterns = _settings.Value.Patterns ?? Enumerable.Empty<string>();
-            if (!_settings.Value.Patterns.Any())
-            {
-                throw new InvalidOperationException("There are no patterns configured.");
-            }
-
-            var root = _settings.Value.Root;
-            if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
-            {
-                throw new InvalidOperationException("The root folder does not exist.");
-            }
-
-            foreach (var pattern in patterns)
-            {
-                var files = _fileScanner.FindFilesInPath(root, pattern);
-                await foreach (var file in files.Where(f => f != null).WithCancellation(stoppingToken))
-                {
-                    if (file.Files.Count == 0)
-                    {
-                        _logger.LogInformation($"Project {file.Name} contains no items after filtering.");
-                        continue;
-                    }
-
-                    yield return file;
-                }
             }
         }
 

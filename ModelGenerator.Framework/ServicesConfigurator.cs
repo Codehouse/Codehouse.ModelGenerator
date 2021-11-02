@@ -1,11 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ModelGenerator.Framework.Activities;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
+using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Framework
@@ -32,9 +34,13 @@ namespace ModelGenerator.Framework
                 .AddSingleton<IFilePathFilter, FileScanning.TemplateFilter>()
                 .AddSingleton<IItemFilter, PathFilter>()
                 //.AddSingleton<IItemFilter, TemplateFilter>()
+                .AddSingleton<IProgressTracker, ProgressTracker>()
                 .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
                 .AddSingleton<ITypeFactory, TypeFactory>()
                 .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
+
+            collection.AddSingleton<ProgressStep<FileScanActivity>>()
+                      .AddSingleton<FileScanActivity>();
         }
     }
 }

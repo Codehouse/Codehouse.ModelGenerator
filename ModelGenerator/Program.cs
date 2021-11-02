@@ -1,10 +1,11 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using Karambolo.Extensions.Logging.File;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework;
 
 namespace ModelGenerator
@@ -16,7 +17,26 @@ namespace ModelGenerator
             await Host.CreateDefaultBuilder(args)
                       .ConfigureAppConfiguration(LoadConfiguration)
                       .ConfigureServices(RegisterServices)
+                      .ConfigureLogging(ConfigureLogging)
                       .RunConsoleAsync();
+        }
+
+        private static void ConfigureLogging(HostBuilderContext context, ILoggingBuilder logBuilder)
+        {
+            logBuilder.ClearProviders();
+            logBuilder.AddConfiguration(context.Configuration.GetSection("Logging"));
+            logBuilder.AddFile(o =>
+            {
+                o.RootPath = context.HostingEnvironment.ContentRootPath;
+                o.Files = new[]
+                {
+                    new LogFileOptions
+                    {
+                        DateFormat = "s",
+                        Path = "modelGenerator.log"
+                    }
+                };
+            });
         }
 
         private static void LoadConfiguration(HostBuilderContext context, IConfigurationBuilder configBuilder)
@@ -40,7 +60,6 @@ namespace ModelGenerator
             collection
                 .AddSingleton<Runner>()
                 .AddHostedService<Worker>();
-            //collection.AddHostedService<TestWorker>();
         }
     }
 }

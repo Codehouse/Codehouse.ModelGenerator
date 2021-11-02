@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using GlobExpressions;
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.FileScanning;
 
@@ -48,22 +47,10 @@ namespace ModelGenerator.Tds
             _filePathFilters = filePathFilters.ToArray();
         }
 
-        public async IAsyncEnumerable<FileSet> FindFilesInPath(string root, string path)
+        public async Task<FileSet?> ScanSourceAsync(string path)
         {
-            _logger.LogInformation($"Scanning pattern {path}");
-            var projectFiles = Glob.Files(root, path)
-                                   .Select(path => Path.Combine(root, path))
-                                   .ToList();
-            _logger.LogInformation($"Pattern {path} found {projectFiles.Count} projects");
-
-            foreach (var projectFilePath in projectFiles)
-            {
-                var fileSet = ReadTdsProject(projectFilePath);
-                if (fileSet != null)
-                {
-                    yield return await fileSet;
-                }
-            }
+            _logger.LogInformation($"Scanning source {path}");
+            return await ReadTdsProject(path);
         }
 
         private string DecodeFilePath(string s)
