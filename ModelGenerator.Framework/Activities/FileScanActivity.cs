@@ -13,6 +13,7 @@ namespace ModelGenerator.Framework.Activities
     public class FileScanActivity : CollectionActivityBase<string, FileSet>
     {
         public override string Description => "Scanning files";
+        
         private readonly IFileScanner _fileScanner;
         private readonly ILogger<FileScanActivity> _logger;
         private string _root;

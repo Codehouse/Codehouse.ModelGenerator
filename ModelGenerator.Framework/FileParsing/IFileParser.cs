@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using ModelGenerator.Framework.FileScanning;
 
 namespace ModelGenerator.Framework.FileParsing
 {
     public interface IFileParser
     {
-        IAsyncEnumerable<Item> ParseFile(FileSet fileSet, ItemFile file);
+        Task<Item[]> ParseFile(FileSet fileSet, ItemFile file);
     }
 }

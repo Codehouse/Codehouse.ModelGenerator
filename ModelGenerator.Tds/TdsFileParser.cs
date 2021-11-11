@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using ModelGenerator.Framework;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Tds.Parsing;
@@ -29,21 +31,16 @@ namespace ModelGenerator.Tds
             _itemFilters = itemFilters.ToArray();
         }
 
-        public async IAsyncEnumerable<Item> ParseFile(FileSet fileSet, ItemFile file)
+        public async Task<Item[]> ParseFile(FileSet fileSet, ItemFile file)
         {
             var rawItem = await File.ReadAllTextAsync(file.Path);
-            var parsedItems = ParsedItems(fileSet, file, rawItem);
-
-            foreach (var item in parsedItems)
-            {
-                if (_itemFilters.All(f => f.Accept(item)))
-                {
-                    yield return item;
-                }
-            }
+            return ParseItems(fileSet, file, rawItem)
+                .WhereNotNull()
+                .Where(i => _itemFilters.All(f => f.Accept(i)))
+                .ToArray();
         }
 
-        private Item[] ParsedItems(FileSet fileSet, ItemFile file, string rawItem)
+        private Item[] ParseItems(FileSet fileSet, ItemFile file, string rawItem)
         {
             try
             {

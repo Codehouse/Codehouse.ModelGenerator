@@ -39,8 +39,13 @@ namespace ModelGenerator.Framework
                 .AddSingleton<ITypeFactory, TypeFactory>()
                 .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
 
-            collection.AddSingleton<ProgressStep<FileScanActivity>>()
-                      .AddSingleton<FileScanActivity>();
+            collection.AddSingleton(typeof(ProgressStep<>))
+                      .AddSingleton<DatabaseActivity>()
+                      .AddSingleton<FileParseActivity>()
+                      .AddSingleton<FileScanActivity>()
+                      .AddSingleton<GenerationActivity>()
+                      .AddSingleton<TemplateActivity>()
+                      .AddSingleton<TypeActivity>();
         }
     }
 }

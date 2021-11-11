@@ -47,7 +47,7 @@ namespace ModelGenerator.Framework.Progress
         public ProgressTracker()
         {
             var progress = AnsiConsole.Progress();
-            progress.HideCompleted = true;
+            progress.HideCompleted = false;
             progress.StartAsync(ctx =>
             {
                 _container = new ContextContainer(ctx);

@@ -24,8 +24,7 @@ namespace ModelGenerator
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Starting...");
-            Task.Run(() => ExecuteAsync(_cts.Token))
-                .ContinueWith(t => _lifetime.StopApplication());
+            Task.Run(() => ExecuteAsync(_cts.Token).ContinueWith(t => _lifetime.StopApplication()));
             return Task.CompletedTask;
         }
 
