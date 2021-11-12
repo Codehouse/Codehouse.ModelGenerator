@@ -11,7 +11,7 @@ namespace ModelGenerator.Framework.FileParsing
         {
             _settings = settings;
         }
-        
+
         public bool Accept(Item item)
         {
             return _settings.Exclude.All(excludedPath => !item.Path.StartsWith(excludedPath, StringComparison.OrdinalIgnoreCase));

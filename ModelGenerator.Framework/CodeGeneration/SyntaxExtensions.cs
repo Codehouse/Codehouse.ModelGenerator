@@ -3,7 +3,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ModelGenerator.Framework.ItemModelling;
 
 namespace ModelGenerator.Framework.CodeGeneration
 {
@@ -14,12 +13,12 @@ namespace ModelGenerator.Framework.CodeGeneration
             var arguments = names
                             .Select(n => n is null
                                 ? SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
-                                : (ExpressionSyntax) SyntaxFactory.IdentifierName(n))
+                                : (ExpressionSyntax)SyntaxFactory.IdentifierName(n))
                             .Select(SyntaxFactory.Argument)
                             .ToArray();
             return syntax.AddArgumentListArguments(arguments);
         }
-        
+
         public static AttributeSyntax AddSimpleArguments(this AttributeSyntax member, params ExpressionSyntax[] expressionArguments)
         {
             var arguments = expressionArguments
@@ -47,7 +46,7 @@ namespace ModelGenerator.Framework.CodeGeneration
         }
 
         public static T If<T>(this T syntax, bool condition, Func<T, T> mutation)
-            where T: SyntaxNode
+            where T : SyntaxNode
         {
             return condition
                 ? mutation.Invoke(syntax)

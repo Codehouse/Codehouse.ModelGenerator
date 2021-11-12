@@ -16,7 +16,7 @@ namespace ModelGenerator.Framework.Progress
             get => _task.MaxValue;
             set => _task.MaxValue = value;
         }
-        
+
         private readonly ProgressContext _containerContext;
         private readonly ProgressTask _task;
 
@@ -24,6 +24,11 @@ namespace ModelGenerator.Framework.Progress
         {
             _containerContext = containerContext;
             _task = _containerContext.AddTask(description, false);
+        }
+
+        public void Dispose()
+        {
+            _task.StopTask();
         }
 
         public void Increment()
@@ -44,11 +49,6 @@ namespace ModelGenerator.Framework.Progress
         public void Stop()
         {
             _task.Value = _task.MaxValue;
-            _task.StopTask();
-        }
-
-        public void Dispose()
-        {
             _task.StopTask();
         }
     }

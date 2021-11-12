@@ -16,7 +16,7 @@ namespace ModelGenerator.Framework.Activities
         {
             _typeFactory = typeFactory;
         }
-        
+
         protected override Task<IImmutableList<TypeSet>> ExecuteAsync(Job job, TemplateCollection input, CancellationToken cancellationToken)
         {
             return Task.Run(() => _typeFactory.CreateTypeSets(input), cancellationToken);

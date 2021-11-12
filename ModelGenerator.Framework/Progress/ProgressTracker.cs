@@ -23,9 +23,10 @@ namespace ModelGenerator.Framework.Progress
                 }
             }
 
+            private readonly ProgressContext _context;
+
             private bool _isComplete;
-            private ProgressContext _context;
-            private TaskCompletionSource _tcs;
+            private readonly TaskCompletionSource _tcs;
 
             public ContextContainer(ProgressContext context)
             {
@@ -43,7 +44,7 @@ namespace ModelGenerator.Framework.Progress
         }
 
         private ContextContainer _container;
-        
+
         public ProgressTracker()
         {
             var progress = AnsiConsole.Progress();

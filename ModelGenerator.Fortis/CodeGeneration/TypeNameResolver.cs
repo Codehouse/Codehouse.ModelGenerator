@@ -16,7 +16,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _fortisSettings = fortisSettings;
             _settings = settings;
         }
-        
+
         public string GetClassName(Template template)
         {
             return GetTypeName(template) + "Item";

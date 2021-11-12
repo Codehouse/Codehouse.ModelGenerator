@@ -11,13 +11,13 @@ namespace ModelGenerator.Fortis.CodeGeneration
     public abstract class FortisTypeGeneratorBase
     {
         private const string FortisModelTemplateMappingAttribute = "TemplateMapping";
-        
+
         protected AttributeSyntax CreateTemplateMappingAttribute(Guid templateId, string mappingType)
         {
             return Attribute(ParseName(FortisModelTemplateMappingAttribute))
                 .AddSimpleArguments(IdLiteral(templateId), StringLiteral(mappingType));
         }
-        
+
         /// <summary>
         /// Creates the appropriate GetField<T> invocation for a template field.
         /// </summary>
@@ -33,7 +33,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             {
                 arguments = arguments.Append(Argument(StringLiteral(templateField.Name.ToLowerInvariant())));
             }
-            
+
             // GetField<TField>("FieldName", "fieldname") for normal templates
             // GetField<TField>("FieldName") for rendering parameter templates
             return InvocationExpression(

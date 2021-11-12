@@ -33,11 +33,20 @@ namespace ModelGenerator.Framework.ItemModelling
                             .SelectMany(s => s.Templates.Values)
                             .ToImmutableDictionary(t => t.Id);
 
-            return new TemplateCollection(_templateIds)
+            var collection = new TemplateCollection(_templateIds)
             {
                 TemplateSets = templateSets.ToImmutableDictionary(s => s.Id),
                 Templates = templates
             };
+
+            // Early initialisation of all these caches removes need for locking during parallel generation.
+            foreach (var template in templates.Keys)
+            {
+                collection.GetAllBaseTemplates(template);
+                collection.GetAllFields(template);
+            }
+
+            return collection;
         }
 
         protected string CreateNamespaceFromPath(string path, int trimFromStart, int trimFromEnd)

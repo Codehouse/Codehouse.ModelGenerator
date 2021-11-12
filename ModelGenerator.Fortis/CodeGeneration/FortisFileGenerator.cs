@@ -14,8 +14,8 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly FortisClassGenerator _classGenerator;
         private readonly FortisIdGenerator _idGenerator;
         private readonly FortisInterfaceGenerator _interfaceGenerator;
-        private readonly TypeNameResolver _typeNameResolver;
         private readonly FortisSettings _settings;
+        private readonly TypeNameResolver _typeNameResolver;
 
         public FortisFileGenerator(
             FortisSettings settings,
@@ -45,12 +45,12 @@ namespace ModelGenerator.Fortis.CodeGeneration
             foreach (var namespaceTypeGroup in namespaceTypeGroups)
             {
                 var members = namespaceTypeGroup
-                    .SelectMany(t => GenerateTypes(context, t))
-                    .ToArray();
-                
+                              .SelectMany(t => GenerateTypes(context, t))
+                              .ToArray();
+
                 yield return NamespaceDeclaration(ParseName(namespaceTypeGroup.Key))
-                                          .WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty))
-                                          .AddMembers(members);
+                             .WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty))
+                             .AddMembers(members);
             }
 
             if (!_settings.Quirks.LocalNamespaceForIds)

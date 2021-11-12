@@ -10,8 +10,8 @@ namespace ModelGenerator.Framework.CodeGeneration
     public static class SyntaxHelper
     {
         private const string SitecoreIndexFieldAttribute = "Sitecore.ContentSearch.IndexField";
-        
-        public static AccessorDeclarationSyntax AutoGet()   
+
+        public static AccessorDeclarationSyntax AutoGet()
         {
             return AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                 .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
@@ -21,19 +21,19 @@ namespace ModelGenerator.Framework.CodeGeneration
         {
             return SyntaxFactory.FieldDeclaration(VariableDeclaration(typeName, name));
         }
-        
+
         public static LiteralExpressionSyntax IdLiteral(Guid value)
         {
             return StringLiteral(value.ToSitecoreId());
         }
-        
+
         public static SyntaxTrivia NewLineTrivia()
-        {   
-            return EndOfLine(String.Empty);
+        {
+            return EndOfLine(string.Empty);
         }
-        
+
         public static SyntaxTrivia[] NewLineTrivia(int count)
-        {   
+        {
             return Enumerable.Range(0, count)
                              .Select(i => NewLineTrivia())
                              .ToArray();
@@ -52,16 +52,16 @@ namespace ModelGenerator.Framework.CodeGeneration
                     AttributeArgument(StringLiteral(fieldName.ToLowerInvariant()))
                 );
         }
-        
+
         public static LiteralExpressionSyntax StringLiteral(string value)
         {
-            return LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+            return LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(value));
         }
 
         public static VariableDeclarationSyntax VariableDeclaration(TypeSyntax typeName, string name)
         {
             return SyntaxFactory.VariableDeclaration(typeName)
-                .AddVariables(VariableDeclarator(Identifier(name)));
+                                .AddVariables(VariableDeclarator(Identifier(name)));
         }
     }
 }

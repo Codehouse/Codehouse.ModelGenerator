@@ -53,6 +53,21 @@ namespace ModelGenerator.Tds
             return await ReadTdsProject(path);
         }
 
+        private ItemFile? CreateItemFile(string projectFolder, XElement element)
+        {
+            var path = DecodeFilePath(element.Attribute("Include")?.Value);
+            if (string.IsNullOrEmpty(path))
+            {
+                return null;
+            }
+
+            var properties = ToDictionarySafe(element.Elements()
+                                                     .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
+                                                     .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
+
+            return new ItemFile(Path.Combine(projectFolder, path), properties);
+        }
+
         private string DecodeFilePath(string s)
         {
             return Regex.Replace(s, "%([0-9a-fA-F]{2})", match => DecodeValue(match.Groups[1].Value));
@@ -69,7 +84,7 @@ namespace ModelGenerator.Tds
             {
                 return false;
             }
-            
+
             if (File.Exists(itemFilePath))
             {
                 return true;
@@ -130,21 +145,6 @@ namespace ModelGenerator.Tds
                 _logger.LogError(ex, $"Could not parse file {projectName}");
                 return null;
             }
-        }
-
-        private ItemFile? CreateItemFile(string projectFolder, XElement element)
-        {
-            var path = DecodeFilePath(element.Attribute("Include")?.Value);
-            if (string.IsNullOrEmpty(path))
-            {
-                return null;
-            }
-
-            var properties = ToDictionarySafe(element.Elements()
-                                    .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
-                                    .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
-
-            return new ItemFile(Path.Combine(projectFolder, path), properties);
         }
 
         private IDictionary<string, string> ToDictionarySafe(IEnumerable<KeyValuePair<string, string>> properties)

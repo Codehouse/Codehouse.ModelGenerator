@@ -17,8 +17,8 @@ namespace ModelGenerator.Fortis.CodeGeneration
     {
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
-        private readonly TypeNameResolver _typeNameResolver;
         private readonly FortisSettings _settings;
+        private readonly TypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
         public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, IXmlDocumentationGenerator xmlDocGenerator)
@@ -56,7 +56,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         {
             var templates = context.Templates.Templates;
             var isRenderingParameters = context.Templates.IsRenderingParameters(template.Id);
-            
+
             return template.BaseTemplateIds
                            .Where(id => templates.ContainsKey(id))
                            .Where(id => templates[id].SetId != null)

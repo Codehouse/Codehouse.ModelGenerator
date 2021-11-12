@@ -25,7 +25,7 @@ namespace ModelGenerator.Framework.CodeGeneration
             {
                 return null;
             }
-            
+
             return WriteCode(modelFile, syntax);
         }
 

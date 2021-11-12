@@ -35,9 +35,22 @@ namespace ModelGenerator.Tds
         {
             var rawItem = await File.ReadAllTextAsync(file.Path);
             return ParseItems(fileSet, file, rawItem)
-                .WhereNotNull()
-                .Where(i => _itemFilters.All(f => f.Accept(i)))
-                .ToArray();
+                   .WhereNotNull()
+                   .Where(i => _itemFilters.All(f => f.Accept(i)))
+                   .ToArray();
+        }
+
+        private ImmutableDictionary<HintTypes, string> ParseHints(ItemFile file)
+        {
+            if (!file.Properties.ContainsKey("CodeGenNamespace"))
+            {
+                return ImmutableDictionary<HintTypes, string>.Empty;
+            }
+
+            return new Dictionary<HintTypes, string>
+            {
+                { HintTypes.Namespace, file.Properties["CodeGenNamespace"] }
+            }.ToImmutableDictionary();
         }
 
         private Item[] ParseItems(FileSet fileSet, ItemFile file, string rawItem)
@@ -64,19 +77,6 @@ namespace ModelGenerator.Tds
             }
 
             return Array.Empty<Item>();
-        }
-
-        private ImmutableDictionary<HintTypes, string> ParseHints(ItemFile file)
-        {
-            if (!file.Properties.ContainsKey("CodeGenNamespace"))
-            {
-                return ImmutableDictionary<HintTypes, string>.Empty;
-            }
-
-            return new Dictionary<HintTypes, string>
-            {
-                { HintTypes.Namespace, file.Properties["CodeGenNamespace"] }
-            }.ToImmutableDictionary();
         }
     }
 }

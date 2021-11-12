@@ -60,13 +60,13 @@ namespace ModelGenerator.Tds.ItemModelling
                     {
                         namespaceHint = namespaceHint.Substring(_settings.ModelNamespace.Length).TrimStart('.');
                     }
-                    
+
                     values.Insert(0, namespaceHint);
                 }
 
                 return values;
             }
-            
+
             values.Insert(0, item.Name);
             return BuildLocalNamespaceStack(database, values, item.Parent);
         }
@@ -80,10 +80,10 @@ namespace ModelGenerator.Tds.ItemModelling
                                           .OrderByDescending(p => p.Length)
                                           .ToArray();
 
-            for (int i = 0; i < pathFragmentsCollection[0].Length; i++)
+            for (var i = 0; i < pathFragmentsCollection[0].Length; i++)
             {
                 var element = pathFragmentsCollection[0][i];
-                for (int j = 0; j < pathFragmentsCollection.Length; j++)
+                for (var j = 0; j < pathFragmentsCollection.Length; j++)
                 {
                     if (pathFragmentsCollection[j][i] != element)
                     {

@@ -8,7 +8,7 @@ namespace ModelGenerator.Framework.Activities
     public abstract class ActivityBase<TInput, TOutput> : IActivity<TInput, TOutput>
     {
         public abstract string Description { get; }
-        
+
         private TInput? _input;
         private bool _isRunning;
         private TOutput? _output;
@@ -19,7 +19,7 @@ namespace ModelGenerator.Framework.Activities
             {
                 throw new InvalidOperationException("Input not set.");
             }
-            
+
             try
             {
                 _isRunning = true;
@@ -27,7 +27,7 @@ namespace ModelGenerator.Framework.Activities
             }
             finally
             {
-                _isRunning = false;                
+                _isRunning = false;
             }
         }
 
@@ -52,7 +52,7 @@ namespace ModelGenerator.Framework.Activities
             {
                 throw new InvalidOperationException("Cannot modify input while running.");
             }
-            
+
             _input = input;
         }
 

@@ -16,7 +16,7 @@ namespace ModelGenerator.Framework
         {
             return Task.WhenAll(collection);
         }
-        
+
         public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> o)
             where T : class
         {

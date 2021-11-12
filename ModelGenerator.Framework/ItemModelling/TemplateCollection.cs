@@ -19,6 +19,13 @@ namespace ModelGenerator.Framework.ItemModelling
             _templateIds = templateIds;
         }
 
+        public IEnumerable<Template> GetAllBaseTemplates(Guid templateId)
+        {
+            return GetAllBaseTemplates(new HashSet<Guid>(), templateId)
+                   .Where(t => Templates.ContainsKey(t))
+                   .Select(t => Templates[t]);
+        }
+
         public IEnumerable<TemplateField> GetAllFields(Guid templateId)
         {
             if (!Templates.ContainsKey(templateId))
@@ -32,25 +39,13 @@ namespace ModelGenerator.Framework.ItemModelling
                    .OrderBy(f => f.Name);
         }
 
-        public IEnumerable<Template> GetAllBaseTemplates(Guid templateId)
-        {
-            return GetAllBaseTemplates(new HashSet<Guid>(), templateId)
-                   .Where(t => Templates.ContainsKey(t))
-                   .Select(t => Templates[t]);
-        }
-
-        public bool IsRenderingParameters(Guid templateId)
-        {
-            return GetTemplateType(templateId) == TemplateTypes.RenderingParameter;
-        }
-
         public TemplateTypes GetTemplateType(Guid templateId)
         {
             if (!Templates.ContainsKey(templateId))
             {
                 throw new ArgumentException($"Unknown template ID {templateId}", nameof(templateId));
             }
-            
+
             if (templateId == _templateIds.RenderingParameters)
             {
                 return TemplateTypes.RenderingParameter;
@@ -68,6 +63,11 @@ namespace ModelGenerator.Framework.ItemModelling
                 : TemplateTypes.Concrete;
         }
 
+        public bool IsRenderingParameters(Guid templateId)
+        {
+            return GetTemplateType(templateId) == TemplateTypes.RenderingParameter;
+        }
+
         private IEnumerable<Guid> GetAllBaseTemplates(HashSet<Guid> visitedTemplates, Guid templateId)
         {
             if (!Templates.ContainsKey(templateId))
@@ -79,12 +79,12 @@ namespace ModelGenerator.Framework.ItemModelling
             {
                 visitedTemplates.Add(templateId);
             }
-            
+
             if (_baseTemplateLookup.ContainsKey(templateId))
             {
                 return _baseTemplateLookup[templateId];
             }
-            
+
             var template = Templates[templateId];
             var templates = template.BaseTemplateIds
                                     .SelectMany(t => GetAllBaseTemplates(visitedTemplates, t))

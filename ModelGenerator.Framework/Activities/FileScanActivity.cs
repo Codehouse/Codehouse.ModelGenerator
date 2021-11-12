@@ -13,7 +13,7 @@ namespace ModelGenerator.Framework.Activities
     public class FileScanActivity : CollectionActivityBase<string, FileSet>
     {
         public override string Description => "Scanning files";
-        
+
         private readonly IFileScanner _fileScanner;
         private readonly ILogger<FileScanActivity> _logger;
         private string _root;
@@ -32,12 +32,12 @@ namespace ModelGenerator.Framework.Activities
             {
                 throw new InvalidOperationException("There are no patterns configured.");
             }
-            
+
             if (string.IsNullOrEmpty(_root))
             {
                 throw new InvalidOperationException("Root path has not been configured.");
             }
-            
+
             base.SetInput(input.SelectMany(EvaluatePattern));
         }
 
@@ -72,8 +72,8 @@ namespace ModelGenerator.Framework.Activities
         private IEnumerable<string> EvaluatePattern(string pattern)
         {
             var matchedFiles = Glob.Files(_root, pattern)
-                .Select(path => Path.Combine(_root, path))
-                .ToList();
+                                   .Select(path => Path.Combine(_root, path))
+                                   .ToList();
             _logger.LogInformation($"Pattern {pattern} located {matchedFiles.Count} files.");
             return matchedFiles;
         }

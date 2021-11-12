@@ -29,7 +29,7 @@ namespace ModelGenerator.Framework.TypeConstruction
 
         private ModelFile CreateFile(TemplateSet set, Template template, string rootPath)
         {
-            var types = new []
+            var types = new[]
             {
                 new ModelType(template.Name, template, set)
             };
@@ -60,7 +60,7 @@ namespace ModelGenerator.Framework.TypeConstruction
                                                    .Values
                                                    .Where(s => templateSet.References.Contains(s.Id))
                                                    .ToImmutableArray();
-            
+
             return new TypeSet
             {
                 Name = templateSet.Name,

@@ -14,7 +14,7 @@ namespace ModelGenerator.Framework.Activities
         {
             _templateFactory = templateFactory;
         }
-        
+
         protected override Task<TemplateCollection> ExecuteAsync(Job job, IDatabase input, CancellationToken cancellationToken)
         {
             return Task.Run(() => _templateFactory.ConstructTemplates(input), cancellationToken);

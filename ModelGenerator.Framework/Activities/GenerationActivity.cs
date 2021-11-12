@@ -11,19 +11,20 @@ namespace ModelGenerator.Framework.Activities
 {
     public class GenerationActivity : CollectionActivityBase<GenerationContext, bool>
     {
-        private readonly ILogger<GenerationActivity> _logger;
-        private readonly ICodeGenerator _codeGenerator;
         public override string Description => "Generate code";
+        private readonly ICodeGenerator _codeGenerator;
+        private readonly ILogger<GenerationActivity> _logger;
 
         public GenerationActivity(ILogger<GenerationActivity> logger, ICodeGenerator codeGenerator)
         {
             _logger = logger;
             _codeGenerator = codeGenerator;
         }
+
         protected override async Task<bool> ExecuteItemAsync(Job job, GenerationContext input)
         {
             var typeSet = input.TypeSet;
-            
+
             _logger.LogInformation($"Generating files for {typeSet.Name} ({typeSet.Files.Count})");
             var tasks = typeSet.Files.Select(f => Task.Run(() => GenerateFile(input, f)));
             var generatedFiles = (await Task.WhenAll(tasks))
@@ -44,7 +45,7 @@ namespace ModelGenerator.Framework.Activities
 
             return true;
         }
-        
+
         private FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
         {
             try

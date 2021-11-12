@@ -16,7 +16,7 @@ namespace ModelGenerator.Framework.CodeGeneration
             _settings = settings;
             ConfigureCompiler();
         }
-        
+
         public SyntaxTriviaList GetFieldComment(Template template, TemplateField field)
         {
             // TODO: SuperXML might have a memory leak - consider switching templating.

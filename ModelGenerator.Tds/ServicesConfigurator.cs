@@ -13,7 +13,7 @@ namespace ModelGenerator.Tds
                       .AddSingleton<IFileScanner, TdsFileScanner>()
                       .AddSingleton<ITdsItemParser, TdsItemParser>()
                       .AddSingleton<ITdsTokenizer, TdsItemTokenizer>();
-                      //.AddSingleton<ITemplateCollectionFactory, TdsTemplateCollectionFactory>();
+            //.AddSingleton<ITemplateCollectionFactory, TdsTemplateCollectionFactory>();
         }
     }
 }

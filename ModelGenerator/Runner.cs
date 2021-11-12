@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,11 +23,11 @@ namespace ModelGenerator
         private readonly ProgressStep<FileParseActivity> _fileParseActivity;
         private readonly ProgressStep<FileScanActivity> _fileScanActivity;
         private readonly ProgressStep<GenerationActivity> _generationActivity;
-        private readonly ProgressStep<TemplateActivity> _templateActivity;
-        private readonly ProgressStep<TypeActivity> _typeActivity;
         private readonly ILogger<Runner> _logger;
         private readonly IProgressTracker _progressTracker;
         private readonly IOptions<Settings> _settings;
+        private readonly ProgressStep<TemplateActivity> _templateActivity;
+        private readonly ProgressStep<TypeActivity> _typeActivity;
 
         public Runner(
             IOptions<Settings> settings,
@@ -64,9 +62,39 @@ namespace ModelGenerator
             var database = await ConstructDatabase(job, itemSets, stoppingToken);
             var templates = await ConstructTemplates(job, database, stoppingToken);
             var typeSets = await CreateTypeSets(job, templates, stoppingToken);
-            
+
             await GenerateCode(job, database, templates, typeSets, stoppingToken);
             job.Stop();
+        }
+
+        private async Task<IDatabase> ConstructDatabase(Job job, ICollection<ItemSet> itemSets, CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Constructing database.");
+            _databaseActivity.Activity.SetInput(itemSets);
+            await _databaseActivity.ExecuteAsync(stoppingToken);
+
+            job.Increment();
+            return _databaseActivity.Activity.GetOutput();
+        }
+
+        private async Task<TemplateCollection> ConstructTemplates(Job job, IDatabase database, CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Constructing template structure.");
+            _templateActivity.Activity.SetInput(database);
+            await _templateActivity.ExecuteAsync(stoppingToken);
+
+            job.Increment();
+            return _templateActivity.Activity.GetOutput();
+        }
+
+        private async Task<IImmutableList<TypeSet>> CreateTypeSets(Job job, TemplateCollection templates, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Constructing type sets.");
+            _typeActivity.Activity.SetInput(templates);
+            await _typeActivity.ExecuteAsync(cancellationToken);
+
+            job.Increment();
+            return _typeActivity.Activity.GetOutput();
         }
 
         private async Task GenerateCode(Job job, IDatabase database, TemplateCollection templates, IEnumerable<TypeSet> typeSets, CancellationToken stoppingToken)
@@ -84,58 +112,28 @@ namespace ModelGenerator
             job.Increment();
         }
 
-        private async Task<IImmutableList<TypeSet>> CreateTypeSets(Job job, TemplateCollection templates, CancellationToken cancellationToken)
+        private async Task<ICollection<FileSet>> GetFileSets(Job job, CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Constructing type sets.");
-            _typeActivity.Activity.SetInput(templates);
-            await _typeActivity.ExecuteAsync(cancellationToken);
+            // TODO: Make TDS settings TDS-specific.
+            _logger.LogInformation("Locating item files.");
+
+            _fileScanActivity.Activity.SetRoot(_settings.Value.Root);
+            _fileScanActivity.Activity.SetInput(_settings.Value.Patterns);
+            await _fileScanActivity.ExecuteAsync(stoppingToken);
 
             job.Increment();
-            return _typeActivity.Activity.GetOutput();
-        }
-
-        private async Task<TemplateCollection> ConstructTemplates(Job job, IDatabase database, CancellationToken stoppingToken)
-        {
-            _logger.LogInformation("Constructing template structure.");
-            _templateActivity.Activity.SetInput(database);
-            await _templateActivity.ExecuteAsync(stoppingToken);
-            
-            job.Increment();
-            return _templateActivity.Activity.GetOutput();
-        }
-
-        private async Task<IDatabase> ConstructDatabase(Job job, ICollection<ItemSet> itemSets, CancellationToken stoppingToken)
-        {
-            _logger.LogInformation("Constructing database.");
-            _databaseActivity.Activity.SetInput(itemSets);
-            await _databaseActivity.ExecuteAsync(stoppingToken);
-            
-            job.Increment();
-            return _databaseActivity.Activity.GetOutput();
+            return _fileScanActivity.Activity.GetOutput();
         }
 
         private async Task<ICollection<ItemSet>> GetItemSets(Job job, ICollection<FileSet> fileSets, CancellationToken stoppingToken)
         {
             _logger.LogInformation("Parsing item files.");
-            
+
             _fileParseActivity.Activity.SetInput(fileSets);
             await _fileParseActivity.ExecuteAsync(stoppingToken);
-            
+
             job.Increment();
             return _fileParseActivity.Activity.GetOutput();
-        }
-
-        private async Task<ICollection<FileSet>> GetFileSets(Job job, CancellationToken stoppingToken)
-        {
-            // TODO: Make TDS settings TDS-specific.
-            _logger.LogInformation("Locating item files.");
-            
-            _fileScanActivity.Activity.SetRoot(_settings.Value.Root);
-            _fileScanActivity.Activity.SetInput(_settings.Value.Patterns);
-            await _fileScanActivity.ExecuteAsync(stoppingToken);
-            
-            job.Increment();
-            return _fileScanActivity.Activity.GetOutput();
         }
     }
 }

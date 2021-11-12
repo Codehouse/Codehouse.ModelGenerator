@@ -9,6 +9,7 @@ using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
+using TemplateFilter = ModelGenerator.Framework.FileScanning.TemplateFilter;
 
 namespace ModelGenerator.Framework
 {
@@ -31,7 +32,7 @@ namespace ModelGenerator.Framework
             collection
                 .AddSingleton<ICodeGenerator, CodeGenerator>()
                 .AddSingleton<IDatabaseFactory, DatabaseFactory>()
-                .AddSingleton<IFilePathFilter, FileScanning.TemplateFilter>()
+                .AddSingleton<IFilePathFilter, TemplateFilter>()
                 .AddSingleton<IItemFilter, PathFilter>()
                 //.AddSingleton<IItemFilter, TemplateFilter>()
                 .AddSingleton<IProgressTracker, ProgressTracker>()

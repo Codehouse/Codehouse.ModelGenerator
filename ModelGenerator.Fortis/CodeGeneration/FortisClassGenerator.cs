@@ -14,12 +14,12 @@ namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class FortisClassGenerator : FortisTypeGeneratorBase
     {
-        private const string SitecorePredefinedQueryAttribute = "PredefinedQuery";
         private readonly FieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly FortisSettings _settings;
         private readonly TypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
+        private const string SitecorePredefinedQueryAttribute = "PredefinedQuery";
 
         public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
         {
@@ -48,7 +48,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                    AttributeArgument(IdLiteral(model.Template.Id)),
                                    AttributeArgument(TypeOfExpression(ParseTypeName("Guid")))
                                )
-                           )
+                       )
                        .AddMembers(GenerateClassFields(context, model).ToArray())
                        .AddMembers(GenerateConstructors(context, model).ToArray())
                        .AddMembers(context.Templates.GetAllFields(model.Template.Id)
@@ -67,12 +67,22 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
             return CreateTemplateMappingAttribute(template.Id, mappingType);
         }
-        
-        private MemberDeclarationSyntax[] GenerateMembers(GenerationContext context, ModelType model, IEnumerable<TemplateField> fields)
+
+        private SimpleBaseTypeSyntax[] GenerateBaseTypes(GenerationContext context, Template template)
         {
-            return GenerateClassFields(context, model)
-                   .Union(GenerateConstructors(context, model))
-                   .Union(fields.SelectMany(f => GenerateProperty(context, model, f)))
+            var isRenderingParameters = context.Templates.IsRenderingParameters(template.Id);
+            var baseTemplates = _settings.Quirks.FullInterfaceList
+                ? context.Templates.GetAllBaseTemplates(template.Id)
+                : template.BaseTemplateIds
+                          .Where(tid => context.Templates.Templates.ContainsKey(tid))
+                          .Select(tid => context.Templates.Templates[tid]);
+
+            return baseTemplates
+                   .Where(t => t.SetId != null)
+                   .Select(t => GetBaseTypeName(template, t, context.Templates))
+                   .Prepend(_typeNameResolver.GetInterfaceName(template))
+                   .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")
+                   .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
                    .ToArray();
         }
 
@@ -83,10 +93,10 @@ namespace ModelGenerator.Fortis.CodeGeneration
             {
                 yield break;
             }
-            
+
             yield return FieldDeclaration(ParseTypeName("Item"), "_item")
-                .AddModifiers(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
-                .WithTrailingTrivia(EndOfLine(string.Empty));
+                         .AddModifiers(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
+                         .WithTrailingTrivia(EndOfLine(string.Empty));
         }
 
         private IEnumerable<MemberDeclarationSyntax> GenerateConstructors(GenerationContext context, ModelType model)
@@ -160,6 +170,14 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
+        private MemberDeclarationSyntax[] GenerateMembers(GenerationContext context, ModelType model, IEnumerable<TemplateField> fields)
+        {
+            return GenerateClassFields(context, model)
+                   .Union(GenerateConstructors(context, model))
+                   .Union(fields.SelectMany(f => GenerateProperty(context, model, f)))
+                   .ToArray();
+        }
+
         private IEnumerable<MemberDeclarationSyntax> GenerateProperty(GenerationContext context, ModelType model, TemplateField templateField)
         {
             var isRenderingParameters = context.Templates.IsRenderingParameters(model.Template.Id);
@@ -170,7 +188,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 ? model.Template
                 : context.Templates.Templates[templateField.TemplateId];
             var fieldComment = _xmlDocGenerator.GetFieldComment(template, templateField);
-            
+
             // TODO: Fix spacing on property accessors.
             yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
                          .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
@@ -210,24 +228,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                  property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
                              .WithLeadingTrivia(fieldComment);
             }
-        }
-
-        private SimpleBaseTypeSyntax[] GenerateBaseTypes(GenerationContext context, Template template)
-        {
-            var isRenderingParameters = context.Templates.IsRenderingParameters(template.Id);
-            var baseTemplates = _settings.Quirks.FullInterfaceList
-                ? context.Templates.GetAllBaseTemplates(template.Id)
-                : template.BaseTemplateIds
-                          .Where(tid => context.Templates.Templates.ContainsKey(tid))
-                          .Select(tid => context.Templates.Templates[tid]);
-
-            return baseTemplates
-                   .Where(t => t.SetId != null)
-                   .Select(t => GetBaseTypeName(template, t, context.Templates))
-                   .Prepend(_typeNameResolver.GetInterfaceName(template))
-                   .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")
-                   .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
-                   .ToArray();
         }
 
         private string GetBaseTypeName(Template currentTemplate, Template baseTemplate, TemplateCollection collection)

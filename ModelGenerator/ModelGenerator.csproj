@@ -7,27 +7,27 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ModelGenerator.Fortis\ModelGenerator.Fortis.csproj" />
-        <ProjectReference Include="..\ModelGenerator.Framework\ModelGenerator.Framework.csproj" />
-        <ProjectReference Include="..\ModelGenerator.Tds\ModelGenerator.Tds.csproj" />
+        <ProjectReference Include="..\ModelGenerator.Fortis\ModelGenerator.Fortis.csproj"/>
+        <ProjectReference Include="..\ModelGenerator.Framework\ModelGenerator.Framework.csproj"/>
+        <ProjectReference Include="..\ModelGenerator.Tds\ModelGenerator.Tds.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Karambolo.Extensions.Logging.File" Version="3.2.1" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
-        <PackageReference Include="NetEscapades.Configuration.Yaml" Version="2.1.0" />
-        <PackageReference Include="System.Interactive.Async" Version="5.0.0" />
+        <PackageReference Include="Karambolo.Extensions.Logging.File" Version="3.2.1"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0"/>
+        <PackageReference Include="NetEscapades.Configuration.Yaml" Version="2.1.0"/>
+        <PackageReference Include="System.Interactive.Async" Version="5.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
         <None Update="appsettings.yml">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

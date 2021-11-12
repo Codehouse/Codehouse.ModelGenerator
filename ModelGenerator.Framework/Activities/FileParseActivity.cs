@@ -12,16 +12,16 @@ namespace ModelGenerator.Framework.Activities
     public class FileParseActivity : CollectionActivityBase<FileSet, ItemSet>
     {
         public override string Description => "Parsing item files";
-        
-        private readonly ILogger<FileParseActivity> _logger;
         private readonly IFileParser _fileParser;
+
+        private readonly ILogger<FileParseActivity> _logger;
 
         public FileParseActivity(ILogger<FileParseActivity> logger, IFileParser fileParser)
         {
             _logger = logger;
             _fileParser = fileParser;
         }
-        
+
         protected override async Task<ItemSet?> ExecuteItemAsync(Job job, FileSet input)
         {
             try

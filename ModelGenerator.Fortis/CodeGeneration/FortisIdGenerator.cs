@@ -33,7 +33,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, IEnumerable<ModelType> models)
         {
             yield return GenerateTemplateIdClass(context, models);
-            
+
             if (models.SelectMany(m => m.Template.OwnFields).Any())
             {
                 yield return GenerateFieldIdClasses(context, models);
@@ -41,11 +41,11 @@ namespace ModelGenerator.Fortis.CodeGeneration
         }
 
         private ClassDeclarationSyntax GenerateFieldIdClasses(GenerationContext context, IEnumerable<ModelType> models)
-        {   
+        {
             var innerClasses = models
                                .Select(m => GenerateFieldIdInnerClass(context, m))
                                .ToArray();
-            
+
             return ClassDeclaration(Identifier("FieldIds"))
                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword))
                    .AddMembers(innerClasses);
@@ -83,7 +83,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                    .WithInitializer(
                        EqualsValueClause(
                            InvocationExpression(
-                                   MemberAccessExpression(  
+                                   MemberAccessExpression(
                                        SyntaxKind.SimpleMemberAccessExpression,
                                        IdentifierName("Guid"),
                                        IdentifierName("Parse")
@@ -100,7 +100,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             var properties = models
                              .Select(model => GenerateIdProperty(model.Template))
                              .ToArray();
-            
+
             return ClassDeclaration(Identifier("TemplateIds"))
                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword))
                    .AddMembers(properties);
