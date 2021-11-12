@@ -5,7 +5,8 @@
   ModelFolder: 'ItemModels'
   ModelNamespace: 'Models'
 PathFilters:
-  Exclude: []
+  Exclude: [ ]
+# Dictionary of well-known field IDs used by generation
 FieldIds:
   BaseTemplates: '{12C33F3F-86C5-43A5-AEB4-5598CEC45116}'
   DisplayName: '{B5E02AD9-D56F-4C41-A065-A133DB87BDEB}'
@@ -13,45 +14,35 @@ FieldIds:
   Title: '{19A69332-A23E-4E70-8D16-B2640CB24CC8}'
 Fortis:
   FieldTypeMappings:
+    # Map the Sitecore field type (case insensitive) to the concrete field type.
     ConcreteFieldTypes:
-      BooleanField:
-        - 'checkbox'
-      CustomTableField:
-        - 'table'
-      DateTimeField:
-        - 'date'
-        - 'datetime'
-      FileField:
-        - 'file'
-      GeneralLinkField:
-        - 'general link'
-        - 'general link with search'
-      ImageField:
-        - 'image'
-      IntegerField:
-        - 'integer'
-      LinkField:
-        - 'droplink'
-        - 'droptree'
-      ListField:
-        - 'checklist'
-        - 'multilist'
-        - 'multilist with search'
-        - 'tags'
-        - 'treelist'
-        - 'treelist with search'
-        - 'treelistex'
-      NumberField:
-        - 'number'
-      RichTextField:
-        - 'rich text'
-      SvgImageField:
-        - 'svg image'
-      TextField:
-        - 'multi-line text'
-        - 'single-line text'
-        - 'text'
+      checkbox: 'BooleanField'
+      checklist: 'ListField'
+      date: 'DateTimeField'
+      datetime: 'DateTimeField'
+      droplink: 'LinkField'
+      droptree: 'LinkField'
+      file: 'FileField'
+      'general link': 'GeneralLinkField'
+      'general link with search': 'GeneralLinkField'
+      image: 'ImageField'
+      integer: 'IntegerField'
+      'multi-line text': 'TextField'
+      multilist: 'ListField'
+      'multilist with search': 'ListField'
+      number: 'NumberField'
+      'rich text': 'RichTextField'
+      'single-line text': 'TextField'
+      tags: 'ListField'
+      text: 'TextField'
+      treelist: 'ListField'
+      'treelist with search': 'ListField'
+      treelistex: 'ListField'
+
+    # Fallback field type for unknown field types  
     FallBackFieldType: 'TextField'
+
+    # Mapping of field types to field parameter types (for rendering parameters)
     FieldParameterMappings:
       BooleanField: 'BooleanParameter'
       LinkField: 'LinkParameter'
@@ -59,49 +50,57 @@ Fortis:
       IntegerField: 'IntegerParameter'
       NumberField: 'NumberParameter'
       TextField: 'TextParameter'
+
+    # Mapping of field types to raw field types (no mapping => omitted)
     FieldValueMappings:
-      bool:
-        - 'BooleanField'
-      DateTime:
-        - 'DateTimeField'
-      IEnumerable<Guid>:
-        - 'ListField'
-      long:
-        - 'IntegerField'
-      float:
-        - 'NumberField'
-      Guid:
-        - 'LinkField'
-      string:
-        - 'GeneralLinkField'
-        - 'ImageField'
-        - 'RichTextField'
-        - 'SvgImageField'
-        - 'TextField'
+      BooleanField: 'bool'
+      DateTimeField: 'DateTime'
+      GeneralLinkField: 'string'
+      ImageField: 'string'
+      IntegerField: 'long'
+      LinkField: 'Guid'
+      ListField: 'IEnumerable<Guid>'
+      NumberField: 'float'
+      RichTextField: 'string'
+      TextField: 'string'
+
+  # List the namespaces to be imported in model files
   NamespaceImports:
     - 'System'
     - 'System.Collections.Generic'
     - 'System.Diagnostics'
-    - 'Apm.Foundation.FortisInfrastructure.Model'
-    - 'Apm.Foundation.FortisInfrastructure.Model.Fields'
-    - 'Apm.Foundation.FortisInfrastructure.Model.Fields.Interfaces'
-    - 'Apm.Foundation.FortisInfrastructure.Model.RenderingParameters'
-    - 'Apm.Foundation.FortisInfrastructure.Fields'
     - 'Fortis.Model'
     - 'Fortis.Providers'
     - 'Sitecore.Data.Items'
     - 'Sitecore.ContentSearch'
     - 'Sitecore.ContentSearch.Linq.Common'
+
+  # Controls "quirks" supported by this provider
   Quirks:
+    # If true will list all interfaces (i.e. indirectly inherited base
+    # templates) on concrete classes.
     FullInterfaceList: false
+
+    # If true will use each template's local namespace for the TemplateId
+    # and FieldId classes.
     LocalNamespaceForIds: false
+
+    # If true will mark interfaces as partial
     PartialInterfaces: true
+
+# Dictionary of well-known Sitecore template IDs
 TemplateIds:
   RenderingParameters: '{8ca06d6a-b353-44e8-bc31-b528c7306971}'
   Template: '{AB86861A-6030-46C5-B394-E8F99E8B87DB}'
   TemplateSection: '{E269FBB5-3750-427A-9149-7AA950B49301}'
   TemplateField: '{455A3E98-A627-4B40-8035-E683A0331AC7}'
+
+# Templates used for XML documentation
 XmlDocumentation:
+  # Used for field-related members
+  # Parameters:
+  #   f - TemplateField - The field that the member relates to
+  #   t - Template - The template declaring the field f
   Field: |
     /// <summary>
     /// <para>Field: {{f.Name}}</para>
@@ -109,12 +108,17 @@ XmlDocumentation:
     /// <para>Data type: {{f.FieldType}}</para>
     /// <para>Template: {{t.Name}}</para>
     /// </summary>
+
+  # Used for template-related members
+  # Parameters:
+  #   t - Template - The template that the member relates to
   Template: |
     /// <summary>
     /// <para>Template: {{t.Name}}</para>
     /// <para>ID: {{t.Id | scid}}</para>
     /// <para>Path: {{t.Path}}</para>
     /// </summary>
+
 Logging:
   LogLevel:
     Default: Debug

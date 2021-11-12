@@ -23,6 +23,13 @@ namespace ModelGenerator
 
         private static void ConfigureLogging(HostBuilderContext context, ILoggingBuilder logBuilder)
         {
+            const string logfileName = "modelGenerator.log";
+            var logfile = Path.Combine(context.HostingEnvironment.ContentRootPath, logfileName);
+            if (File.Exists(logfile))
+            {
+                File.WriteAllText(logfile, string.Empty);
+            }
+
             logBuilder.ClearProviders();
             logBuilder.AddConfiguration(context.Configuration.GetSection("Logging"));
             logBuilder.AddFile(o =>
@@ -33,7 +40,7 @@ namespace ModelGenerator
                     new LogFileOptions
                     {
                         DateFormat = "s",
-                        Path = "modelGenerator.log"
+                        Path = logfileName
                     }
                 };
             });
@@ -44,15 +51,15 @@ namespace ModelGenerator
             // Load main settings from file in application folder
             var assemblyLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             configBuilder.AddYamlFile(Path.Combine(assemblyLocation, "appSettings.yml"));
-            
+
             // Load additional layer from working directory
-            configBuilder.AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.yml"), optional: true);
+            configBuilder.AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.yml"), true);
         }
 
         private static void RegisterServices(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             collection.AddOptions();
-            
+
             ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
             Fortis.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
             Tds.ServicesConfigurator.Configure(collection);

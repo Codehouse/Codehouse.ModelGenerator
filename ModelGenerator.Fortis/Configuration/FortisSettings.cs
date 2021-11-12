@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ModelGenerator.Fortis.Configuration
 {
@@ -6,10 +7,10 @@ namespace ModelGenerator.Fortis.Configuration
     {
         public record FieldTypeMappingSettings
         {
-            public Dictionary<string, string[]> ConcreteFieldTypes { get; } = new Dictionary<string, string[]>();
+            public Dictionary<string, string> ConcreteFieldTypes { get; } = new(StringComparer.OrdinalIgnoreCase);
             public string FallBackFieldType { get; init; }
-            public Dictionary<string, string> FieldParameterMappings { get; } = new Dictionary<string, string>();
-            public Dictionary<string, string[]> FieldValueMappings { get; } = new Dictionary<string, string[]>();
+            public Dictionary<string, string> FieldParameterMappings { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, string> FieldValueMappings { get; } = new(StringComparer.OrdinalIgnoreCase);
         }
 
         public record QuirkSettings
@@ -20,14 +21,14 @@ namespace ModelGenerator.Fortis.Configuration
             /// <para>If false, adds only direct base templates</para>
             /// </summary>
             public bool FullInterfaceList { get; init; }
-            
+
             /// <summary>
             /// Toggle whether or not to use local namespaces for field and template ID classes.
             /// <para>If true, field and template ID classes for a template will use that template's local namespace.</para>
             /// <para>If false, field and template ID classes for a template will use the template set's namespace.</para>
             /// </summary>
             public bool LocalNamespaceForIds { get; init; }
-            
+
             /// <summary>
             /// Toggle whether or not to mark template interfaces as partial.
             /// <para>If true, interfaces will be marked partial.</para>
@@ -36,8 +37,8 @@ namespace ModelGenerator.Fortis.Configuration
             public bool PartialInterfaces { get; init; }
         }
 
-        public FieldTypeMappingSettings FieldTypeMappings { get; } = new FieldTypeMappingSettings();
+        public FieldTypeMappingSettings FieldTypeMappings { get; } = new();
         public string[] NamespaceImports { get; init; }
-        public QuirkSettings Quirks { get; } = new QuirkSettings();
+        public QuirkSettings Quirks { get; } = new();
     }
 }

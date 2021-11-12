@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.ItemModelling;
@@ -7,22 +8,17 @@ namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class FieldTypeResolver
     {
+        private readonly IDictionary<string, string> _fieldParameterLookup;
+        private readonly IDictionary<string, string> _fieldTypeLookup;
+        private readonly IDictionary<string, string> _fieldValueLookup;
         private readonly FortisSettings.FieldTypeMappingSettings _settings;
-        private readonly IImmutableDictionary<string, string> _fieldTypeLookup;
-        private readonly IImmutableDictionary<string, string> _fieldValueLookup;
-        private readonly ImmutableDictionary<string, string> _fieldParameterLookup;
 
         public FieldTypeResolver(FortisSettings settings)
         {
             _settings = settings.FieldTypeMappings;
             _fieldParameterLookup = _settings.FieldParameterMappings.ToImmutableDictionary();
-            _fieldTypeLookup = MappingInverter.InvertMapping(_settings.ConcreteFieldTypes, StringComparer.OrdinalIgnoreCase);
-            _fieldValueLookup = MappingInverter.InvertMapping(_settings.FieldValueMappings, StringComparer.OrdinalIgnoreCase);
-        }
-        
-        public string GetFieldInterfaceType(TemplateField field)
-        {
-            return "I" + GetFieldConcreteType(field);
+            _fieldTypeLookup = _settings.ConcreteFieldTypes;
+            _fieldValueLookup = _settings.FieldValueMappings;
         }
 
         public string GetFieldConcreteType(TemplateField field)
@@ -35,15 +31,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
             return _settings.FallBackFieldType;
         }
 
-        public string? GetFieldValueType(TemplateField field)
+        public string GetFieldInterfaceType(TemplateField field)
         {
-            var concreteFieldType = GetFieldConcreteType(field);
-            if (_fieldValueLookup.TryGetValue(concreteFieldType, out string fieldType))
-            {
-                return fieldType;
-            }
-
-            return null;
+            return "I" + GetFieldConcreteType(field);
         }
 
         public string GetFieldParameterType(TemplateField field)
@@ -55,6 +45,17 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
 
             throw new NotSupportedException($"Field type '{field.FieldType}' cannot be used in rendering parameters.");
+        }
+
+        public string? GetFieldValueType(TemplateField field)
+        {
+            var concreteFieldType = GetFieldConcreteType(field);
+            if (_fieldValueLookup.TryGetValue(concreteFieldType, out string fieldType))
+            {
+                return fieldType;
+            }
+
+            return null;
         }
     }
 }
