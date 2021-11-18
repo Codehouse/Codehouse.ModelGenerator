@@ -66,7 +66,7 @@ namespace ModelGenerator.Framework.ItemModelling
 
         private Template CreateTemplate(IDatabase database, Item templateItem)
         {
-            var sections = database.GetChildren(templateItem.Id);
+            var sections = database.GetChildren(templateItem.Id).Where(f => f.TemplateId == _templateIds.TemplateSection);
             var fields = sections
                          .SelectMany(section => database.GetChildren(section.Id), (section, fieldItem) => new TemplateField
                          {
