@@ -4,6 +4,7 @@
     - 'src\*\*\serialisation\**\*.scproj'
   ModelFolder: 'ItemModels'
   ModelNamespace: 'Models'
+  Verbosity: 'Verbose'
 PathFilters:
   Exclude: [ ]
 # Dictionary of well-known field IDs used by generation

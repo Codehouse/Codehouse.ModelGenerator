@@ -11,6 +11,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.FileScanning;
+using ModelGenerator.Framework.Progress;
 
 namespace ModelGenerator.Tds
 {
@@ -18,7 +19,6 @@ namespace ModelGenerator.Tds
     {
         private static class ElementNames
         {
-            public static string EnableGeneration => "EnableCodeGeneration";
             public static string ProjectId => "ProjectGuid";
             public static string ProjectName => "Name";
             public static string ProjectSourcePath => "SourceWebPhysicalPath";
@@ -47,17 +47,29 @@ namespace ModelGenerator.Tds
             _filePathFilters = filePathFilters.ToArray();
         }
 
-        public async Task<FileSet?> ScanSourceAsync(string path)
+        public async Task<FileSet?> ScanSourceAsync(RagBuilder<string> ragBuilder, string path)
         {
             _logger.LogInformation($"Scanning source {path}");
-            return await ReadTdsProject(path);
+            var projectName = Path.GetFileNameWithoutExtension(path);
+            var scopedBuilder = new ScopedRagBuilder<string>(projectName);
+            
+            var fileset = await ReadTdsProject(scopedBuilder, projectName, path);
+            if (scopedBuilder.CanPass)
+            {
+                scopedBuilder.AddPass();
+            }
+            
+            ragBuilder.MergeBuilder(scopedBuilder);
+            return fileset;
         }
 
-        private ItemFile? CreateItemFile(string projectFolder, XElement element)
+        private ItemFile? CreateItemFile(ScopedRagBuilder<string> ragBuilder, string projectFolder, XElement element)
         {
             var path = DecodeFilePath(element.Attribute("Include")?.Value);
             if (string.IsNullOrEmpty(path))
             {
+                _logger.LogWarning("Empty item file path in TDS project.");
+                ragBuilder.AddWarn($"TDS item file was empty: {path}");
                 return null;
             }
 
@@ -78,7 +90,7 @@ namespace ModelGenerator.Tds
             return ((char)byte.Parse(value, NumberStyles.HexNumber)).ToString();
         }
 
-        private bool EnsureItemFileExists(string itemFilePath)
+        private bool EnsureItemFileExists(ScopedRagBuilder<string> scopedRagBuilder, string projectFolder, string itemFilePath)
         {
             if (string.IsNullOrEmpty(itemFilePath))
             {
@@ -90,20 +102,31 @@ namespace ModelGenerator.Tds
                 return true;
             }
 
+            var relativeItemFilePath = Path.GetRelativePath(projectFolder, itemFilePath);
             _logger.LogWarning($"Item file {itemFilePath} does not exist.");
+            scopedRagBuilder.AddWarn($"Item file {relativeItemFilePath} does not exist.");
             return false;
         }
 
-        private async Task<FileSet> ReadTdsProject(string projectFilePath)
+        private TValue GetDictionaryKey<TKey, TValue>(string scope, IDictionary<TKey, TValue> dictionary, TKey key)
         {
-            var projectName = Path.GetFileNameWithoutExtension(projectFilePath);
+            if (dictionary.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+
+            throw new FileScanException($"Property dictionary for {scope} did not contain entry for {key}.");
+        }
+
+        private async Task<FileSet?> ReadTdsProject(ScopedRagBuilder<string> ragBuilder, string projectName, string projectFilePath)
+        {
             _logger.LogDebug($"Reading {projectName}");
             try
             {
                 var projectFolder = Path.GetDirectoryName(projectFilePath);
                 if (projectFolder == null)
                 {
-                    throw new InvalidOperationException($"Could not resolve path from project {projectFolder}");
+                    throw new FileScanException($"Could not resolve path from project {projectFolder}");
                 }
 
                 using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings { Async = true });
@@ -117,9 +140,9 @@ namespace ModelGenerator.Tds
                 var files = xml.Root
                                .Elements(TagNames.ItemGroup)
                                .Elements(TagNames.Item)
-                               .Select(e => CreateItemFile(projectFolder, e))
+                               .Select(e => CreateItemFile(ragBuilder, projectFolder, e))
                                .Where(f => f != null)
-                               .Where(f => EnsureItemFileExists(f.Path))
+                               .Where(f => EnsureItemFileExists(ragBuilder, projectFolder, f.Path))
                                .Where(f => _filePathFilters.All(filter => filter.Accept(f.Path)))
                                .ToImmutableList();
 
@@ -132,17 +155,19 @@ namespace ModelGenerator.Tds
                 return new FileSet
                 {
                     Files = files,
-                    Id = properties[ElementNames.ProjectId],
-                    Name = properties[ElementNames.ProjectName],
-                    Namespace = properties[ElementNames.ProjectName].Replace(".Master", ".Models"),
+                    Id = GetDictionaryKey(projectName, properties, ElementNames.ProjectId),
+                    Name = GetDictionaryKey(projectName, properties, ElementNames.ProjectName),
+                    Namespace = GetDictionaryKey(projectName, properties, ElementNames.ProjectName)
+                        .Replace(".Master", ".Models"),
                     ItemPath = projectFolder,
-                    ModelPath = Path.GetFullPath(Path.Combine(projectFolder, properties[ElementNames.ProjectSourcePath])),
+                    ModelPath = Path.GetFullPath(Path.Combine(projectFolder, GetDictionaryKey(projectName, properties, ElementNames.ProjectSourcePath))),
                     References = references
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Could not parse file {projectName}");
+                ragBuilder.AddWarn("Could not parse TDS project file.", ex);
                 return null;
             }
         }

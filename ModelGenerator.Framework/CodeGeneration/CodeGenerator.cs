@@ -54,7 +54,7 @@ namespace ModelGenerator.Framework.CodeGeneration
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Could not generate code for file {modelFile.FileName} in {modelFile.RootPath}");
-                return null;
+                throw;
             }
         }
     }

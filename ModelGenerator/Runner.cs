@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +20,7 @@ namespace ModelGenerator
 {
     public class Runner
     {
-        // TODO: Separate out into individual classes.
+        // TODO: Reports on step progress.
         private readonly ProgressStep<DatabaseActivity> _databaseActivity;
         private readonly ProgressStep<FileParseActivity> _fileParseActivity;
         private readonly ProgressStep<FileScanActivity> _fileScanActivity;
@@ -57,49 +59,36 @@ namespace ModelGenerator
             using var job = _progressTracker.CreateJob("Overall progress");
             job.MaxValue = 6;
 
-            var fileSets = await GetFileSets(job, stoppingToken);
-            var itemSets = await GetItemSets(job, fileSets, stoppingToken);
-            var database = await ConstructDatabase(job, itemSets, stoppingToken);
-            var templates = await ConstructTemplates(job, database, stoppingToken);
-            var typeSets = await CreateTypeSets(job, templates, stoppingToken);
-
-            await GenerateCode(job, database, templates, typeSets, stoppingToken);
+            var fileSetReport = await GetFileSets(job, stoppingToken);
+            var itemSetReport = await GetItemSets(job, fileSetReport.Result, stoppingToken);
+            var databaseReport = await ConstructDatabase(job, itemSetReport.Result, stoppingToken);
+            var templateReport = await ConstructTemplates(job, databaseReport.Result, stoppingToken);
+            var typeSetReport = await CreateTypeSets(job, templateReport.Result, stoppingToken);
+            var generationReport = await GenerateCode(job, databaseReport.Result, templateReport.Result, typeSetReport.Result, stoppingToken);
+            
             job.Stop();
+            _progressTracker.Finish();
+            
+            PrintReports(fileSetReport, itemSetReport, databaseReport, templateReport, typeSetReport, generationReport);
         }
 
-        private async Task<IDatabase> ConstructDatabase(Job job, ICollection<ItemSet> itemSets, CancellationToken stoppingToken)
+        private Task<IReport<IDatabase>> ConstructDatabase(Job job, ICollection<ItemSet> itemSets, CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Constructing database.");
-            _databaseActivity.Activity.SetInput(itemSets);
-            await _databaseActivity.ExecuteAsync(stoppingToken);
-
-            job.Increment();
-            return _databaseActivity.Activity.GetOutput();
+            return RunStep<DatabaseActivity, IDatabase, ICollection<ItemSet>>(job, _databaseActivity, itemSets, stoppingToken);
         }
 
-        private async Task<TemplateCollection> ConstructTemplates(Job job, IDatabase database, CancellationToken stoppingToken)
+        private Task<IReport<TemplateCollection>> ConstructTemplates(Job job, IDatabase database, CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Constructing template structure.");
-            _templateActivity.Activity.SetInput(database);
-            await _templateActivity.ExecuteAsync(stoppingToken);
-
-            job.Increment();
-            return _templateActivity.Activity.GetOutput();
+            return RunStep<TemplateActivity, TemplateCollection, IDatabase>(job, _templateActivity, database, stoppingToken);
         }
 
-        private async Task<IImmutableList<TypeSet>> CreateTypeSets(Job job, TemplateCollection templates, CancellationToken cancellationToken)
+        private Task<IReport<IImmutableList<TypeSet>>> CreateTypeSets(Job job, TemplateCollection templates, CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Constructing type sets.");
-            _typeActivity.Activity.SetInput(templates);
-            await _typeActivity.ExecuteAsync(cancellationToken);
-
-            job.Increment();
-            return _typeActivity.Activity.GetOutput();
+            return RunStep<TypeActivity, IImmutableList<TypeSet>, TemplateCollection>(job, _typeActivity, templates, stoppingToken);
         }
 
-        private async Task GenerateCode(Job job, IDatabase database, TemplateCollection templates, IEnumerable<TypeSet> typeSets, CancellationToken stoppingToken)
+        private Task<IReport<ICollection<FileInfo>>> GenerateCode(Job job, IDatabase database, TemplateCollection templates, IEnumerable<TypeSet> typeSets, CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Outputting types.");
             var contexts = typeSets.Select(t => new GenerationContext
             {
                 Database = database,
@@ -107,33 +96,46 @@ namespace ModelGenerator
                 TypeSet = t
             });
 
-            _generationActivity.Activity.SetInput(contexts);
-            await _generationActivity.ExecuteAsync(stoppingToken);
-            job.Increment();
+            return RunStep<GenerationActivity, ICollection<FileInfo>, IEnumerable<GenerationContext>>(job, _generationActivity, contexts, stoppingToken);
         }
 
-        private async Task<ICollection<FileSet>> GetFileSets(Job job, CancellationToken stoppingToken)
+        private Task<IReport<ICollection<FileSet>>> GetFileSets(Job job, CancellationToken stoppingToken)
         {
             // TODO: Make TDS settings TDS-specific.
-            _logger.LogInformation("Locating item files.");
-
             _fileScanActivity.Activity.SetRoot(_settings.Value.Root);
-            _fileScanActivity.Activity.SetInput(_settings.Value.Patterns);
-            await _fileScanActivity.ExecuteAsync(stoppingToken);
-
-            job.Increment();
-            return _fileScanActivity.Activity.GetOutput();
+            return RunStep<FileScanActivity, ICollection<FileSet>, IEnumerable<string>>(job, _fileScanActivity, _settings.Value.Patterns, stoppingToken);
         }
 
-        private async Task<ICollection<ItemSet>> GetItemSets(Job job, ICollection<FileSet> fileSets, CancellationToken stoppingToken)
+        private Task<IReport<ICollection<ItemSet>>> GetItemSets(Job job, ICollection<FileSet> fileSets, CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Parsing item files.");
+            return RunStep<FileParseActivity, ICollection<ItemSet>, IEnumerable<FileSet>> (job, _fileParseActivity, fileSets, stoppingToken);
+        }
 
-            _fileParseActivity.Activity.SetInput(fileSets);
-            await _fileParseActivity.ExecuteAsync(stoppingToken);
-
+        private async Task<IReport<TResult>> RunStep<TActivity, TResult, TInput>(Job job, ProgressStep<TActivity> step, TInput input, CancellationToken stoppingToken)
+            where TActivity : IActivity<TInput, TResult>
+        {
+            _logger.LogInformation(step.Activity.Description);
+            step.Activity.SetInput(input);
+            
+            await step.ExecuteAsync(stoppingToken);
             job.Increment();
-            return _fileParseActivity.Activity.GetOutput();
+            
+            var report = step.Activity.GetOutput();
+            if (report.Result == null)
+            {
+                _logger.LogWarning($"Result of step '{step.Activity.Description}' was null.");
+                throw new InvalidOperationException("Step result was null.");
+            }
+            
+            return report;
+        }
+
+        private void PrintReports(params IReport[] reports)
+        {
+            foreach (var report in reports)
+            {
+                report.Print(_settings.Value.Verbosity);
+            }
         }
     }
 }

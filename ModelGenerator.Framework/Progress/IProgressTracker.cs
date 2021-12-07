@@ -3,5 +3,6 @@
     public interface IProgressTracker
     {
         Job CreateJob(string description);
+        void Finish();
     }
 }

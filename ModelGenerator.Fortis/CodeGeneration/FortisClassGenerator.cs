@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -190,43 +191,67 @@ namespace ModelGenerator.Fortis.CodeGeneration
             var fieldComment = _xmlDocGenerator.GetFieldComment(template, templateField);
 
             // TODO: Fix spacing on property accessors.
-            yield return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
-                         .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
-                         .AddAccessorListAccessors(
-                             AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                 .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
-                                 .WithExpressionBody(
-                                     ArrowExpressionClause(GetFieldInvocation(isRenderingParameters, templateField, concreteType))
-                                 )
-                                 .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
-                         )
-                         .If(
-                             !isRenderingParameters,
-                             property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
-                         .WithLeadingTrivia(fieldComment);
+            yield return GeneratePropertyField(model.Template, templateField, isRenderingParameters, concreteType, fieldComment);
 
             var valueType = _fieldTypeResolver.GetFieldValueType(templateField);
             if (valueType != null)
             {
-                yield return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
-                             .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                             .AddAccessorListAccessors(
-                                 AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                     .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
-                                     .WithExpressionBody(
-                                         ArrowExpressionClause(
-                                             MemberAccessExpression(
-                                                 SyntaxKind.SimpleMemberAccessExpression,
-                                                 IdentifierName(_fieldNameResolver.GetFieldName(templateField)),
-                                                 IdentifierName("Value"))
-                                         )
-                                     )
-                                     .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
-                             )
-                             .If(
-                                 !isRenderingParameters,
-                                 property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
-                             .WithLeadingTrivia(fieldComment);
+                yield return GeneratePropertyFieldValue(model.Template, templateField, valueType, isRenderingParameters, fieldComment);
+            }
+        }
+
+        private PropertyDeclarationSyntax GeneratePropertyFieldValue(Template template, TemplateField templateField, string? valueType, bool isRenderingParameters, SyntaxTriviaList fieldComment)
+        {
+            try
+            {
+                return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
+                       .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                       .AddAccessorListAccessors(
+                           AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                               .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
+                               .WithExpressionBody(
+                                   ArrowExpressionClause(
+                                       MemberAccessExpression(
+                                           SyntaxKind.SimpleMemberAccessExpression,
+                                           IdentifierName(_fieldNameResolver.GetFieldName(templateField)),
+                                           IdentifierName("Value"))
+                                   )
+                               )
+                               .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
+                       )
+                       .If(
+                           !isRenderingParameters,
+                           property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
+                       .WithLeadingTrivia(fieldComment);
+            }
+            catch (Exception ex)
+            {
+                throw new GenerationException($"Could not generate field value property for field {templateField.Name} on template {template.Name}.", ex);
+            }
+        }
+
+        private PropertyDeclarationSyntax GeneratePropertyField(Template template, TemplateField templateField, bool isRenderingParameters, string? concreteType, SyntaxTriviaList fieldComment)
+        {
+            try
+            {
+                return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
+                       .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
+                       .AddAccessorListAccessors(
+                           AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                               .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
+                               .WithExpressionBody(
+                                   ArrowExpressionClause(GetFieldInvocation(isRenderingParameters, templateField, concreteType))
+                               )
+                               .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
+                       )
+                       .If(
+                           !isRenderingParameters,
+                           property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
+                       .WithLeadingTrivia(fieldComment);
+            }
+            catch (Exception ex)
+            {
+                throw new GenerationException($"Could not generate field property for field {templateField.Name} on template {template.Name}.", ex);
             }
         }
 

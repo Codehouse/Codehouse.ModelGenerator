@@ -11,7 +11,7 @@ namespace ModelGenerator.Framework.Activities
 
         private TInput? _input;
         private bool _isRunning;
-        private TOutput? _output;
+        private IReport<TOutput>? _output;
 
         public async Task ExecuteAsync(Job job, CancellationToken cancellationToken)
         {
@@ -31,7 +31,7 @@ namespace ModelGenerator.Framework.Activities
             }
         }
 
-        public virtual TOutput GetOutput()
+        public virtual IReport<TOutput> GetOutput()
         {
             if (_output == null)
             {
@@ -56,6 +56,6 @@ namespace ModelGenerator.Framework.Activities
             _input = input;
         }
 
-        protected abstract Task<TOutput> ExecuteAsync(Job job, TInput input, CancellationToken cancellationToken);
+        protected abstract Task<IReport<TOutput>> ExecuteAsync(Job job, TInput input, CancellationToken cancellationToken);
     }
 }

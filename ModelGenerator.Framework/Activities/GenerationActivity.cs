@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,11 +11,12 @@ using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Framework.Activities
 {
-    public class GenerationActivity : CollectionActivityBase<GenerationContext, bool>
+    public class GenerationActivity : CollectionActivityBase<GenerationContext, FileInfo, FileInfo[]>
     {
         public override string Description => "Generate code";
         private readonly ICodeGenerator _codeGenerator;
         private readonly ILogger<GenerationActivity> _logger;
+        private readonly RagBuilder<string> _ragBuilder = new();
 
         public GenerationActivity(ILogger<GenerationActivity> logger, ICodeGenerator codeGenerator)
         {
@@ -21,7 +24,21 @@ namespace ModelGenerator.Framework.Activities
             _codeGenerator = codeGenerator;
         }
 
-        protected override async Task<bool> ExecuteItemAsync(Job job, GenerationContext input)
+        protected override IReport<ICollection<FileInfo>> CreateReport(ICollection<FileInfo> results)
+        {
+            return new RagReport<ICollection<FileInfo>, string>(Description,
+                _ragBuilder,
+                results);
+        }
+
+        protected override ICollection<FileInfo> ConvertResults(FileInfo[]?[] results)
+        {
+            return results.SelectMany(s => s)
+                          .WhereNotNull()
+                          .ToArray();
+        }
+
+        protected override async Task<FileInfo[]> ExecuteItemAsync(Job job, GenerationContext input)
         {
             var typeSet = input.TypeSet;
 
@@ -29,7 +46,7 @@ namespace ModelGenerator.Framework.Activities
             var tasks = typeSet.Files.Select(f => Task.Run(() => GenerateFile(input, f)));
             var generatedFiles = (await Task.WhenAll(tasks))
                                  .WhereNotNull()
-                                 .ToList();
+                                 .ToArray();
 
             var oldFiles = Directory.GetFiles(typeSet.RootPath, "*.cs", SearchOption.AllDirectories)
                                     .Except(generatedFiles.Select(f => f.FullName))
@@ -43,17 +60,20 @@ namespace ModelGenerator.Framework.Activities
                 }
             }
 
-            return true;
+            return generatedFiles;
         }
 
         private FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
         {
             try
             {
-                return _codeGenerator.GenerateFile(context, modelFile);
+                var file = _codeGenerator.GenerateFile(context, modelFile);
+                _ragBuilder.AddPass(file.FullName);
+                return file;
             }
             catch (Exception ex)
             {
+                _ragBuilder.AddFail(new RagStatus<string>(modelFile.FileName, ex));
                 _logger.LogError(ex, $"Could not generate file {modelFile.FileName}");
                 return null;
             }

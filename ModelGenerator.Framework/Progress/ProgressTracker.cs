@@ -61,5 +61,10 @@ namespace ModelGenerator.Framework.Progress
         {
             return new Job(_container.Context, description);
         }
+
+        public void Finish()
+        {
+            _container.Finish();
+        }
     }
 }

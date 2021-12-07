@@ -6,7 +6,17 @@ using ModelGenerator.Framework.Progress;
 
 namespace ModelGenerator.Framework.Activities
 {
-    public abstract class CollectionActivityBase<TInput, TOutput> : ActivityBase<IEnumerable<TInput>, ICollection<TOutput>>
+    public abstract class CollectionActivityBase<TInput, TOutput> : CollectionActivityBase<TInput, TOutput, TOutput>
+        where TOutput : class
+    {
+        protected override ICollection<TOutput> ConvertResults(TOutput?[] results)
+        {
+            return results.WhereNotNull().ToArray();
+        }
+    }
+    
+    public abstract class CollectionActivityBase<TInput, TOutput, TItemOutput> : ActivityBase<IEnumerable<TInput>, ICollection<TOutput>>
+        where TOutput : class
     {
         private readonly SemaphoreSlim _semaphore = new(0);
 
@@ -15,7 +25,7 @@ namespace ModelGenerator.Framework.Activities
             base.SetInput(input.ToArray());
         }
 
-        protected override async Task<ICollection<TOutput>> ExecuteAsync(Job job, IEnumerable<TInput> inputs, CancellationToken cancellationToken)
+        protected override async Task<IReport<ICollection<TOutput>>> ExecuteAsync(Job job, IEnumerable<TInput> inputs, CancellationToken cancellationToken)
         {
             job.MaxValue = inputs.Count() - 1;
             var taskList = inputs.Select(i => CreateItemTaskAsync(job, i, cancellationToken))
@@ -23,14 +33,15 @@ namespace ModelGenerator.Framework.Activities
 
             // TODO: Make DOP configurable.               
             _semaphore.Release(1);
-            return (await Task.WhenAll(taskList))
-                   .Where(r => r is not null)
-                   .ToArray()!;
+            var results = await Task.WhenAll(taskList);
+            return CreateReport(ConvertResults(results));
         }
 
-        protected abstract Task<TOutput?> ExecuteItemAsync(Job job, TInput input);
+        protected abstract IReport<ICollection<TOutput>> CreateReport(ICollection<TOutput> results);
+        protected abstract ICollection<TOutput> ConvertResults(TItemOutput?[] results);
+        protected abstract Task<TItemOutput?> ExecuteItemAsync(Job job, TInput input);
 
-        private async Task<TOutput?> CreateItemTaskAsync(Job job, TInput input, CancellationToken cancellationToken)
+        private async Task<TItemOutput?> CreateItemTaskAsync(Job job, TInput input, CancellationToken cancellationToken)
         {
             try
             {

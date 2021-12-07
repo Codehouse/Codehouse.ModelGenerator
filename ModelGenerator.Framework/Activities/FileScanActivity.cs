@@ -14,6 +14,7 @@ namespace ModelGenerator.Framework.Activities
     {
         public override string Description => "Scanning files";
 
+        private readonly RagBuilder<string> _builder = new();
         private readonly IFileScanner _fileScanner;
         private readonly ILogger<FileScanActivity> _logger;
         private string _root;
@@ -41,6 +42,11 @@ namespace ModelGenerator.Framework.Activities
             base.SetInput(input.SelectMany(EvaluatePattern));
         }
 
+        protected override IReport<ICollection<FileSet>> CreateReport(ICollection<FileSet> results)
+        {
+            return new RagReport<ICollection<FileSet>, string>(Description, _builder, results);
+        }
+
         public void SetRoot(string rootPath)
         {
             if (string.IsNullOrEmpty(rootPath))
@@ -59,7 +65,7 @@ namespace ModelGenerator.Framework.Activities
 
         protected override async Task<FileSet?> ExecuteItemAsync(Job job, string input)
         {
-            var fileSet = await _fileScanner.ScanSourceAsync(input);
+            var fileSet = await _fileScanner.ScanSourceAsync(_builder, input);
             if (fileSet != null && fileSet.Files.Count == 0)
             {
                 _logger.LogInformation($"Project {fileSet.Name} contains no items after filtering.");

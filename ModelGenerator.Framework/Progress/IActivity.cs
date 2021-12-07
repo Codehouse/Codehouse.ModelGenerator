@@ -11,7 +11,7 @@ namespace ModelGenerator.Framework.Progress
 
     public interface IActivity<TInput, TOutput> : IActivity
     {
-        TOutput GetOutput();
+        IReport<TOutput> GetOutput();
         void SetInput(TInput input);
     }
 }

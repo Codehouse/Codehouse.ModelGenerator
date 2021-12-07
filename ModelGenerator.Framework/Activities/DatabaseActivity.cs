@@ -17,9 +17,14 @@ namespace ModelGenerator.Framework.Activities
             _databaseFactory = databaseFactory;
         }
 
-        protected override Task<IDatabase> ExecuteAsync(Job job, ICollection<ItemSet> input, CancellationToken cancellationToken)
+        protected override Task<IReport<IDatabase>> ExecuteAsync(Job job, ICollection<ItemSet> input, CancellationToken cancellationToken)
         {
-            return Task.Run(() => _databaseFactory.CreateDatabase(input), cancellationToken);
+            return Task.Run(() => Execute(input), cancellationToken);
+        }
+
+        private IReport<IDatabase> Execute(ICollection<ItemSet> input)
+        {
+            return new NullReport<IDatabase>(_databaseFactory.CreateDatabase(input));
         }
     }
 }

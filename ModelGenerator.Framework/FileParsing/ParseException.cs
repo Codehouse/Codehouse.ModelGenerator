@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace ModelGenerator.Framework.FileParsing
+﻿namespace ModelGenerator.Framework.FileParsing
 {
-    public class ParseException : Exception
+    public class ParseException : FrameworkException
     {
         public ParseException(string message) : base(message)
         {
