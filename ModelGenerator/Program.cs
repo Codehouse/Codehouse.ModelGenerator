@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Karambolo.Extensions.Logging.File;
@@ -56,13 +57,39 @@ namespace ModelGenerator
             configBuilder.AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.yml"), true);
         }
 
+        private static void RegisterInputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
+        {
+            var providerName = hostBuilderContext.Configuration.GetValue<ProviderNames>("Providers:Input");
+            switch (providerName)
+            {
+                case ProviderNames.Tds:
+                    Tds.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                    break;
+                default:
+                    throw new Exception($"Unsupported input provider: {providerName}");
+            }
+        }
+
+        private static void RegisterOutputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
+        {
+            var providerName = hostBuilderContext.Configuration.GetValue<ProviderNames>("Providers:Output");
+            switch (providerName)
+            {
+                case ProviderNames.Fortis:
+                    Fortis.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                    break;
+                default:
+                    throw new Exception($"Unsupported output provider: {providerName}");
+            }
+        }
+
         private static void RegisterServices(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             collection.AddOptions();
 
             ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
-            Fortis.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
-            Tds.ServicesConfigurator.Configure(collection);
+            RegisterInputProvider(hostBuilderContext, collection);
+            RegisterOutputProvider(hostBuilderContext, collection);
 
             collection
                 .AddSingleton<Runner>()

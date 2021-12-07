@@ -1,7 +1,4 @@
 ﻿Settings:
-  Root: 'D:\Projects\Apm.MainSite'
-  Patterns:
-    - 'src\*\*\serialisation\**\*.scproj'
   ModelFolder: 'ItemModels'
   ModelNamespace: 'Models'
   Verbosity: 'Verbose'
@@ -119,6 +116,14 @@ XmlDocumentation:
     /// <para>ID: {{t.Id | scid}}</para>
     /// <para>Path: {{t.Path}}</para>
     /// </summary>
+
+Tds:
+  # Root folder (leave blank for working directory)
+  Root: ''
+  
+  # List of TDS sources (supports globbing)
+  Sources:
+    - 'src\*\*\serialisation\**\*.Master.scproj'
 
 Logging:
   LogLevel:

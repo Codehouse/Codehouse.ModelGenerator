@@ -17,7 +17,6 @@ namespace ModelGenerator.Framework.Activities
         private readonly RagBuilder<string> _builder = new();
         private readonly IFileScanner _fileScanner;
         private readonly ILogger<FileScanActivity> _logger;
-        private string _root;
 
         public FileScanActivity(
             ILogger<FileScanActivity> logger,
@@ -34,33 +33,12 @@ namespace ModelGenerator.Framework.Activities
                 throw new InvalidOperationException("There are no patterns configured.");
             }
 
-            if (string.IsNullOrEmpty(_root))
-            {
-                throw new InvalidOperationException("Root path has not been configured.");
-            }
-
-            base.SetInput(input.SelectMany(EvaluatePattern));
+            base.SetInput(input);
         }
 
         protected override IReport<ICollection<FileSet>> CreateReport(ICollection<FileSet> results)
         {
             return new RagReport<ICollection<FileSet>, string>(Description, _builder, results);
-        }
-
-        public void SetRoot(string rootPath)
-        {
-            if (string.IsNullOrEmpty(rootPath))
-            {
-                SetRoot(Directory.GetCurrentDirectory());
-                return;
-            }
-
-            if (!Directory.Exists(rootPath))
-            {
-                throw new InvalidOperationException($"Root directory {rootPath} does not exist.");
-            }
-
-            _root = rootPath;
         }
 
         protected override async Task<FileSet?> ExecuteItemAsync(Job job, string input)
@@ -75,13 +53,5 @@ namespace ModelGenerator.Framework.Activities
             return fileSet;
         }
 
-        private IEnumerable<string> EvaluatePattern(string pattern)
-        {
-            var matchedFiles = Glob.Files(_root, pattern)
-                                   .Select(path => Path.Combine(_root, path))
-                                   .ToList();
-            _logger.LogInformation($"Pattern {pattern} located {matchedFiles.Count} files.");
-            return matchedFiles;
-        }
     }
 }

@@ -28,11 +28,13 @@ namespace ModelGenerator
         private readonly ILogger<Runner> _logger;
         private readonly IProgressTracker _progressTracker;
         private readonly IOptions<Settings> _settings;
+        private readonly ISourceProvider _sourceProvider;
         private readonly ProgressStep<TemplateActivity> _templateActivity;
         private readonly ProgressStep<TypeActivity> _typeActivity;
 
         public Runner(
             IOptions<Settings> settings,
+            ISourceProvider sourceProvider,
             ProgressStep<DatabaseActivity> databaseActivity,
             ProgressStep<FileParseActivity> fileParseActivity,
             ProgressStep<FileScanActivity> fileScanActivity,
@@ -43,6 +45,7 @@ namespace ModelGenerator
             IProgressTracker progressTracker)
         {
             _settings = settings;
+            _sourceProvider = sourceProvider;
             _databaseActivity = databaseActivity;
             _fileParseActivity = fileParseActivity;
             _fileScanActivity = fileScanActivity;
@@ -101,9 +104,8 @@ namespace ModelGenerator
 
         private Task<IReport<ICollection<FileSet>>> GetFileSets(Job job, CancellationToken stoppingToken)
         {
-            // TODO: Make TDS settings TDS-specific.
-            _fileScanActivity.Activity.SetRoot(_settings.Value.Root);
-            return RunStep<FileScanActivity, ICollection<FileSet>, IEnumerable<string>>(job, _fileScanActivity, _settings.Value.Patterns, stoppingToken);
+            var sources = _sourceProvider.GetSources();
+            return RunStep<FileScanActivity, ICollection<FileSet>, IEnumerable<string>>(job, _fileScanActivity, sources, stoppingToken);
         }
 
         private Task<IReport<ICollection<ItemSet>>> GetItemSets(Job job, ICollection<FileSet> fileSets, CancellationToken stoppingToken)
