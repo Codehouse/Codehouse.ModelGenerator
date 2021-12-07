@@ -72,10 +72,7 @@ namespace ModelGenerator.Tds.Parsing
             var parsed = TdsFile.TryParse(tokenList);
             if (!parsed.HasValue)
             {
-                ////value = null;
-                ////error = parsed.ToString();
-                ////errorPosition = parsed.ErrorPosition;
-                throw new ParseException("Could not parse TDS item file: " + parsed.ErrorMessage);
+                throw new TdsParseException(parsed.ErrorPosition, "Could not parse TDS item file: " + parsed.ErrorMessage);
             }
 
             return parsed.Value;

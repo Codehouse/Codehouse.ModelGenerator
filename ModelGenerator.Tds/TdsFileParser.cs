@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
+using ModelGenerator.Framework.Progress;
 using ModelGenerator.Tds.Parsing;
 
 namespace ModelGenerator.Tds
@@ -31,10 +32,10 @@ namespace ModelGenerator.Tds
             _itemFilters = itemFilters.ToArray();
         }
 
-        public async Task<Item[]> ParseFile(FileSet fileSet, ItemFile file)
+        public async Task<Item[]> ParseFile(ScopedRagBuilder<string> scopedRagBuilder, FileSet fileSet, ItemFile file)
         {
             var rawItem = await File.ReadAllTextAsync(file.Path);
-            return ParseItems(fileSet, file, rawItem)
+            return ParseItems(scopedRagBuilder, fileSet, file, rawItem)
                    .WhereNotNull()
                    .Where(i => _itemFilters.All(f => f.Accept(i)))
                    .ToArray();
@@ -53,7 +54,7 @@ namespace ModelGenerator.Tds
             }.ToImmutableDictionary();
         }
 
-        private Item[] ParseItems(FileSet fileSet, ItemFile file, string rawItem)
+        private Item[] ParseItems(ScopedRagBuilder<string> scopedRagBuilder, FileSet fileSet, ItemFile file, string rawItem)
         {
             try
             {
@@ -66,14 +67,17 @@ namespace ModelGenerator.Tds
             catch (ParseException ex)
             {
                 _logger.LogError(ex, $"Could not parse file tokens {file.Path}");
+                scopedRagBuilder.AddFail("Could not parse file tokens.");
             }
             catch (TokenisationException ex)
             {
                 _logger.LogError(ex, $"Could not tokenise file {file.Path}");
+                scopedRagBuilder.AddFail("Could not tokenise files.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Unexpected error reading file {file.Path}");
+                scopedRagBuilder.AddFail("Unexpected error reading file.");
             }
 
             return Array.Empty<Item>();

@@ -62,24 +62,30 @@ namespace ModelGenerator.Framework.Activities
 
         private async Task<Item[]> ExecuteItem(FileSet input, ItemFile f)
         {
+            var scopedRagBuilder = new ScopedRagBuilder<string>(f.Path);
             try
             {
-                var items = await _fileParser.ParseFile(input, f);
+                var items = await _fileParser.ParseFile(scopedRagBuilder, input, f);
                 if (!items.Any())
                 {
-                    _ragBuilder.AddWarn(new RagStatus<string>(f.Path));
+                    scopedRagBuilder.AddWarn("File yielded no items.");
                 }
-                else
+
+                if (scopedRagBuilder.CanPass)
                 {
-                    _ragBuilder.AddPass(f.Path);
+                    scopedRagBuilder.AddPass();
                 }
 
                 return items;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                _ragBuilder.AddFail(new RagStatus<string>(f.Path, ex));
+                scopedRagBuilder.AddFail("Unhandled exception parsing file", ex);
                 return Array.Empty<Item>();
+            }
+            finally
+            {
+                _ragBuilder.MergeBuilder(scopedRagBuilder);
             }
         }
     }
