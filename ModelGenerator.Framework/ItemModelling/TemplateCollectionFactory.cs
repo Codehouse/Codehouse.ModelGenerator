@@ -9,11 +9,11 @@ namespace ModelGenerator.Framework.ItemModelling
 {
     public class TemplateCollectionFactory : ITemplateCollectionFactory
     {
-        private readonly IFieldIds _fieldIds;
+        private readonly FieldIds _fieldIds;
         private readonly ILogger<TemplateCollectionFactory> _logger;
-        private readonly ITemplateIds _templateIds;
+        private readonly TemplateIds _templateIds;
 
-        public TemplateCollectionFactory(IFieldIds fieldIds, ILogger<TemplateCollectionFactory> logger, ITemplateIds templateIds)
+        public TemplateCollectionFactory(FieldIds fieldIds, ILogger<TemplateCollectionFactory> logger, TemplateIds templateIds)
         {
             _fieldIds = fieldIds;
             _logger = logger;

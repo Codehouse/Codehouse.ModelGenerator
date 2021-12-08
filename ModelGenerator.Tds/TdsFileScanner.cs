@@ -38,7 +38,6 @@ namespace ModelGenerator.Tds
 
         private readonly ILogger<TdsFileScanner> _logger;
 
-
         public TdsFileScanner(
             ILogger<TdsFileScanner> logger,
             IEnumerable<IFilePathFilter> filePathFilters)
@@ -75,7 +74,7 @@ namespace ModelGenerator.Tds
 
             var properties = ToDictionarySafe(element.Elements()
                                                      .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
-                                                     .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
+                                                     .Select(e => KeyValuePair.Create(string.Intern(e.Name.LocalName), string.Intern(e.Value.Trim()))));
 
             return new ItemFile(Path.Combine(projectFolder, path), properties);
         }

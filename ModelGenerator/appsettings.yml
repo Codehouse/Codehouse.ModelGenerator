@@ -2,14 +2,32 @@
   ModelFolder: 'ItemModels'
   ModelNamespace: 'Models'
   Verbosity: 'Verbose'
+  
 PathFilters:
   Exclude: [ ]
+  
 # Dictionary of well-known field IDs used by generation
 FieldIds:
   BaseTemplates: '{12C33F3F-86C5-43A5-AEB4-5598CEC45116}'
   DisplayName: '{B5E02AD9-D56F-4C41-A065-A133DB87BDEB}'
   FieldType: '{AB162CC0-DC80-4ABF-8871-998EE5D7BA32}'
   Title: '{19A69332-A23E-4E70-8D16-B2640CB24CC8}'
+  
+Common:
+  ItemParsing:
+    # Any fields not on this list will be discarded
+    IncludedFields:
+      - '__Base template'
+      - '__Display name'
+      - '__Long description'
+      - '__Short description'
+      - 'Type'
+      - 'Title'
+    
+    # Intern values for the specified field types
+    InternFieldValues:
+      - 'Type'
+
 Fortis:
   FieldTypeMappings:
     # Map the Sitecore field type (case insensitive) to the concrete field type.

@@ -20,7 +20,6 @@ namespace ModelGenerator
 {
     public class Runner
     {
-        // TODO: Reports on step progress.
         private readonly ProgressStep<DatabaseActivity> _databaseActivity;
         private readonly ProgressStep<FileParseActivity> _fileParseActivity;
         private readonly ProgressStep<FileScanActivity> _fileScanActivity;
@@ -58,9 +57,9 @@ namespace ModelGenerator
 
         public async Task RunAsync(CancellationToken stoppingToken)
         {
-            // TODO: Add progress reporting/indicators
             using var job = _progressTracker.CreateJob("Overall progress");
             job.MaxValue = 6;
+            job.Start();
 
             var fileSetReport = await GetFileSets(job, stoppingToken);
             var itemSetReport = await GetItemSets(job, fileSetReport.Result, stoppingToken);
@@ -72,6 +71,7 @@ namespace ModelGenerator
             job.Stop();
             _progressTracker.Finish();
             
+            GC.Collect(3);
             PrintReports(fileSetReport, itemSetReport, databaseReport, templateReport, typeSetReport, generationReport);
         }
 

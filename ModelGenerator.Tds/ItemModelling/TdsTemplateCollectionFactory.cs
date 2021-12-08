@@ -12,9 +12,9 @@ namespace ModelGenerator.Tds.ItemModelling
     {
         private readonly Dictionary<string, int> _commonFolderDepths = new Dictionary<string, int>();
         private readonly Settings _settings;
-        private readonly ITemplateIds _templateIds;
+        private readonly TemplateIds _templateIds;
 
-        public TdsTemplateCollectionFactory(IFieldIds fieldIds, ILogger<TemplateCollectionFactory> logger, Settings settings, ITemplateIds templateIds)
+        public TdsTemplateCollectionFactory(FieldIds fieldIds, ILogger<TemplateCollectionFactory> logger, Settings settings, TemplateIds templateIds)
             : base(fieldIds, logger, templateIds)
         {
             _settings = settings;

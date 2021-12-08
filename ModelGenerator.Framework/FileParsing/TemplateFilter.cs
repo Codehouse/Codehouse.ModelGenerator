@@ -7,7 +7,7 @@ namespace ModelGenerator.Framework.FileParsing
     {
         private readonly Guid[] _validIds;
 
-        public TemplateFilter(ITemplateIds templateIds)
+        public TemplateFilter(TemplateIds templateIds)
         {
             _validIds = new[]
             {

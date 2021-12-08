@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.FileParsing;
 using Superpower;
 using Superpower.Model;
@@ -60,10 +61,12 @@ namespace ModelGenerator.Tds.Parsing
             from fields in TdsField.Many()
             select CreateVersion(versionProperties, fields);
 
+        private readonly ItemParsingSettings _settings;
         private readonly ITdsTokenizer _tokenizer;
 
-        public TdsItemParser(ITdsTokenizer tokenizer)
+        public TdsItemParser(ItemParsingSettings settings, ITdsTokenizer tokenizer)
         {
+            _settings = settings;
             _tokenizer = tokenizer;
         }
 
@@ -78,18 +81,28 @@ namespace ModelGenerator.Tds.Parsing
             return parsed.Value;
         }
 
-
-        private static Field CreateField(Dictionary<string, string> properties, string value)
+        private static string GetFieldValue(Token<TdsItemTokens>[] lines)
         {
+            return string.Join("", lines.SkipLast(1).Select(t => t.ToStringValue()));
+        }
+
+        private Field CreateField(Dictionary<string, string> properties, string value)
+        {
+            var name = string.Intern(properties[TdsPropertyNames.Name]);
+            if (_settings.InternedFieldValues.Contains(name, StringComparer.OrdinalIgnoreCase))
+            {
+                value = string.Intern(value);
+            }
+            
             return new Field
             {
                 Id = Guid.Parse(properties[TdsPropertyNames.FieldId]),
-                Name = properties[TdsPropertyNames.Name],
+                Name = name,
                 Value = value
             };
         }
 
-        private static Item CreateItem(Dictionary<string, string> itemProperties, Field[] sharedFields, LanguageVersion[] versions)
+        private Item CreateItem(Dictionary<string, string> itemProperties, Field[] sharedFields, LanguageVersion[] versions)
         {
             var id = Guid.Parse(itemProperties[TdsPropertyNames.Id]);
             var parent = Guid.Parse(itemProperties[TdsPropertyNames.ParentId]);
@@ -102,26 +115,27 @@ namespace ModelGenerator.Tds.Parsing
                 Parent = parent,
                 Path = itemProperties[TdsPropertyNames.Path],
                 TemplateId = templateId,
-                TemplateName = itemProperties[TdsPropertyNames.TemplateKey],
-                SharedFields = sharedFields.ToImmutableList(),
+                TemplateName = string.Intern(itemProperties[TdsPropertyNames.TemplateKey]),
+                SharedFields = FilterIncludedFields(sharedFields).ToImmutableList(),
                 Versions = versions.ToImmutableList()
             };
         }
 
-        private static LanguageVersion CreateVersion(Dictionary<string, string> versionProperties, Field[] fields)
+        private LanguageVersion CreateVersion(Dictionary<string, string> versionProperties, Field[] fields)
         {
             return new LanguageVersion
             {
-                Language = versionProperties[TdsPropertyNames.Language],
+                Language = string.Intern(versionProperties[TdsPropertyNames.Language]),
                 Number = int.Parse(versionProperties[TdsPropertyNames.Version]),
                 Revision = Guid.Parse(versionProperties[TdsPropertyNames.Revision]),
-                Fields = fields.ToImmutableDictionary(f => f.Id)
+                Fields = FilterIncludedFields(fields).ToImmutableDictionary(f => f.Id)
             };
         }
 
-        private static string GetFieldValue(Token<TdsItemTokens>[] lines)
+        private IEnumerable<Field> FilterIncludedFields(IEnumerable<Field> fields)
         {
-            return string.Join("", lines.SkipLast(1).Select(t => t.ToStringValue()));
+            return fields
+                .Where(f => _settings.IncludedFields.Contains(f.Name, StringComparer.OrdinalIgnoreCase));
         }
     }
 }

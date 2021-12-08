@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using ModelGenerator.Framework.Activities;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.Configuration;
@@ -17,17 +16,14 @@ namespace ModelGenerator.Framework
     {
         public static void Configure(IServiceCollection collection, IConfiguration configuration)
         {
+            // TODO: Move configuration into Common or activity-specific sections.
             collection
-                .Configure<FieldIds>(opts => configuration.GetSection(nameof(FieldIds)).Bind(opts))
-                .AddSingleton<IFieldIds, FieldIds>(sp => sp.GetRequiredService<IOptions<FieldIds>>().Value)
-                .Configure<PathFilterSettings>(opts => configuration.GetSection("PathFilters").Bind(opts))
-                .AddSingleton(sp => sp.GetRequiredService<IOptions<PathFilterSettings>>().Value)
-                .Configure<TemplateIds>(opts => configuration.GetSection(nameof(TemplateIds)).Bind(opts))
-                .AddSingleton<ITemplateIds, TemplateIds>(sp => sp.GetRequiredService<IOptions<TemplateIds>>().Value)
-                .Configure<Settings>(opts => configuration.GetSection(nameof(Settings)).Bind(opts))
-                .AddSingleton(sp => sp.GetRequiredService<IOptions<Settings>>().Value)
-                .Configure<XmlDocumentationSettings>(opts => configuration.GetSection("XmlDocumentation").Bind(opts))
-                .AddSingleton(sp => sp.GetRequiredService<IOptions<XmlDocumentationSettings>>().Value);
+                .AddConfiguration<FieldIds>(configuration, nameof(FieldIds))
+                .AddConfiguration<ItemParsingSettings>(configuration, "Common:ItemParsing")
+                .AddConfiguration<PathFilterSettings>(configuration, "PathFilters")
+                .AddConfiguration<TemplateIds>(configuration, nameof(TemplateIds))
+                .AddConfiguration<Settings>(configuration, nameof(Settings))
+                .AddConfiguration<XmlDocumentationSettings>(configuration, "XmlDocumentation");
 
             collection
                 .AddSingleton<ICodeGenerator, CodeGenerator>()

@@ -12,9 +12,9 @@ namespace ModelGenerator.Framework.ItemModelling
         public IImmutableDictionary<string, TemplateSet> TemplateSets { get; init; }
 
         private readonly IDictionary<Guid, Guid[]> _baseTemplateLookup = new Dictionary<Guid, Guid[]>();
-        private readonly ITemplateIds _templateIds;
+        private readonly TemplateIds _templateIds;
 
-        public TemplateCollection(ITemplateIds templateIds)
+        public TemplateCollection(TemplateIds templateIds)
         {
             _templateIds = templateIds;
         }

@@ -2,7 +2,7 @@
 
 namespace ModelGenerator.Framework.FileParsing
 {
-    public record TemplateIds : ITemplateIds
+    public record TemplateIds
     {
         public Guid RenderingParameters { get; init; }
         public Guid Template { get; init; }

@@ -2,7 +2,7 @@
 
 namespace ModelGenerator.Framework.FileParsing
 {
-    public record FieldIds : IFieldIds
+    public record FieldIds
     {
         public Guid BaseTemplates { get; init; }
         public Guid DisplayName { get; init; }
