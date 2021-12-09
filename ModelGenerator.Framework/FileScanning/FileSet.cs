@@ -2,14 +2,13 @@
 
 namespace ModelGenerator.Framework.FileScanning
 {
-    public record FileSet
-    {
-        public IImmutableList<ItemFile> Files { get; init; }
-        public string Id { get; init; }
-        public string ItemPath { get; init; }
-        public string ModelPath { get; init; }
-        public string Name { get; init; }
-        public string Namespace { get; init; }
-        public ImmutableArray<string> References { get; init; }
-    }
+    public record FileSet(
+        IImmutableList<ItemFile> Files,
+        string Id,
+        string ItemPath,
+        string ModelPath,
+        string Name,
+        string Namespace,
+        ImmutableArray<string> References
+    );
 }

@@ -53,7 +53,7 @@ namespace ModelGenerator.Framework.CodeGeneration
                 : syntax;
         }
 
-        public static ConstructorDeclarationSyntax WithBaseInitializer(this ConstructorDeclarationSyntax syntax, params string[] names)
+        public static ConstructorDeclarationSyntax WithBaseInitializer(this ConstructorDeclarationSyntax syntax, params string?[] names)
         {
             return syntax.WithInitializer(
                 SyntaxFactory.ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)

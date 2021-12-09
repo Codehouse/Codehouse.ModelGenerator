@@ -43,7 +43,7 @@ namespace ModelGenerator.Framework.Progress
             }
         }
 
-        private ContextContainer _container;
+        private ContextContainer _container = null!;
 
         public ProgressTracker()
         {
@@ -55,13 +55,17 @@ namespace ModelGenerator.Framework.Progress
                     new ProgressBarColumn(),
                     new PercentageColumn(),
                     new ElapsedTimeColumn());
-            
+
+            var containerCreationFlag = new TaskCompletionSource();
             progress.StartAsync(ctx =>
             {
                 _container = new ContextContainer(ctx);
+                containerCreationFlag.SetResult();
 
                 return _container.CompletionTask;
             });
+
+            containerCreationFlag.Task.Wait();
         }
 
         public Job CreateJob(string description)

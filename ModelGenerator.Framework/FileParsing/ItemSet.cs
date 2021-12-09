@@ -5,14 +5,13 @@ using System.Diagnostics;
 namespace ModelGenerator.Framework.FileParsing
 {
     [DebuggerDisplay("ItemSet: {Name} {Id}")]
-    public class ItemSet
-    {
-        public string Id { get; init; }
-        public string ItemPath { get; init; }
-        public IImmutableDictionary<Guid, Item> Items { get; init; }
-        public string ModelPath { get; init; }
-        public string Name { get; init; }
-        public string Namespace { get; init; }
-        public ImmutableArray<string> References { get; init; }
-    }
+    public record ItemSet(
+        string Id,
+        string ItemPath,
+        IImmutableDictionary<Guid, Item> Items,
+        string ModelPath,
+        string Name,
+        string Namespace,
+        ImmutableArray<string> References
+    );
 }

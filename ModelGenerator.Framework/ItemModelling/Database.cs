@@ -22,7 +22,19 @@ namespace ModelGenerator.Framework.ItemModelling
             var itemSetsByName = new Dictionary<string, ItemSet>(StringComparer.OrdinalIgnoreCase);
 
             // TODO: Well-known items
-            var root = new Item { Name = "sitecore", Id = Guid.Parse("{11111111-1111-1111-1111-111111111111}"), Hints = ImmutableDictionary<HintTypes, string>.Empty };
+            var root = new Item(
+                ImmutableDictionary<HintTypes, string>.Empty,
+                Guid.Parse("{11111111-1111-1111-1111-111111111111}"),
+                "sitecore",
+                Guid.Empty,
+                "/sitecore",
+                string.Empty,
+                "Well known",
+                ImmutableList<Field>.Empty,
+                Guid.Empty,
+                string.Empty,
+                ImmutableList<LanguageVersion>.Empty
+            );
             items.Add(root.Id, root);
 
             foreach (var itemSet in itemSets)

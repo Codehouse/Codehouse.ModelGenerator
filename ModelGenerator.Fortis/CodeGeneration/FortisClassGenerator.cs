@@ -79,7 +79,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                           .Select(tid => context.Templates.Templates[tid]);
 
             return baseTemplates
-                   .Where(t => t.SetId != null)
+                   .Where(t => t.SetId != string.Empty)
                    .Select(t => GetBaseTypeName(template, t, context.Templates))
                    .Prepend(_typeNameResolver.GetInterfaceName(template))
                    .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")
@@ -171,14 +171,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
-        private MemberDeclarationSyntax[] GenerateMembers(GenerationContext context, ModelType model, IEnumerable<TemplateField> fields)
-        {
-            return GenerateClassFields(context, model)
-                   .Union(GenerateConstructors(context, model))
-                   .Union(fields.SelectMany(f => GenerateProperty(context, model, f)))
-                   .ToArray();
-        }
-
         private IEnumerable<MemberDeclarationSyntax> GenerateProperty(GenerationContext context, ModelType model, TemplateField templateField)
         {
             var isRenderingParameters = context.Templates.IsRenderingParameters(model.Template.Id);
@@ -200,7 +192,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
-        private PropertyDeclarationSyntax GeneratePropertyFieldValue(Template template, TemplateField templateField, string? valueType, bool isRenderingParameters, SyntaxTriviaList fieldComment)
+        private PropertyDeclarationSyntax GeneratePropertyFieldValue(Template template, TemplateField templateField, string valueType, bool isRenderingParameters, SyntaxTriviaList fieldComment)
         {
             try
             {
@@ -230,7 +222,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
-        private PropertyDeclarationSyntax GeneratePropertyField(Template template, TemplateField templateField, bool isRenderingParameters, string? concreteType, SyntaxTriviaList fieldComment)
+        private PropertyDeclarationSyntax GeneratePropertyField(Template template, TemplateField templateField, bool isRenderingParameters, string concreteType, SyntaxTriviaList fieldComment)
         {
             try
             {

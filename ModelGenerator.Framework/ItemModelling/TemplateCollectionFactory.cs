@@ -33,11 +33,7 @@ namespace ModelGenerator.Framework.ItemModelling
                             .SelectMany(s => s.Templates.Values)
                             .ToImmutableDictionary(t => t.Id);
 
-            var collection = new TemplateCollection(_templateIds)
-            {
-                TemplateSets = templateSets.ToImmutableDictionary(s => s.Id),
-                Templates = templates
-            };
+            var collection = new TemplateCollection(_templateIds, templates, templateSets);
 
             // Early initialisation of all these caches removes need for locking during parallel generation.
             foreach (var template in templates.Keys)
@@ -69,15 +65,15 @@ namespace ModelGenerator.Framework.ItemModelling
             var sections = database.GetChildren(templateItem.Id).Where(f => f.TemplateId == _templateIds.TemplateSection);
             var fields = sections
                          .SelectMany(section => database.GetChildren(section.Id), (section, fieldItem) => new TemplateField
-                         {
-                             Id = fieldItem.Id,
-                             Name = fieldItem.Name,
-                             Item = fieldItem,
-                             DisplayName = fieldItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
-                             SectionName = section.Name,
-                             FieldType = fieldItem.GetUnversionedField(_fieldIds.FieldType)?.Value,
-                             TemplateId = templateItem.Id
-                         })
+                         (
+                             fieldItem.GetVersionedField(_fieldIds.DisplayName)?.Value ?? fieldItem.Name,
+                             fieldItem.GetUnversionedField(_fieldIds.FieldType)?.Value ?? throw new FrameworkException($"Field {fieldItem.Path} has no field type."),
+                             fieldItem.Id,
+                             fieldItem,
+                             fieldItem.Name,
+                             section.Name,
+                             templateItem.Id
+                         ))
                          .OrderBy(f => f.Name)
                          .ToImmutableList();
 
@@ -85,36 +81,38 @@ namespace ModelGenerator.Framework.ItemModelling
                                             .SingleOrDefault(f => f.Id == _fieldIds.BaseTemplates)
                                             .GetMultiReferenceValue();
 
-            return new Template
-            {
-                Id = templateItem.Id,
-                Name = templateItem.Name,
-                Item = templateItem,
-                DisplayName = templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value,
-                OwnFields = fields,
-                BaseTemplateIds = baseTemplates ?? new Guid[0],
-                LocalNamespace = ResolveLocalNamespace(database, templateItem),
-                Path = templateItem.Path,
-                SetId = templateItem.SetId
-            };
+            return new Template(
+                baseTemplates,
+                templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value ?? templateItem.Name,
+                templateItem.Id,
+                templateItem,
+                ResolveLocalNamespace(database, templateItem),
+                templateItem.Name,
+                fields,
+                templateItem.Path,
+                templateItem.SetId
+            );
         }
 
         private TemplateSet CreateTemplateSet(IDatabase database, IGrouping<ItemSet?, Item> grouping)
         {
             var items = grouping.ToArray();
             var groupName = grouping.Key;
-
-            return new TemplateSet
+            if (groupName == null)
             {
-                Id = groupName.Id,
-                Name = groupName.Name,
-                ItemPath = groupName.ItemPath,
-                ModelPath = groupName.ModelPath,
-                Namespace = groupName.Namespace,
-                References = groupName.References,
-                Templates = items.Select(i => CreateTemplate(database, i))
-                                 .ToImmutableDictionary(t => t.Id)
-            };
+                throw new FrameworkException("Template set was null during template collection creation.");
+            }
+
+            return new TemplateSet(
+                groupName.Id,
+                groupName.ItemPath,
+                groupName.ModelPath,
+                groupName.Name,
+                groupName.Namespace,
+                groupName.References,
+                items.Select(i => CreateTemplate(database, i))
+                     .ToImmutableDictionary(t => t.Id)
+            );
         }
 
         private TemplateSet GetWellKnownTemplates()
@@ -126,34 +124,43 @@ namespace ModelGenerator.Framework.ItemModelling
             {
                 {
                     standardTemplateId,
-                    new Template
-                    {
-                        Id = standardTemplateId,
-                        Name = "Standard Template",
-                        DisplayName = "Standard Template",
-                        OwnFields = ImmutableList<TemplateField>.Empty,
-                        BaseTemplateIds = new Guid[0]
-                    }
+                    new Template(
+                        new Guid[0],
+                        "Standard Template",
+                        standardTemplateId,
+                        null,
+                        string.Empty,
+                        "Standard Template",
+                        ImmutableList<TemplateField>.Empty,
+                        string.Empty,
+                        string.Empty
+                    )
                 },
                 {
                     folderTemplateId,
-                    new Template
-                    {
-                        Id = folderTemplateId,
-                        Name = "Folder",
-                        DisplayName = "Folder",
-                        OwnFields = ImmutableList<TemplateField>.Empty,
-                        BaseTemplateIds = new Guid[0]
-                    }
+                    new Template(
+                        new Guid[0],
+                        "Folder",
+                        folderTemplateId,
+                        null,
+                        string.Empty,
+                        "Folder",
+                        ImmutableList<TemplateField>.Empty,
+                        string.Empty,
+                        string.Empty
+                    )
                 }
             };
 
-            return new TemplateSet
-            {
-                Id = string.Empty,
-                Name = "Well Known",
-                Templates = templates.ToImmutableDictionary()
-            };
+            return new TemplateSet(
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                "Well Known",
+                string.Empty,
+                ImmutableArray<string>.Empty,
+                templates.ToImmutableDictionary()
+            );
         }
     }
 }

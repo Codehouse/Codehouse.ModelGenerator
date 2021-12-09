@@ -6,16 +6,15 @@ using ModelGenerator.Framework.FileParsing;
 namespace ModelGenerator.Framework.ItemModelling
 {
     [DebuggerDisplay("Template: {Name} ({Id})")]
-    public record Template
-    {
-        public Guid[] BaseTemplateIds { get; init; }
-        public string DisplayName { get; init; }
-        public Guid Id { get; init; }
-        public Item Item { get; init; }
-        public string LocalNamespace { get; init; }
-        public string Name { get; init; }
-        public IImmutableList<TemplateField> OwnFields { get; init; }
-        public string Path { get; init; }
-        public string SetId { get; init; }
-    }
+    public record Template(
+        Guid[] BaseTemplateIds,
+        string DisplayName,
+        Guid Id,
+        Item? Item,
+        string LocalNamespace,
+        string Name,
+        IImmutableList<TemplateField> OwnFields,
+        string Path,
+        string SetId
+    );
 }

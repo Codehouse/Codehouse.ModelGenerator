@@ -6,20 +6,20 @@ using System.Linq;
 namespace ModelGenerator.Framework.FileParsing
 {
     [DebuggerDisplay("Item: {Name} {Id}")]
-    public record Item
+    public record Item(
+        ImmutableDictionary<HintTypes, string> Hints,
+        Guid Id,
+        string Name,
+        Guid Parent,
+        string Path,
+        string RawFilePath,
+        string SetId,
+        ImmutableList<Field> SharedFields,
+        Guid TemplateId,
+        string TemplateName,
+        ImmutableList<LanguageVersion> Versions
+    )
     {
-        public ImmutableDictionary<HintTypes, string> Hints { get; init; }
-        public Guid Id { get; init; }
-        public string Name { get; init; }
-        public Guid Parent { get; init; }
-        public string Path { get; init; }
-        public string RawFilePath { get; init; }
-        public string SetId { get; set; }
-        public ImmutableList<Field> SharedFields { get; init; }
-        public Guid TemplateId { get; init; }
-        public string TemplateName { get; init; }
-        public ImmutableList<LanguageVersion> Versions { get; init; }
-
         public LanguageVersion? GetLatestVersion(string language = "en")
         {
             return Versions.Where(v => language.Equals(v.Language, StringComparison.OrdinalIgnoreCase))

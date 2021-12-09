@@ -41,16 +41,15 @@ namespace ModelGenerator.Framework.Activities
                             .SelectMany(i => i)
                             .ToDictionary(i => i.Id, i => i);
 
-                return new ItemSet
-                {
-                    Id = input.Id,
-                    Name = input.Name,
-                    Namespace = input.Namespace,
-                    ItemPath = input.ItemPath,
-                    ModelPath = input.ModelPath,
-                    References = input.References,
-                    Items = items.ToImmutableDictionary()
-                };
+                return new ItemSet(
+                    input.Id,
+                    input.ItemPath,
+                    items.ToImmutableDictionary(),
+                    input.ModelPath,
+                    input.Name,
+                    input.Namespace,
+                    input.References
+                );
             }
             catch (Exception e)
             {

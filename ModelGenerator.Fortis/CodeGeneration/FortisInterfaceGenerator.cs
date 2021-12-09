@@ -78,7 +78,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
-        private PropertyDeclarationSyntax GenerateFieldValueProperty(Template template, TemplateField templateField, string? valueType)
+        private PropertyDeclarationSyntax GenerateFieldValueProperty(Template template, TemplateField templateField, string valueType)
         {
             try
             {

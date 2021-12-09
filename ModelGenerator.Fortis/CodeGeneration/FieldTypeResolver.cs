@@ -23,12 +23,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
         public string GetFieldConcreteType(TemplateField field)
         {
-            if (_fieldTypeLookup.TryGetValue(field.FieldType, out string fieldType))
-            {
-                return fieldType;
-            }
-
-            return _settings.FallBackFieldType;
+            return _fieldTypeLookup.TryGetValue(field.FieldType, out var fieldType)
+                ? fieldType
+                : _settings.FallBackFieldType;
         }
 
         public string GetFieldInterfaceType(TemplateField field)
@@ -39,7 +36,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         public string GetFieldParameterType(TemplateField field)
         {
             var concreteFieldType = GetFieldConcreteType(field);
-            if (_fieldParameterLookup.TryGetValue(concreteFieldType, out string fieldType))
+            if (_fieldParameterLookup.TryGetValue(concreteFieldType, out var fieldType))
             {
                 return fieldType;
             }
@@ -50,12 +47,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
         public string? GetFieldValueType(TemplateField field)
         {
             var concreteFieldType = GetFieldConcreteType(field);
-            if (_fieldValueLookup.TryGetValue(concreteFieldType, out string fieldType))
-            {
-                return fieldType;
-            }
-
-            return null;
+            return _fieldValueLookup.TryGetValue(concreteFieldType, out var fieldType)
+                ? fieldType
+                : null;
         }
     }
 }

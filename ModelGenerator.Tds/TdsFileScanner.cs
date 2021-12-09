@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
+using ModelGenerator.Framework;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.Progress;
 
@@ -64,7 +65,7 @@ namespace ModelGenerator.Tds
 
         private ItemFile? CreateItemFile(ScopedRagBuilder<string> ragBuilder, string projectFolder, XElement element)
         {
-            var path = DecodeFilePath(element.Attribute("Include")?.Value);
+            var path = DecodeFilePath(element.Attribute("Include")?.Value ?? string.Empty);
             if (string.IsNullOrEmpty(path))
             {
                 _logger.LogWarning("Empty item file path in TDS project.");
@@ -130,38 +131,37 @@ namespace ModelGenerator.Tds
 
                 using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings { Async = true });
                 var xml = await XDocument.LoadAsync(xmlReader, LoadOptions.None, CancellationToken.None);
-                var properties = ToDictionarySafe(xml.Root
-                                                     .Elements(TagNames.PropertyGroup)
+                var properties = ToDictionarySafe(xml?.Root
+                                                     ?.Elements(TagNames.PropertyGroup)
                                                      .Where(e => !e.HasAttributes)
                                                      .Elements()
                                                      .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
 
-                var files = xml.Root
-                               .Elements(TagNames.ItemGroup)
+                var files = xml?.Root
+                               ?.Elements(TagNames.ItemGroup)
                                .Elements(TagNames.Item)
                                .Select(e => CreateItemFile(ragBuilder, projectFolder, e))
-                               .Where(f => f != null)
+                               .WhereNotNull()
                                .Where(f => EnsureItemFileExists(ragBuilder, projectFolder, f.Path))
                                .Where(f => _filePathFilters.All(filter => filter.Accept(f.Path)))
-                               .ToImmutableList();
+                               .ToImmutableList() ?? ImmutableList<ItemFile>.Empty;
 
-                var references = xml.Root
-                                    .Elements(TagNames.ItemGroup)
+                var references = xml?.Root
+                                    ?.Elements(TagNames.ItemGroup)
                                     .Elements(TagNames.CodeGenReference)
                                     .Select(e => e.Value)
-                                    .ToImmutableArray();
+                                    .ToImmutableArray() ?? ImmutableArray<string>.Empty;
 
-                return new FileSet
-                {
-                    Files = files,
-                    Id = GetDictionaryKey(projectName, properties, ElementNames.ProjectId),
-                    Name = GetDictionaryKey(projectName, properties, ElementNames.ProjectName),
-                    Namespace = GetDictionaryKey(projectName, properties, ElementNames.ProjectName)
+                return new FileSet(
+                    files,
+                    GetDictionaryKey(projectName, properties, ElementNames.ProjectId),
+                    projectFolder,
+                    Path.GetFullPath(Path.Combine(projectFolder, GetDictionaryKey(projectName, properties, ElementNames.ProjectSourcePath))),
+                    GetDictionaryKey(projectName, properties, ElementNames.ProjectName),
+                    GetDictionaryKey(projectName, properties, ElementNames.ProjectName)
                         .Replace(".Master", ".Models"),
-                    ItemPath = projectFolder,
-                    ModelPath = Path.GetFullPath(Path.Combine(projectFolder, GetDictionaryKey(projectName, properties, ElementNames.ProjectSourcePath))),
-                    References = references
-                };
+                    references
+                );
             }
             catch (Exception ex)
             {
@@ -171,7 +171,7 @@ namespace ModelGenerator.Tds
             }
         }
 
-        private IDictionary<string, string> ToDictionarySafe(IEnumerable<KeyValuePair<string, string>> properties)
+        private IDictionary<string, string> ToDictionarySafe(IEnumerable<KeyValuePair<string, string>>? properties)
         {
             Dictionary<string, string> Aggregator(Dictionary<string, string> d, KeyValuePair<string, string> kvp)
             {
@@ -191,6 +191,7 @@ namespace ModelGenerator.Tds
                 return d;
             }
 
+            properties ??= Enumerable.Empty<KeyValuePair<string, string>>();
             return properties.Aggregate(
                 new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 Aggregator);

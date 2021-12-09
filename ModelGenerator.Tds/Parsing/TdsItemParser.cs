@@ -7,13 +7,12 @@ using ModelGenerator.Framework.FileParsing;
 using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
-using ParseException = ModelGenerator.Framework.FileParsing.ParseException;
 
 namespace ModelGenerator.Tds.Parsing
 {
     internal class TdsItemParser : ITdsItemParser
     {
-        public TokenListParser<TdsItemTokens, Item[]> TdsFile =>
+        public TokenListParser<TdsItemTokens, TdsItem[]> TdsFile =>
             TdsItem.Many()
                    .AtEnd();
 
@@ -30,7 +29,7 @@ namespace ModelGenerator.Tds.Parsing
                                .Many()
             select GetFieldValue(lines);
 
-        private TokenListParser<TdsItemTokens, Item> TdsItem =>
+        private TokenListParser<TdsItemTokens, TdsItem> TdsItem =>
             from begin in Token.EqualTo(TdsItemTokens.ItemSeparator)
                                .IgnoreThen(Token.EqualTo(TdsItemTokens.NewLine))
             from itemProperties in TdsProperties
@@ -70,7 +69,7 @@ namespace ModelGenerator.Tds.Parsing
             _tokenizer = tokenizer;
         }
 
-        public Item[] ParseTokens(TokenList<TdsItemTokens> tokenList)
+        public TdsItem[] ParseTokens(TokenList<TdsItemTokens> tokenList)
         {
             var parsed = TdsFile.TryParse(tokenList);
             if (!parsed.HasValue)
@@ -93,43 +92,36 @@ namespace ModelGenerator.Tds.Parsing
             {
                 value = string.Intern(value);
             }
-            
-            return new Field
-            {
-                Id = Guid.Parse(properties[TdsPropertyNames.FieldId]),
-                Name = name,
-                Value = value
-            };
+
+            return new Field(Guid.Parse(properties[TdsPropertyNames.FieldId]), name, value);
         }
 
-        private Item CreateItem(Dictionary<string, string> itemProperties, Field[] sharedFields, LanguageVersion[] versions)
+        private TdsItem CreateItem(Dictionary<string, string> itemProperties, Field[] sharedFields, LanguageVersion[] versions)
         {
             var id = Guid.Parse(itemProperties[TdsPropertyNames.Id]);
             var parent = Guid.Parse(itemProperties[TdsPropertyNames.ParentId]);
             var templateId = Guid.Parse(itemProperties[TdsPropertyNames.TemplateId]);
 
-            return new Item
-            {
-                Id = id,
-                Name = itemProperties[TdsPropertyNames.Name],
-                Parent = parent,
-                Path = itemProperties[TdsPropertyNames.Path],
-                TemplateId = templateId,
-                TemplateName = string.Intern(itemProperties[TdsPropertyNames.TemplateKey]),
-                SharedFields = FilterIncludedFields(sharedFields).ToImmutableList(),
-                Versions = versions.ToImmutableList()
-            };
+            return new TdsItem(
+                id,
+                itemProperties[TdsPropertyNames.Name],
+                parent,
+                itemProperties[TdsPropertyNames.Path],
+                FilterIncludedFields(sharedFields).ToImmutableList(),
+                templateId,
+                string.Intern(itemProperties[TdsPropertyNames.TemplateKey]),
+                versions.ToImmutableList()
+            );
         }
 
         private LanguageVersion CreateVersion(Dictionary<string, string> versionProperties, Field[] fields)
         {
-            return new LanguageVersion
-            {
-                Language = string.Intern(versionProperties[TdsPropertyNames.Language]),
-                Number = int.Parse(versionProperties[TdsPropertyNames.Version]),
-                Revision = Guid.Parse(versionProperties[TdsPropertyNames.Revision]),
-                Fields = FilterIncludedFields(fields).ToImmutableDictionary(f => f.Id)
-            };
+            return new LanguageVersion(
+                FilterIncludedFields(fields).ToImmutableDictionary(f => f.Id),
+                string.Intern(versionProperties[TdsPropertyNames.Language]),
+                int.Parse(versionProperties[TdsPropertyNames.Version]),
+                Guid.Parse(versionProperties[TdsPropertyNames.Revision])
+            );
         }
 
         private IEnumerable<Field> FilterIncludedFields(IEnumerable<Field> fields)

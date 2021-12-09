@@ -15,11 +15,19 @@ namespace ModelGenerator
     {
         public static async Task Main(string[] args)
         {
-            await Host.CreateDefaultBuilder(args)
-                      .ConfigureAppConfiguration(LoadConfiguration)
-                      .ConfigureServices(RegisterServices)
-                      .ConfigureLogging(ConfigureLogging)
-                      .RunConsoleAsync();
+            try
+            {
+                await Host.CreateDefaultBuilder(args)
+                          .ConfigureAppConfiguration(LoadConfiguration)
+                          .ConfigureServices(RegisterServices)
+                          .ConfigureLogging(ConfigureLogging)
+                          .RunConsoleAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unhandled exception:");
+                Console.WriteLine(ex);
+            }
         }
 
         private static void ConfigureLogging(HostBuilderContext context, ILoggingBuilder logBuilder)
@@ -49,8 +57,19 @@ namespace ModelGenerator
 
         private static void LoadConfiguration(HostBuilderContext context, IConfigurationBuilder configBuilder)
         {
+            var entryAssembly = Assembly.GetEntryAssembly();
+            if (entryAssembly == null)
+            {
+                throw new Exception("Entry assembly was null.");
+            }
+            
             // Load main settings from file in application folder
-            var assemblyLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var assemblyLocation = Path.GetDirectoryName(entryAssembly.Location);
+            if (assemblyLocation == null)
+            {
+                throw new Exception("Entry assembly location could not be determined.");
+            }
+            
             configBuilder.AddYamlFile(Path.Combine(assemblyLocation, "appSettings.yml"));
 
             // Load additional layer from working directory

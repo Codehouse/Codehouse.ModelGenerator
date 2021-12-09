@@ -8,7 +8,7 @@ namespace ModelGenerator.Fortis.Configuration
         public record FieldTypeMappingSettings
         {
             public Dictionary<string, string> ConcreteFieldTypes { get; } = new(StringComparer.OrdinalIgnoreCase);
-            public string FallBackFieldType { get; init; }
+            public string FallBackFieldType { get; init; } = string.Empty;
             public Dictionary<string, string> FieldParameterMappings { get; } = new(StringComparer.OrdinalIgnoreCase);
             public Dictionary<string, string> FieldValueMappings { get; } = new(StringComparer.OrdinalIgnoreCase);
         }
@@ -38,7 +38,7 @@ namespace ModelGenerator.Fortis.Configuration
         }
 
         public FieldTypeMappingSettings FieldTypeMappings { get; } = new();
-        public string[] NamespaceImports { get; init; }
+        public string[] NamespaceImports { get; init; } = Array.Empty<string>();
         public QuirkSettings Quirks { get; } = new();
     }
 }

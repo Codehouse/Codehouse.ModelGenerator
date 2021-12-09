@@ -2,7 +2,7 @@
 {
     public class XmlDocumentationSettings
     {
-        public string Field { get; init; }
-        public string Template { get; init; }
+        public string Field { get; init; } = string.Empty;
+        public string Template { get; init; } = string.Empty;
     }
 }

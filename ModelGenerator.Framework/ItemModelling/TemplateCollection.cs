@@ -8,15 +8,17 @@ namespace ModelGenerator.Framework.ItemModelling
 {
     public class TemplateCollection
     {
-        public IImmutableDictionary<Guid, Template> Templates { get; init; }
-        public IImmutableDictionary<string, TemplateSet> TemplateSets { get; init; }
+        public IImmutableDictionary<Guid, Template> Templates { get; }
+        public IImmutableDictionary<string, TemplateSet> TemplateSets { get; }
 
         private readonly IDictionary<Guid, Guid[]> _baseTemplateLookup = new Dictionary<Guid, Guid[]>();
         private readonly TemplateIds _templateIds;
 
-        public TemplateCollection(TemplateIds templateIds)
+        public TemplateCollection(TemplateIds templateIds, ImmutableDictionary<Guid, Template> templates, TemplateSet[] templateSets)
         {
             _templateIds = templateIds;
+            Templates = templates;
+            TemplateSets = templateSets.ToImmutableDictionary(s => s.Id);
         }
 
         public IEnumerable<Template> GetAllBaseTemplates(Guid templateId)

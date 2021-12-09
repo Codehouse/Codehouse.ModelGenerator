@@ -14,15 +14,12 @@ namespace ModelGenerator.Framework.Progress
         public TResult Result { get; }
         public ICollection<RagStatus<TItem>> Warns { get; }
 
-        public RagReport(string name, RagBuilder<TItem> builder, TResult result) : this(name, result)
+        public RagReport(string name, RagBuilder<TItem> builder, TResult result)
         {
             Passes = builder.GetPasses();
             Warns = builder.GetWarns();
             Fails = builder.GetFails();
-        }
-
-        private RagReport(string name, TResult result)
-        {
+            
             Name = name;
             Result = result;
         }

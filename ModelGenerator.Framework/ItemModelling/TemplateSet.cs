@@ -5,14 +5,13 @@ using System.Diagnostics;
 namespace ModelGenerator.Framework.ItemModelling
 {
     [DebuggerDisplay("TemplateSet: {Name} {Id}")]
-    public class TemplateSet
-    {
-        public string Id { get; init; }
-        public string ItemPath { get; init; }
-        public string ModelPath { get; init; }
-        public string Name { get; init; }
-        public string Namespace { get; set; }
-        public ImmutableArray<string> References { get; set; }
-        public IImmutableDictionary<Guid, Template> Templates { get; init; }
-    }
+    public record TemplateSet(
+        string Id,
+        string ItemPath,
+        string ModelPath,
+        string Name,
+        string Namespace,
+        ImmutableArray<string> References,
+        IImmutableDictionary<Guid, Template> Templates
+    );
 }

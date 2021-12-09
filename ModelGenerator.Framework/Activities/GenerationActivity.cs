@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,14 +30,15 @@ namespace ModelGenerator.Framework.Activities
                 results);
         }
 
-        protected override ICollection<FileInfo> ConvertResults(FileInfo[]?[] results)
+        protected override ICollection<FileInfo> ConvertResults(FileInfo?[]?[] results)
         {
-            return results.SelectMany(s => s)
+            return results.WhereNotNull()
+                          .SelectMany(s => s)
                           .WhereNotNull()
                           .ToArray();
         }
 
-        protected override async Task<FileInfo[]> ExecuteItemAsync(Job job, GenerationContext input)
+        protected override async Task<FileInfo[]?> ExecuteItemAsync(Job job, GenerationContext input)
         {
             var typeSet = input.TypeSet;
 
@@ -68,7 +68,15 @@ namespace ModelGenerator.Framework.Activities
             try
             {
                 var file = _codeGenerator.GenerateFile(context, modelFile);
-                _ragBuilder.AddPass(file.FullName);
+                if (file == null)
+                {
+                    _ragBuilder.AddFail(new RagStatus<string>(modelFile.FileName, "Did not generate a file."));
+                }
+                else
+                {
+                    _ragBuilder.AddPass(file.FullName);
+                }
+                
                 return file;
             }
             catch (Exception ex)

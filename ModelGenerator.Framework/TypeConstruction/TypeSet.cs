@@ -5,10 +5,10 @@ namespace ModelGenerator.Framework.TypeConstruction
 {
     public record TypeSet
     {
-        public IImmutableList<ModelFile> Files { get; init; }
-        public string Name { get; init; }
-        public string Namespace { get; init; }
-        public ImmutableArray<TemplateSet> References { get; set; }
-        public string RootPath { get; init; }
+        public IImmutableList<ModelFile> Files { get; init; } = ImmutableList<ModelFile>.Empty;
+        public string Name { get; init; } = string.Empty;
+        public string Namespace { get; init; } = string.Empty;
+        public ImmutableArray<TemplateSet> References { get; set; } = ImmutableArray<TemplateSet>.Empty;
+        public string RootPath { get; init; } = string.Empty;
     }
 }

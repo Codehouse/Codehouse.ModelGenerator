@@ -92,12 +92,7 @@ namespace ModelGenerator
 
         private Task<IReport<ICollection<FileInfo>>> GenerateCode(Job job, IDatabase database, TemplateCollection templates, IEnumerable<TypeSet> typeSets, CancellationToken stoppingToken)
         {
-            var contexts = typeSets.Select(t => new GenerationContext
-            {
-                Database = database,
-                Templates = templates,
-                TypeSet = t
-            });
+            var contexts = typeSets.Select(t => new GenerationContext(database, templates, t));
 
             return RunStep<GenerationActivity, ICollection<FileInfo>, IEnumerable<GenerationContext>>(job, _generationActivity, contexts, stoppingToken);
         }

@@ -5,6 +5,6 @@ namespace ModelGenerator.Tds.Parsing
 {
     public interface ITdsItemParser
     {
-        Item[] ParseTokens(TokenList<TdsItemTokens> tokenList);
+        TdsItem[] ParseTokens(TokenList<TdsItemTokens> tokenList);
     }
 }

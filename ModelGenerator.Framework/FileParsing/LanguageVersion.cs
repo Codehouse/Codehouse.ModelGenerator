@@ -5,11 +5,5 @@ using System.Diagnostics;
 namespace ModelGenerator.Framework.FileParsing
 {
     [DebuggerDisplay("Version: {Language}#{Number}")]
-    public record LanguageVersion
-    {
-        public ImmutableDictionary<Guid, Field> Fields { get; init; }
-        public string Language { get; init; }
-        public int Number { get; init; }
-        public Guid Revision { get; init; }
-    }
+    public record LanguageVersion(ImmutableDictionary<Guid, Field> Fields, string Language, int Number, Guid Revision);
 }

@@ -23,7 +23,7 @@ namespace ModelGenerator.Framework.TypeConstruction
             return collection.TemplateSets
                              .Values
                              .Select(s => CreateTypeSet(collection, s))
-                             .Where(s => s != null)
+                             .WhereNotNull()
                              .ToImmutableList();
         }
 
@@ -34,12 +34,7 @@ namespace ModelGenerator.Framework.TypeConstruction
                 new ModelType(template.Name, template, set)
             };
 
-            return new ModelFile
-            {
-                RootPath = rootPath,
-                FileName = template.Name + ".Generated.cs",
-                Types = types.ToImmutableList()
-            };
+            return new ModelFile(template.Name + ".Generated.cs", rootPath, types.ToImmutableList());
         }
 
         private TypeSet? CreateTypeSet(TemplateCollection templateCollection, TemplateSet templateSet)

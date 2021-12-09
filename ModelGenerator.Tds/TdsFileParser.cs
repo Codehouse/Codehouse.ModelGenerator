@@ -61,7 +61,18 @@ namespace ModelGenerator.Tds
                 var hints = ParseHints(file);
                 var tokens = _tokenizer.Tokenize(rawItem);
                 return _parser.ParseTokens(tokens)
-                              .Select(i => i with { Hints = hints, RawFilePath = file.Path, SetId = fileSet.Id })
+                              .Select(i => new Item(
+                                  hints,
+                                  i.Id,
+                                  i.Name,
+                                  i.Parent,
+                                  i.Path,
+                                  file.Path,
+                                  fileSet.Id,
+                                  i.SharedFields,
+                                  i.TemplateId,
+                                  i.TemplateName,
+                                  i.Versions))
                               .ToArray();
             }
             catch (ParseException ex)

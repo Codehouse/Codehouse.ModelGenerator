@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using ModelGenerator.Framework;
 using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.ItemModelling;
@@ -29,7 +30,13 @@ namespace ModelGenerator.Tds.ItemModelling
             {
                 if (!_commonFolderDepths.ContainsKey(templateItem.SetId))
                 {
-                    _commonFolderDepths[templateItem.SetId] = CountCommonFolderDepth(database.GetItemSetForItem(templateItem.Id).Items.Values);
+                    var set = database.GetItemSetForItem(templateItem.Id);
+                    if (set == null)
+                    {
+                        throw new FrameworkException($"Could not find database set with ID {templateItem.SetId}");
+                    }
+                    
+                    _commonFolderDepths[templateItem.SetId] = CountCommonFolderDepth(set.Items.Values);
                 }
 
                 return CreateNamespaceFromPath(templateItem.Path, _commonFolderDepths[templateItem.SetId], 1);

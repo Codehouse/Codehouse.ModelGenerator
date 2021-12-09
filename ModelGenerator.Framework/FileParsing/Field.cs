@@ -4,10 +4,9 @@ using System.Diagnostics;
 namespace ModelGenerator.Framework.FileParsing
 {
     [DebuggerDisplay("Field: {Name} {Id}")]
-    public record Field
-    {
-        public Guid Id { get; init; }
-        public string Name { get; init; }
-        public string Value { get; init; }
-    }
+    public record Field(
+        Guid Id,
+        string Name,
+        string Value
+    );
 }

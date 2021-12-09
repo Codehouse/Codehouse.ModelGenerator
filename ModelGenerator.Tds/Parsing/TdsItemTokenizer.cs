@@ -11,12 +11,12 @@ namespace ModelGenerator.Tds.Parsing
 {
     public class TdsItemTokenizer : ITdsTokenizer
     {
-        public TextParser<TextSpan> PropertyName { get; private set; }
+        public TextParser<TextSpan> PropertyName { get; }
         private readonly Tokenizer<TdsItemTokens> _tokenizer;
 
         public TdsItemTokenizer()
         {
-            BuildParsers();
+            PropertyName = BuildParsers();
             _tokenizer = BuildTokenizer();
         }
 
@@ -31,9 +31,9 @@ namespace ModelGenerator.Tds.Parsing
             throw new TokenisationException(result.ErrorMessage);
         }
 
-        private void BuildParsers()
+        private TextParser<TextSpan> BuildParsers()
         {
-            PropertyName = BuildPropertyNameParser(typeof(TdsPropertyNames));
+            return BuildPropertyNameParser(typeof(TdsPropertyNames));
         }
 
         private TextParser<TextSpan> BuildPropertyNameParser(Type type)
