@@ -10,6 +10,7 @@ namespace ModelGenerator.Framework.ItemModelling
         Guid[] BaseTemplateIds,
         string DisplayName,
         Guid Id,
+        bool IsWellKnown,
         Item? Item,
         string LocalNamespace,
         string Name,

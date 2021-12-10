@@ -79,7 +79,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                           .Select(tid => context.Templates.Templates[tid]);
 
             return baseTemplates
-                   .Where(t => t.SetId != string.Empty)
+                   .Where(t => !t.IsWellKnown)
                    .Select(t => GetBaseTypeName(template, t, context.Templates))
                    .Prepend(_typeNameResolver.GetInterfaceName(template))
                    .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")

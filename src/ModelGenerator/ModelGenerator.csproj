@@ -6,6 +6,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\ModelGenerator.Fortis\ModelGenerator.Fortis.csproj" />
         <ProjectReference Include="..\ModelGenerator.Framework\ModelGenerator.Framework.csproj" />

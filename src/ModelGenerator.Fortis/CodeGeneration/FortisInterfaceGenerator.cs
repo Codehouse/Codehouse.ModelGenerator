@@ -60,7 +60,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
 
             return template.BaseTemplateIds
                            .Where(id => templates.ContainsKey(id))
-                           .Where(id => templates[id].SetId != null)
+                           .Where(id => !templates[id].IsWellKnown)
                            .Select(id => GetBaseTypeName(template, templates[id], context.Templates))
                            .Prepend(isRenderingParameters ? "IRenderingParameter" : "IItem")
                            .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))

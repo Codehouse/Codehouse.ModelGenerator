@@ -85,6 +85,7 @@ namespace ModelGenerator.Framework.ItemModelling
                 baseTemplates,
                 templateItem.GetVersionedField(_fieldIds.DisplayName)?.Value ?? templateItem.Name,
                 templateItem.Id,
+                false,
                 templateItem,
                 ResolveLocalNamespace(database, templateItem),
                 templateItem.Name,
@@ -105,6 +106,7 @@ namespace ModelGenerator.Framework.ItemModelling
 
             return new TemplateSet(
                 groupName.Id,
+                false,
                 groupName.ItemPath,
                 groupName.ModelPath,
                 groupName.Name,
@@ -128,6 +130,7 @@ namespace ModelGenerator.Framework.ItemModelling
                         new Guid[0],
                         "Standard Template",
                         standardTemplateId,
+                        true,
                         null,
                         string.Empty,
                         "Standard Template",
@@ -142,6 +145,7 @@ namespace ModelGenerator.Framework.ItemModelling
                         new Guid[0],
                         "Folder",
                         folderTemplateId,
+                        true,
                         null,
                         string.Empty,
                         "Folder",
@@ -154,6 +158,7 @@ namespace ModelGenerator.Framework.ItemModelling
 
             return new TemplateSet(
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 "Well Known",

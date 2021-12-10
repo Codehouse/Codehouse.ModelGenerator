@@ -7,6 +7,7 @@ namespace ModelGenerator.Framework.ItemModelling
     [DebuggerDisplay("TemplateSet: {Name} {Id}")]
     public record TemplateSet(
         string Id,
+        bool IsWellKnown,
         string ItemPath,
         string ModelPath,
         string Name,
