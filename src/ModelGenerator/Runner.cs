@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -57,6 +58,11 @@ namespace ModelGenerator
 
         public async Task RunAsync(CancellationToken stoppingToken)
         {
+            if (!CheckVersion())
+            {
+                return;
+            }
+            
             using var job = _progressTracker.CreateJob("Overall progress");
             job.MaxValue = 6;
             job.Start();
@@ -73,6 +79,44 @@ namespace ModelGenerator
 
             GC.Collect(3);
             PrintReports(fileSetReport, itemSetReport, databaseReport, templateReport, typeSetReport, generationReport);
+        }
+
+        private bool CheckVersion()
+        {
+            var currentVersion = Assembly.GetEntryAssembly()?.GetName().Version
+                              ?? throw new InvalidOperationException("Could not identify application version.");
+            
+            if (string.IsNullOrEmpty(_settings.Value.MinVersion))
+            {
+                var message = $"Minimum version not set in the config, set it to {currentVersion.ToString(2)}.";
+                _logger.LogInformation(message);
+                Console.WriteLine(message);
+                return false;
+            }
+
+            var minVersion = Version.Parse(_settings.Value.MinVersion);
+            if (minVersion > currentVersion)
+            {
+                var message = $"You are using {currentVersion} of the model generator tool, and you must be using at least {minVersion}.";
+                _logger.LogCritical(message);
+                Console.WriteLine(message);
+                return false;
+            }
+
+            if (currentVersion.Major > minVersion.Major || currentVersion.Minor > minVersion.Minor)
+            {
+                var message = $"You are using {currentVersion} of the model generator tool, which may not be compatible with {minVersion}.";
+                _logger.LogError(message);
+                Console.WriteLine(message);
+
+                message = $"Update the min version to {currentVersion.ToString(2)}.";
+                _logger.LogError(message);
+                Console.WriteLine(message);
+
+                return false;
+            }
+
+            return true;
         }
 
         private Task<IReport<IDatabase>> ConstructDatabase(Job job, ICollection<ItemSet> itemSets, CancellationToken stoppingToken)

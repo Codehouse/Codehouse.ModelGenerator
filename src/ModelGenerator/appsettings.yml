@@ -1,4 +1,5 @@
 ﻿Settings:
+  MinVersion: ''
   ModelFolder: 'ItemModels'
   ModelNamespace: 'Models'
   Verbosity: 'Verbose'
