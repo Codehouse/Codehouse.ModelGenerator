@@ -29,7 +29,7 @@ namespace ModelGenerator.Framework.CodeGeneration
 
         public static SyntaxTrivia NewLineTrivia()
         {
-            return EndOfLine(string.Empty);
+            return EndOfLine(Environment.NewLine);
         }
 
         public static SyntaxTrivia[] NewLineTrivia(int count)
@@ -62,6 +62,11 @@ namespace ModelGenerator.Framework.CodeGeneration
         {
             return SyntaxFactory.VariableDeclaration(typeName)
                                 .AddVariables(VariableDeclarator(Identifier(name)));
+        }
+
+        public static SyntaxTrivia Whitespace(int length = 1)
+        {
+            return SyntaxFactory.Whitespace(new string(' ', length));
         }
     }
 }

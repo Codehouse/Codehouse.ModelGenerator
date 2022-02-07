@@ -50,11 +50,11 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                    AttributeArgument(TypeOfExpression(ParseTypeName("Guid")))
                                )
                        )
-                       .AddMembers(GenerateClassFields(context, model).ToArray())
-                       .AddMembers(GenerateConstructors(context, model).ToArray())
                        .AddMembers(context.Templates.GetAllFields(model.Template.Id)
                                           .SelectMany(f => GenerateProperty(context, model, f))
                                           .ToArray())
+                       .AddMembers(GenerateClassFields(context, model).ToArray())
+                       .AddMembers(GenerateConstructors(context, model).ToArray())
                        .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
 
             yield return type;
@@ -81,6 +81,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             return baseTemplates
                    .Where(t => !t.IsWellKnown)
                    .Select(t => GetBaseTypeName(template, t, context.Templates))
+                   .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
                    .Prepend(_typeNameResolver.GetInterfaceName(template))
                    .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")
                    .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
@@ -192,6 +193,31 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
+        private PropertyDeclarationSyntax GeneratePropertyField(Template template, TemplateField templateField, bool isRenderingParameters, string concreteType, SyntaxTriviaList fieldComment)
+        {
+            try
+            {
+                return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
+                       .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
+                       .AddAccessorListAccessors(
+                           AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                               .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
+                               .WithExpressionBody(
+                                   ArrowExpressionClause(GetFieldInvocation(isRenderingParameters, templateField, concreteType))
+                               )
+                               .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
+                       )
+                       .If(
+                           !isRenderingParameters,
+                           property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
+                       .WithLeadingTrivia(fieldComment);
+            }
+            catch (Exception ex)
+            {
+                throw new GenerationException($"Could not generate field property for field {templateField.Name} on template {template.Name}.", ex);
+            }
+        }
+
         private PropertyDeclarationSyntax GeneratePropertyFieldValue(Template template, TemplateField templateField, string valueType, bool isRenderingParameters, SyntaxTriviaList fieldComment)
         {
             try
@@ -219,31 +245,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
             catch (Exception ex)
             {
                 throw new GenerationException($"Could not generate field value property for field {templateField.Name} on template {template.Name}.", ex);
-            }
-        }
-
-        private PropertyDeclarationSyntax GeneratePropertyField(Template template, TemplateField templateField, bool isRenderingParameters, string concreteType, SyntaxTriviaList fieldComment)
-        {
-            try
-            {
-                return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
-                       .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.VirtualKeyword))
-                       .AddAccessorListAccessors(
-                           AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                               .AddSingleAttributes(Attribute(ParseName("DebuggerStepThrough")))
-                               .WithExpressionBody(
-                                   ArrowExpressionClause(GetFieldInvocation(isRenderingParameters, templateField, concreteType))
-                               )
-                               .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
-                       )
-                       .If(
-                           !isRenderingParameters,
-                           property => property.AddSingleAttributes(SitecoreIndexField(templateField.Name)))
-                       .WithLeadingTrivia(fieldComment);
-            }
-            catch (Exception ex)
-            {
-                throw new GenerationException($"Could not generate field property for field {templateField.Name} on template {template.Name}.", ex);
             }
         }
 

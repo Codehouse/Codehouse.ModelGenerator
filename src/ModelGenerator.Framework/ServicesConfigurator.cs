@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelGenerator.Framework.Activities;
 using ModelGenerator.Framework.CodeGeneration;
@@ -30,11 +32,16 @@ namespace ModelGenerator.Framework
                 .AddSingleton<IDatabaseFactory, DatabaseFactory>()
                 .AddSingleton<IFilePathFilter, TemplateFilter>()
                 .AddSingleton<IItemFilter, PathFilter>()
-                //.AddSingleton<IItemFilter, TemplateFilter>()
                 .AddSingleton<IProgressTracker, ProgressTracker>()
                 .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
                 .AddSingleton<ITypeFactory, TypeFactory>()
                 .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
+
+            collection
+                .AddTransient<IRewriter, AccessorRewriter>()
+                .AddTransient<IRewriter, BaseTypeListRewriter>()
+                .AddTransient<IRewriter, SpacingRewriter>()
+                .AddSingleton<Func<IEnumerable<IRewriter>>>(sp => sp.GetServices<IRewriter>);
 
             collection.AddSingleton(typeof(ProgressStep<>))
                       .AddSingleton<DatabaseActivity>()
