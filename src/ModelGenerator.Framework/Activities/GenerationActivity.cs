@@ -23,19 +23,19 @@ namespace ModelGenerator.Framework.Activities
             _codeGenerator = codeGenerator;
         }
 
-        protected override IReport<ICollection<FileInfo>> CreateReport(ICollection<FileInfo> results)
-        {
-            return new RagReport<ICollection<FileInfo>, string>(Description,
-                _ragBuilder,
-                results);
-        }
-
         protected override ICollection<FileInfo> ConvertResults(FileInfo?[]?[] results)
         {
             return results.WhereNotNull()
                           .SelectMany(s => s)
                           .WhereNotNull()
                           .ToArray();
+        }
+
+        protected override IReport<ICollection<FileInfo>> CreateReport(ICollection<FileInfo> results)
+        {
+            return new RagReport<ICollection<FileInfo>, string>(Description,
+                _ragBuilder,
+                results);
         }
 
         protected override async Task<FileInfo[]?> ExecuteItemAsync(Job job, GenerationContext input)
@@ -76,7 +76,7 @@ namespace ModelGenerator.Framework.Activities
                 {
                     _ragBuilder.AddPass(file.FullName);
                 }
-                
+
                 return file;
             }
             catch (Exception ex)

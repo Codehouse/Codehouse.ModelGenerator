@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using ModelGenerator.Framework.Configuration;
 using Spectre.Console;
@@ -19,7 +18,7 @@ namespace ModelGenerator.Framework.Progress
             Passes = builder.GetPasses();
             Warns = builder.GetWarns();
             Fails = builder.GetFails();
-            
+
             Name = name;
             Result = result;
         }
@@ -27,9 +26,9 @@ namespace ModelGenerator.Framework.Progress
         public void Print(Verbosities verbosity)
         {
             AnsiConsole.MarkupLine($"[underline]{Name} results:[/]");
-            
-            PrintGroup("Pass" , "green", Passes, verbosity, Verbosities.VeryVerbose);
-            PrintGroup("Warn" , "olive", Warns, verbosity, Verbosities.Verbose);
+
+            PrintGroup("Pass", "green", Passes, verbosity, Verbosities.VeryVerbose);
+            PrintGroup("Warn", "olive", Warns, verbosity, Verbosities.Verbose);
             PrintGroup("Fail", "maroon", Fails, verbosity, Verbosities.Normal);
 
             AnsiConsole.WriteLine();
@@ -39,7 +38,7 @@ namespace ModelGenerator.Framework.Progress
         {
             var valueGroups = statusCollection.GroupBy(f => f.Value).ToArray();
             AnsiConsole.MarkupLine($"  {title}: [{colour}]{valueGroups.Length:N0}[/]");
-            
+
             if (verbosity >= itemisationThreshold)
             {
                 foreach (var valueGroup in valueGroups)

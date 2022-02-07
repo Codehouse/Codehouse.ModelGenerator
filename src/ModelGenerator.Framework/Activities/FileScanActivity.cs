@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using GlobExpressions;
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.Progress;
@@ -52,6 +50,5 @@ namespace ModelGenerator.Framework.Activities
 
             return fileSet;
         }
-
     }
 }

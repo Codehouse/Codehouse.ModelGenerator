@@ -17,14 +17,14 @@ namespace ModelGenerator.Tds
             _log = log;
             _settings = settings;
         }
-        
+
         public IEnumerable<string> GetSources()
         {
             return _settings.Sources
                             .SelectMany(EvaluatePattern)
                             .ToArray();
         }
-        
+
         private IEnumerable<string> EvaluatePattern(string pattern)
         {
             var matchedFiles = Glob.Files(_settings.Root, pattern)

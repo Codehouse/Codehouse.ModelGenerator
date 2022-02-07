@@ -67,10 +67,10 @@ namespace ModelGenerator
             var templateReport = await ConstructTemplates(job, databaseReport.Result, stoppingToken);
             var typeSetReport = await CreateTypeSets(job, templateReport.Result, stoppingToken);
             var generationReport = await GenerateCode(job, databaseReport.Result, templateReport.Result, typeSetReport.Result, stoppingToken);
-            
+
             job.Stop();
             _progressTracker.Finish();
-            
+
             GC.Collect(3);
             PrintReports(fileSetReport, itemSetReport, databaseReport, templateReport, typeSetReport, generationReport);
         }
@@ -105,26 +105,7 @@ namespace ModelGenerator
 
         private Task<IReport<ICollection<ItemSet>>> GetItemSets(Job job, ICollection<FileSet> fileSets, CancellationToken stoppingToken)
         {
-            return RunStep<FileParseActivity, ICollection<ItemSet>, IEnumerable<FileSet>> (job, _fileParseActivity, fileSets, stoppingToken);
-        }
-
-        private async Task<IReport<TResult>> RunStep<TActivity, TResult, TInput>(Job job, ProgressStep<TActivity> step, TInput input, CancellationToken stoppingToken)
-            where TActivity : IActivity<TInput, TResult>
-        {
-            _logger.LogInformation(step.Activity.Description);
-            step.Activity.SetInput(input);
-            
-            await step.ExecuteAsync(stoppingToken);
-            job.Increment();
-            
-            var report = step.Activity.GetOutput();
-            if (report.Result == null)
-            {
-                _logger.LogWarning($"Result of step '{step.Activity.Description}' was null.");
-                throw new InvalidOperationException("Step result was null.");
-            }
-            
-            return report;
+            return RunStep<FileParseActivity, ICollection<ItemSet>, IEnumerable<FileSet>>(job, _fileParseActivity, fileSets, stoppingToken);
         }
 
         private void PrintReports(params IReport[] reports)
@@ -133,6 +114,25 @@ namespace ModelGenerator
             {
                 report.Print(_settings.Value.Verbosity);
             }
+        }
+
+        private async Task<IReport<TResult>> RunStep<TActivity, TResult, TInput>(Job job, ProgressStep<TActivity> step, TInput input, CancellationToken stoppingToken)
+            where TActivity : IActivity<TInput, TResult>
+        {
+            _logger.LogInformation(step.Activity.Description);
+            step.Activity.SetInput(input);
+
+            await step.ExecuteAsync(stoppingToken);
+            job.Increment();
+
+            var report = step.Activity.GetOutput();
+            if (report.Result == null)
+            {
+                _logger.LogWarning($"Result of step '{step.Activity.Description}' was null.");
+                throw new InvalidOperationException("Step result was null.");
+            }
+
+            return report;
         }
     }
 }

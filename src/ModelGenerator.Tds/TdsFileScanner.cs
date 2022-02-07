@@ -52,13 +52,13 @@ namespace ModelGenerator.Tds
             _logger.LogInformation($"Scanning source {path}");
             var projectName = Path.GetFileNameWithoutExtension(path);
             var scopedBuilder = new ScopedRagBuilder<string>(projectName);
-            
+
             var fileset = await ReadTdsProject(scopedBuilder, projectName, path);
             if (scopedBuilder.CanPass)
             {
                 scopedBuilder.AddPass();
             }
-            
+
             ragBuilder.MergeBuilder(scopedBuilder);
             return fileset;
         }

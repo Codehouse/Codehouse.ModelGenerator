@@ -1,5 +1,4 @@
-﻿using ModelGenerator.Framework.FileParsing;
-using Superpower.Model;
+﻿using Superpower.Model;
 
 namespace ModelGenerator.Tds.Parsing
 {

@@ -10,10 +10,25 @@ namespace ModelGenerator.Framework.Progress
         public string? Message { get; }
         public T Value { get; }
 
-        public RagStatus(T value) => (Value, Message, Exception) = (value, null, null);
-        public RagStatus(T value, string message) => (Value, Message, Exception) = (value, message, null);
-        public RagStatus(T value, string message, Exception ex) => (Value, Message, Exception) = (value, message, ex);
-        public RagStatus(T value, Exception ex) => (Value, Message, Exception) = (value, ex.Message, ex);
+        public RagStatus(T value)
+        {
+            (Value, Message, Exception) = (value, null, null);
+        }
+
+        public RagStatus(T value, string message)
+        {
+            (Value, Message, Exception) = (value, message, null);
+        }
+
+        public RagStatus(T value, string message, Exception ex)
+        {
+            (Value, Message, Exception) = (value, message, ex);
+        }
+
+        public RagStatus(T value, Exception ex)
+        {
+            (Value, Message, Exception) = (value, ex.Message, ex);
+        }
 
         public void Print(Verbosities verbosity)
         {
@@ -32,8 +47,6 @@ namespace ModelGenerator.Framework.Progress
                     break;
                 case not null:
                     PrintFullException(Exception);
-                    break;
-                default:
                     break;
             }
         }

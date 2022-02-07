@@ -14,7 +14,7 @@ namespace ModelGenerator.Framework.Activities
             return results.WhereNotNull().ToArray();
         }
     }
-    
+
     public abstract class CollectionActivityBase<TInput, TOutput, TItemOutput> : ActivityBase<IEnumerable<TInput>, ICollection<TOutput>>
         where TOutput : class
     {
@@ -24,6 +24,10 @@ namespace ModelGenerator.Framework.Activities
         {
             base.SetInput(input.ToArray());
         }
+
+        protected abstract ICollection<TOutput> ConvertResults(TItemOutput?[] results);
+
+        protected abstract IReport<ICollection<TOutput>> CreateReport(ICollection<TOutput> results);
 
         protected override async Task<IReport<ICollection<TOutput>>> ExecuteAsync(Job job, IEnumerable<TInput> inputs, CancellationToken cancellationToken)
         {
@@ -37,8 +41,6 @@ namespace ModelGenerator.Framework.Activities
             return CreateReport(ConvertResults(results));
         }
 
-        protected abstract IReport<ICollection<TOutput>> CreateReport(ICollection<TOutput> results);
-        protected abstract ICollection<TOutput> ConvertResults(TItemOutput?[] results);
         protected abstract Task<TItemOutput?> ExecuteItemAsync(Job job, TInput input);
 
         private async Task<TItemOutput?> CreateItemTaskAsync(Job job, TInput input, CancellationToken cancellationToken)

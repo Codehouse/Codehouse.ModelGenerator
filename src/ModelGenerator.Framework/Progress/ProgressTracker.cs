@@ -48,13 +48,13 @@ namespace ModelGenerator.Framework.Progress
         public ProgressTracker()
         {
             var progress = AnsiConsole
-                .Progress()
-                .HideCompleted(false)
-                .Columns(
-                    new TaskDescriptionColumn(),
-                    new ProgressBarColumn(),
-                    new PercentageColumn(),
-                    new ElapsedTimeColumn());
+                           .Progress()
+                           .HideCompleted(false)
+                           .Columns(
+                               new TaskDescriptionColumn(),
+                               new ProgressBarColumn(),
+                               new PercentageColumn(),
+                               new ElapsedTimeColumn());
 
             var containerCreationFlag = new TaskCompletionSource();
             progress.StartAsync(ctx =>

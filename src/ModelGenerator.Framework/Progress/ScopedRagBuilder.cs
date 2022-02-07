@@ -7,9 +7,9 @@ namespace ModelGenerator.Framework.Progress
     public class ScopedRagBuilder<T>
     {
         public bool CanPass => !HasFails && !HasWarns;
-        public bool HasWarns => !_warns.IsEmpty;
         public bool HasFails => !_fails.IsEmpty;
-        
+        public bool HasWarns => !_warns.IsEmpty;
+
         private readonly ConcurrentBag<RagStatus<T>> _fails = new();
         private readonly ConcurrentBag<RagStatus<T>> _passes = new();
         private readonly T _scope;
@@ -36,7 +36,7 @@ namespace ModelGenerator.Framework.Progress
             {
                 throw new InvalidOperationException($"Cannot pass an item with {_fails.Count:N0} fails and {_warns.Count:N0} warnings.");
             }
-            
+
             _passes.Add(new RagStatus<T>(_scope));
         }
 
@@ -61,7 +61,7 @@ namespace ModelGenerator.Framework.Progress
             {
                 _passes.Clear();
             }
-            
+
             _fails.Add(status);
         }
 
@@ -71,7 +71,7 @@ namespace ModelGenerator.Framework.Progress
             {
                 _passes.Clear();
             }
-            
+
             _warns.Add(status);
         }
     }

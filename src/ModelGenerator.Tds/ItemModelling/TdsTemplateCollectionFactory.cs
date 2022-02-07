@@ -35,7 +35,7 @@ namespace ModelGenerator.Tds.ItemModelling
                     {
                         throw new FrameworkException($"Could not find database set with ID {templateItem.SetId}");
                     }
-                    
+
                     _commonFolderDepths[templateItem.SetId] = CountCommonFolderDepth(set.Items.Values);
                 }
 

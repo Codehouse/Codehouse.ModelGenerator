@@ -6,7 +6,7 @@ namespace ModelGenerator.Framework.Progress
     {
         void Print(Verbosities verbosity);
     }
-    
+
     public interface IReport<T> : IReport
     {
         T Result { get; }

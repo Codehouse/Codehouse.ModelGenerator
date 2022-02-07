@@ -10,7 +10,7 @@ namespace ModelGenerator.Framework.Progress
         {
             Result = result;
         }
-        
+
         public void Print(Verbosities verbosity)
         {
             // This report outputs nothing.

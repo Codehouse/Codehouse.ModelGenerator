@@ -78,21 +78,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
             }
         }
 
-        private PropertyDeclarationSyntax GenerateFieldValueProperty(Template template, TemplateField templateField, string valueType)
-        {
-            try
-            {
-                return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
-                       .AddAccessorListAccessors(AutoGet())
-                       .AddSingleAttributes(SitecoreIndexField(templateField.Name))
-                       .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, templateField));
-            }
-            catch (Exception ex)
-            {
-                throw new GenerationException($"Could not generate field value property for field {templateField.Name} on template {template.Name}.", ex);
-            }
-        }
-
         private PropertyDeclarationSyntax GenerateFieldProperty(Template template, TemplateField templateField)
         {
             try
@@ -113,6 +98,21 @@ namespace ModelGenerator.Fortis.CodeGeneration
             return templateOwnFields
                    .SelectMany(f => GenerateField(model, f))
                    .ToArray();
+        }
+
+        private PropertyDeclarationSyntax GenerateFieldValueProperty(Template template, TemplateField templateField, string valueType)
+        {
+            try
+            {
+                return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
+                       .AddAccessorListAccessors(AutoGet())
+                       .AddSingleAttributes(SitecoreIndexField(templateField.Name))
+                       .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, templateField));
+            }
+            catch (Exception ex)
+            {
+                throw new GenerationException($"Could not generate field value property for field {templateField.Name} on template {template.Name}.", ex);
+            }
         }
 
         private string GetBaseTypeName(Template currentTemplate, Template baseTemplate, TemplateCollection collection)

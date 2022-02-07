@@ -14,7 +14,7 @@ namespace ModelGenerator.Tds
             collection
                 .Configure<TdsSettings>(opts => configuration.GetSection("Tds").Bind(opts))
                 .AddSingleton(sp => sp.GetRequiredService<IOptions<TdsSettings>>().Value);
-                
+
             collection.AddSingleton<IFileParser, TdsFileParser>()
                       .AddSingleton<IFileScanner, TdsFileScanner>()
                       .AddSingleton<ISourceProvider, TdsSourceProvider>()

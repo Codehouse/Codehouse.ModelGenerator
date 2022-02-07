@@ -16,8 +16,8 @@ namespace ModelGenerator.Framework
             return collection
                    .Configure<T>(opts => configuration.GetSection(name).Bind(opts))
                    .AddSingleton(sp => sp.GetRequiredService<IOptions<T>>().Value);
-        } 
-        
+        }
+
         public static string ToSitecoreId(this Guid id)
         {
             return id.ToString("B").ToUpperInvariant();

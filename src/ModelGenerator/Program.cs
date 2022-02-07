@@ -7,7 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelGenerator.Framework;
+using FortisServicesConfigurator = ModelGenerator.Fortis.ServicesConfigurator;
+using FrameworkServicesConfigurator = ModelGenerator.Framework.ServicesConfigurator;
+using TdsServicesConfigurator = ModelGenerator.Tds.ServicesConfigurator;
 
 namespace ModelGenerator
 {
@@ -62,14 +64,14 @@ namespace ModelGenerator
             {
                 throw new Exception("Entry assembly was null.");
             }
-            
+
             // Load main settings from file in application folder
             var assemblyLocation = Path.GetDirectoryName(entryAssembly.Location);
             if (assemblyLocation == null)
             {
                 throw new Exception("Entry assembly location could not be determined.");
             }
-            
+
             configBuilder.AddYamlFile(Path.Combine(assemblyLocation, "appSettings.yml"));
 
             // Load additional layer from working directory
@@ -82,7 +84,7 @@ namespace ModelGenerator
             switch (providerName)
             {
                 case ProviderNames.Tds:
-                    Tds.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                    TdsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                     break;
                 default:
                     throw new Exception($"Unsupported input provider: {providerName}");
@@ -95,7 +97,7 @@ namespace ModelGenerator
             switch (providerName)
             {
                 case ProviderNames.Fortis:
-                    Fortis.ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                    FortisServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                     break;
                 default:
                     throw new Exception($"Unsupported output provider: {providerName}");
@@ -106,7 +108,7 @@ namespace ModelGenerator
         {
             collection.AddOptions();
 
-            ServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+            FrameworkServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
             RegisterInputProvider(hostBuilderContext, collection);
             RegisterOutputProvider(hostBuilderContext, collection);
 
