@@ -1,0 +1,17 @@
+name: '0.$(Date:yyyy).$(System.PullRequest.PullRequestNumber).$(Rev:r)'
+pr:
+- 'develop'
+- 'main'
+- 'release/*'
+trigger: none
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+- template: 'build-templates/variables.yml'
+
+steps:
+- template: 'build-templates/tasks-tools.yml'
+- template: 'build-templates/tasks-dependencies.yml'
+- template: 'build-templates/tasks-build.yml'

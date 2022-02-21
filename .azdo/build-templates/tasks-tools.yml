@@ -1,0 +1,10 @@
+# Installs any tools required as a part of the build process
+# to the build agent (excluding those part of the agent image)
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '5.0.x'
+    installationPath: '$(Agent.ToolsDirectory)/dotnet'
+  displayName: 'Tools: Use .NET 5.0'

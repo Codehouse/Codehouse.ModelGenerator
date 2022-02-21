@@ -1,0 +1,19 @@
+name: '$(SourceBranchName).$(Rev:r)'
+pr: none
+trigger:
+  batch: true
+  branches:
+    include:
+    - hotfix/*
+    - release/*
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+- template: 'build-templates/variables.yml'
+
+steps:
+- template: 'build-templates/tasks-tools.yml'
+- template: 'build-templates/tasks-dependencies.yml'
+- template: 'build-templates/tasks-build.yml'

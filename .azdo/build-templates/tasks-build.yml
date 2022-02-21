@@ -1,0 +1,46 @@
+# Performs the tasks to build and unit test the solution,
+# including generation of packages and publication of any
+# build artifacts.
+
+steps:
+- task: Assembly-Info-NetCore@2
+  inputs:
+    Path: '$(Build.SourcesDirectory)'
+    FileNames: |
+      src\*\*\*.csproj
+    InsertAttributes: true
+    Company: 'Codehouse'
+    Copyright: 'Copyright Codehouse $(date:YYYY)'
+    VersionNumber: '$(Build.BuildNumber)'
+    FileVersionNumber: '$(Build.BuildNumber)'
+    InformationalVersion: '$(Build.BuildNumber)-$(Build.SourceVersion)'
+    LogLevel: 'verbose'
+    FailOnWarning: false
+  displayName: 'Build: Set assembly info'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '$(solution)'
+    arguments: '-c $(buildConfiguration)'
+  displayName: 'Build: Build solution'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    projects: 'src\ModelGenerator\ModelGenerator.csproj'
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
+    noBuild: true
+    publishWebProjects: false
+  displayName: 'Build: Publish app'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '$(solution)'
+  displayName: 'Build: Run unit tests'
+
+- task: PublishBuildArtifacts@1
+  condition: succeededOrFailed()
+  displayName: 'Build: Publish build artifacts'
+  

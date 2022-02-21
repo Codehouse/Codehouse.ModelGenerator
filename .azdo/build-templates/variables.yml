@@ -1,0 +1,5 @@
+# Holds common variables to all build pipelines
+
+variables:
+  buildConfiguration: 'Release'
+  solution: 'src/Codehouse.ModelGenerator.sln' # Path to the solution file
