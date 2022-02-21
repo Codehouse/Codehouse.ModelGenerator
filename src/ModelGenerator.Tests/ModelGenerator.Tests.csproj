@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+        <PackageReference Include="NUnit" Version="3.13.1" />
+        <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+        <PackageReference Include="coverlet.collector" Version="3.0.2" />
+        <PackageReference Include="Shouldly" Version="4.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Application" />
+      <Folder Include="Fortis" />
+      <Folder Include="Tds" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ModelGenerator.Fortis\ModelGenerator.Fortis.csproj" />
+      <ProjectReference Include="..\ModelGenerator.Framework\ModelGenerator.Framework.csproj" />
+      <ProjectReference Include="..\ModelGenerator.Tds\ModelGenerator.Tds.csproj" />
+      <ProjectReference Include="..\ModelGenerator\ModelGenerator.csproj" />
+    </ItemGroup>
+
+</Project>
