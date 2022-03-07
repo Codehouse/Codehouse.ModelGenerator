@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -10,7 +11,13 @@ namespace ModelGenerator.Fortis.CodeGeneration
 {
     public abstract class FortisTypeGeneratorBase
     {
+        private readonly FortisSettings _settings;
         private const string FortisModelTemplateMappingAttribute = "TemplateMapping";
+
+        protected FortisTypeGeneratorBase(FortisSettings settings)
+        {
+            _settings = settings;
+        }
 
         protected AttributeSyntax CreateTemplateMappingAttribute(Guid templateId, string mappingType)
         {
@@ -19,19 +26,31 @@ namespace ModelGenerator.Fortis.CodeGeneration
         }
 
         /// <summary>
-        /// Creates the appropriate GetField<T> invocation for a template field.
+        /// Creates the appropriate GetField<T> or (T)GetField invocation for a template field.
         /// </summary>
         /// <param name="isRenderingParameter">A value indicating whether the template is a rendering parameters template.</param>
         /// <param name="templateField">The template field</param>
         /// <param name="concreteType">The concrete type of the field</param>
         /// <returns></returns>
-        protected InvocationExpressionSyntax GetFieldInvocation(bool isRenderingParameter, TemplateField templateField, string concreteType)
+        protected ExpressionSyntax GetFieldInvocation(bool isRenderingParameter, TemplateField templateField, string concreteType)
         {
             var arguments = Enumerable.Empty<ArgumentSyntax>()
                                       .Append(Argument(StringLiteral(templateField.Name)));
             if (!isRenderingParameter)
             {
                 arguments = arguments.Append(Argument(StringLiteral(templateField.Name.ToLowerInvariant())));
+            }
+
+            if (isRenderingParameter && _settings.Quirks.CastRenderingParameterFields)
+            {
+                arguments = arguments.Append(Argument(StringLiteral(templateField.FieldType.ToLowerInvariant())));
+                
+                // (TField)GetField("FieldName", "fieldtype") for rendering parameter templates with this quirk
+                return CastExpression(
+                    IdentifierName(concreteType),
+                    InvocationExpression(IdentifierName("GetField"))
+                        .AddArgumentListArguments(arguments.ToArray())
+                );
             }
 
             // GetField<TField>("FieldName", "fieldname") for normal templates

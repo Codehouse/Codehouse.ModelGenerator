@@ -94,6 +94,10 @@ Fortis:
 
   # Controls "quirks" supported by this provider
   Quirks:
+    # If true, will call GetField for rendering parameter and cast the result,
+    # instead of calling GetField<T> as is used for fields.
+    CastRenderingParameterFields: false
+    
     # If true will list all interfaces (i.e. indirectly inherited base
     # templates) on concrete classes.
     FullInterfaceList: false
@@ -104,6 +108,15 @@ Fortis:
 
     # If true will mark interfaces as partial
     PartialInterfaces: true
+
+  # Type names required by generation process which could be overridden by solution
+  TypeNames:
+    ItemWrapper: 'FortisItem'
+    ItemWrapperInterface: 'IFortisItem'
+    RenderingParameter: 'RenderingParameter'
+    RenderingParameterInterface: 'IRenderingParameter'
+    SitecoreItem: 'Item'
+    SpawnProvider: 'ISpawnProvider'
 
 # Dictionary of well-known Sitecore template IDs
 TemplateIds:

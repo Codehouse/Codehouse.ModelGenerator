@@ -23,6 +23,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private const string SitecorePredefinedQueryAttribute = "PredefinedQuery";
 
         public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
+            : base(settings)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
@@ -83,7 +84,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                    .Select(t => GetBaseTypeName(template, t, context.Templates))
                    .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
                    .Prepend(_typeNameResolver.GetInterfaceName(template))
-                   .Prepend(isRenderingParameters ? "RenderingParameter" : "FortisItem")
+                   .Prepend(isRenderingParameters ? _settings.TypeNames.RenderingParameter : _settings.TypeNames.ItemWrapper)
                    .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
                    .ToArray();
         }
@@ -96,7 +97,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 yield break;
             }
 
-            yield return FieldDeclaration(ParseTypeName("Item"), "_item")
+            yield return FieldDeclaration(ParseTypeName(_settings.TypeNames.SitecoreItem), "_item")
                          .AddModifiers(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
                          .WithTrailingTrivia(EndOfLine(string.Empty));
         }
@@ -112,7 +113,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
                                  Parameter("parameters", "Dictionary<string, string>"),
-                                 Parameter("spawnProvider", "ISpawnProvider")
+                                 Parameter("spawnProvider", _settings.TypeNames.SpawnProvider)
                              )
                              .WithBaseInitializer("parameters", "spawnProvider")
                              .WithBody(Block());
@@ -123,7 +124,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 yield return ConstructorDeclaration(Identifier(className))
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
-                                 Parameter("spawnProvider", "ISpawnProvider")
+                                 Parameter("spawnProvider", _settings.TypeNames.SpawnProvider)
                              )
                              .WithBaseInitializer(null, "spawnProvider")
                              .WithBody(Block());
@@ -133,7 +134,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
                                  Parameter("id", "Guid"),
-                                 Parameter("spawnProvider", "ISpawnProvider")
+                                 Parameter("spawnProvider", _settings.TypeNames.SpawnProvider)
                              )
                              .WithBaseInitializer("id", "spawnProvider")
                              .WithBody(Block());
@@ -144,7 +145,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                              .AddParameterListParameters(
                                  Parameter("id", "Guid"),
                                  Parameter("lazyFields", "Dictionary<string, object>"),
-                                 Parameter("spawnProvider", "ISpawnProvider")
+                                 Parameter("spawnProvider", _settings.TypeNames.SpawnProvider)
                              )
                              .WithBaseInitializer("id", "lazyFields", "spawnProvider")
                              .WithBody(Block());
@@ -154,7 +155,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                              .AddModifiers(Token(SyntaxKind.PublicKeyword))
                              .AddParameterListParameters(
                                  Parameter("item", "Item"),
-                                 Parameter("spawnProvider", "ISpawnProvider")
+                                 Parameter("spawnProvider", _settings.TypeNames.SpawnProvider)
                              )
                              .WithBaseInitializer("item", "spawnProvider")
                              .WithBody(
@@ -183,7 +184,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 : context.Templates.Templates[templateField.TemplateId];
             var fieldComment = _xmlDocGenerator.GetFieldComment(template, templateField);
 
-            // TODO: Fix spacing on property accessors.
             yield return GeneratePropertyField(model.Template, templateField, isRenderingParameters, concreteType, fieldComment);
 
             var valueType = _fieldTypeResolver.GetFieldValueType(templateField);

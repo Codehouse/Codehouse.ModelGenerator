@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
@@ -18,7 +19,8 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly TypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
-        public FortisIdGenerator(FieldNameResolver fieldNameResolver, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
+        public FortisIdGenerator(FieldNameResolver fieldNameResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
+            : base(settings)
         {
             _fieldNameResolver = fieldNameResolver;
             _typeNameResolver = typeNameResolver;

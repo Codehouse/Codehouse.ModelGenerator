@@ -23,6 +23,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
         public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, IXmlDocumentationGenerator xmlDocGenerator)
+            : base(settings)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
@@ -63,7 +64,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                            .Where(id => !templates[id].IsWellKnown)
                            .Select(id => GetBaseTypeName(template, templates[id], context.Templates))
                            .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
-                           .Prepend(isRenderingParameters ? "IRenderingParameter" : "IItem")
+                           .Prepend(isRenderingParameters ? _settings.TypeNames.RenderingParameterInterface : _settings.TypeNames.ItemWrapperInterface)
                            .Select(typeName => SimpleBaseType(ParseTypeName(typeName)))
                            .ToArray();
         }
