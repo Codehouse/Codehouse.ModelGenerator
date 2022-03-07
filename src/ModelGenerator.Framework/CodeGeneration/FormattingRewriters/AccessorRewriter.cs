@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -38,7 +39,7 @@ namespace ModelGenerator.Framework.CodeGeneration
                 {
                     var trivia = SyntaxTriviaList.Empty
                                                  .Add(SyntaxHelper.NewLineTrivia())
-                                                 .AddRange(propertyDeclaration.Modifiers.First().LeadingTrivia);
+                                                 .AddRange(propertyDeclaration.Modifiers.First().LeadingTrivia.Where(t => t.IsKind(SyntaxKind.WhitespaceTrivia)));
                     node = node.WithSemicolonToken(SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.SemicolonToken, trivia));
                 }
             }
