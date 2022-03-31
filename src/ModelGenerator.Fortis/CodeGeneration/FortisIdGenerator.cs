@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
+using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
@@ -27,25 +28,25 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _xmlDocGenerator = xmlDocGenerator;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelType model)
+        public IEnumerable<MemberDeclarationSyntax> GenerateCode(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelType model)
         {
-            return GenerateCode(context, new[] { model });
+            return GenerateCode(ragBuilder, context, new[] { model });
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, IEnumerable<ModelType> models)
+        public IEnumerable<MemberDeclarationSyntax> GenerateCode(ScopedRagBuilder<string> ragBuilder, GenerationContext context, IEnumerable<ModelType> models)
         {
             yield return GenerateTemplateIdClass(context, models);
 
             if (models.SelectMany(m => m.Template.OwnFields).Any())
             {
-                yield return GenerateFieldIdClasses(context, models);
+                yield return GenerateFieldIdClasses(ragBuilder, context, models);
             }
         }
 
-        private ClassDeclarationSyntax GenerateFieldIdClasses(GenerationContext context, IEnumerable<ModelType> models)
+        private ClassDeclarationSyntax GenerateFieldIdClasses(ScopedRagBuilder<string> ragBuilder, GenerationContext context, IEnumerable<ModelType> models)
         {
             var innerClasses = models
-                               .Select(m => GenerateFieldIdInnerClass(context, m))
+                               .Select(m => GenerateFieldIdInnerClass(ragBuilder, context, m))
                                .ToArray();
 
             return ClassDeclaration(Identifier("FieldIds"))
@@ -53,21 +54,29 @@ namespace ModelGenerator.Fortis.CodeGeneration
                    .AddMembers(innerClasses);
         }
 
-        private ClassDeclarationSyntax GenerateFieldIdInnerClass(GenerationContext context, ModelType model)
+        private ClassDeclarationSyntax GenerateFieldIdInnerClass(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelType model)
         {
+            var typeName = _typeNameResolver.GetTypeName(model.Template);
             var fieldProperties = model.Template.OwnFields
-                                       .Select(p => GenerateIdProperty(model.Template, p))
+                                       .Select(p => GenerateIdProperty(ragBuilder, model.Template, p, typeName))
                                        .ToArray();
 
-            return ClassDeclaration(Identifier(_typeNameResolver.GetTypeName(model.Template)))
+            return ClassDeclaration(Identifier(typeName))
                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
                    .AddMembers(fieldProperties)
                    .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
         }
 
-        private PropertyDeclarationSyntax GenerateIdProperty(Template template, TemplateField field)
+        private PropertyDeclarationSyntax GenerateIdProperty(ScopedRagBuilder<string> ragBuilder, Template template, TemplateField field, string typeName)
         {
-            return GenerateIdProperty(_fieldNameResolver.GetFieldName(field), field.Id)
+            var propertyName = _fieldNameResolver.GetFieldName(field);
+            if (propertyName.Equals(typeName))
+            {
+                ragBuilder.AddWarn($"Template contains field with same name as generated class ({typeName}).");
+                propertyName += "FieldId";
+            }
+            
+            return GenerateIdProperty(propertyName, field.Id)
                 .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, field));
         }
 

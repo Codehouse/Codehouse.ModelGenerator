@@ -65,14 +65,15 @@ namespace ModelGenerator.Framework.Activities
 
         private FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
         {
+            using var scopedRagBuilder = _ragBuilder.CreateScope($"{context.TypeSet.Name} - {modelFile.FileName}");
             try
             {
-                var file = _codeGenerator.GenerateFile(context, modelFile);
+                var file = _codeGenerator.GenerateFile(scopedRagBuilder, context, modelFile);
                 if (file == null)
                 {
-                    _ragBuilder.AddFail(new RagStatus<string>(modelFile.FileName, "Did not generate a file."));
+                    scopedRagBuilder.AddFail("Did not generate a file.");
                 }
-                else
+                else if (scopedRagBuilder.CanPass)
                 {
                     _ragBuilder.AddPass(file.FullName);
                 }
@@ -81,7 +82,7 @@ namespace ModelGenerator.Framework.Activities
             }
             catch (Exception ex)
             {
-                _ragBuilder.AddFail(new RagStatus<string>(modelFile.FileName, ex));
+                scopedRagBuilder.AddFail("Error while generating file.", ex);
                 _logger.LogError(ex, $"Could not generate file {modelFile.FileName}");
                 return null;
             }

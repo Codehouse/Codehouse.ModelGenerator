@@ -4,6 +4,7 @@ using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
+using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Framework.CodeGeneration
@@ -21,9 +22,9 @@ namespace ModelGenerator.Framework.CodeGeneration
             _rewriterFactory = rewriterFactory;
         }
 
-        public FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
+        public FileInfo? GenerateFile(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelFile modelFile)
         {
-            var syntax = GenerateCode(context, modelFile);
+            var syntax = GenerateCode(ragBuilder, context, modelFile);
             if (syntax == null)
             {
                 return null;
@@ -54,11 +55,11 @@ namespace ModelGenerator.Framework.CodeGeneration
             return rootNode;
         }
 
-        private CompilationUnitSyntax? GenerateCode(GenerationContext context, ModelFile modelFile)
+        private CompilationUnitSyntax? GenerateCode(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelFile modelFile)
         {
             try
             {
-                return _fileGenerator.GenerateCode(context, modelFile);
+                return _fileGenerator.GenerateCode(ragBuilder, context, modelFile);
             }
             catch (Exception ex)
             {

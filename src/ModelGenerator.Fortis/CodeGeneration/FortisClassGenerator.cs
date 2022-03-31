@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
+using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
@@ -32,7 +33,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _xmlDocGenerator = xmlDocGenerator;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GenerateCode(GenerationContext context, ModelType model)
+        public IEnumerable<MemberDeclarationSyntax> GenerateCode(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelType model)
         {
             var type = ClassDeclaration(_typeNameResolver.GetClassName(model.Template))
                        .AddModifiers(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.PartialKeyword))

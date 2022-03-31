@@ -48,12 +48,12 @@ namespace ModelGenerator.Fortis.Configuration
 
         public record TypeNameSettings
         {
-            public string ItemWrapper { get; init; }
-            public string ItemWrapperInterface { get; init; }
-            public string RenderingParameter { get; init; }
-            public string RenderingParameterInterface { get; init; }
-            public string SitecoreItem { get; init; }
-            public string SpawnProvider { get; init; }
+            public string ItemWrapper { get; init; } = string.Empty;
+            public string ItemWrapperInterface { get; init; } = string.Empty;
+            public string RenderingParameter { get; init; } = string.Empty;
+            public string RenderingParameterInterface { get; init; } = string.Empty;
+            public string SitecoreItem { get; init; } = string.Empty;
+            public string SpawnProvider { get; init; } = string.Empty;
         }
 
         public FieldTypeMappingSettings FieldTypeMappings { get; } = new();

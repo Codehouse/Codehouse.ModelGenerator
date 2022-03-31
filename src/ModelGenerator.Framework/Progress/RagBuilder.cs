@@ -25,6 +25,11 @@ namespace ModelGenerator.Framework.Progress
             _warns.Add(value);
         }
 
+        public OwnedScopedRagBuilder<T> CreateScope(T scope)
+        {
+            return new OwnedScopedRagBuilder<T>(this, scope);
+        }
+
         public ICollection<RagStatus<T>> GetFails()
         {
             return GetCollection(_fails);

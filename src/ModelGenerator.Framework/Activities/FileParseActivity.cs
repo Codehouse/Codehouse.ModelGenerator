@@ -60,7 +60,7 @@ namespace ModelGenerator.Framework.Activities
 
         private async Task<Item[]> ExecuteItem(FileSet input, ItemFile f)
         {
-            var scopedRagBuilder = new ScopedRagBuilder<string>(f.Path);
+            using var scopedRagBuilder = _ragBuilder.CreateScope(f.Path);
             try
             {
                 var items = await _fileParser.ParseFile(scopedRagBuilder, input, f);
@@ -80,10 +80,6 @@ namespace ModelGenerator.Framework.Activities
             {
                 scopedRagBuilder.AddFail("Unhandled exception parsing file", ex);
                 return Array.Empty<Item>();
-            }
-            finally
-            {
-                _ragBuilder.MergeBuilder(scopedRagBuilder);
             }
         }
     }

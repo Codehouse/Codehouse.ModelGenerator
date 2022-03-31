@@ -22,6 +22,7 @@ namespace ModelGenerator.Framework.Activities
 
         private IReport<TemplateCollection> Execute(IDatabase input)
         {
+            // TODO: Support RagReport for this activity.
             return new NullReport<TemplateCollection>(_templateFactory.ConstructTemplates(input));
         }
     }

@@ -24,6 +24,7 @@ namespace ModelGenerator.Framework.Activities
 
         private IReport<IDatabase> Execute(ICollection<ItemSet> input)
         {
+            // TODO: Support RagReport for this activity.
             return new NullReport<IDatabase>(_databaseFactory.CreateDatabase(input));
         }
     }
