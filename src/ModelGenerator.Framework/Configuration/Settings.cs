@@ -4,6 +4,7 @@
     // Record is initialised from configuration.
     public record Settings
     {
+        public string? License { get; init; }
         public string? MinVersion { get; init; }
         public string ModelFolder { get; init; } = string.Empty;
         public string ModelNamespace { get; init; } = string.Empty;

@@ -38,8 +38,11 @@ namespace ModelGenerator.Framework.Progress
 
             public void Finish()
             {
-                _isComplete = true;
-                _tcs.SetResult();
+                if (!_isComplete)
+                {
+                    _isComplete = true;
+                    _tcs.SetResult();
+                }
             }
         }
 
@@ -71,6 +74,11 @@ namespace ModelGenerator.Framework.Progress
         public Job CreateJob(string description)
         {
             return new Job(_container.Context, description);
+        }
+
+        public void Dispose()
+        {
+            Finish();
         }
 
         public void Finish()

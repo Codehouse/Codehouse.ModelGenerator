@@ -1,6 +1,8 @@
-﻿namespace ModelGenerator.Framework.Progress
+﻿using System;
+
+namespace ModelGenerator.Framework.Progress
 {
-    public interface IProgressTracker
+    public interface IProgressTracker : IDisposable
     {
         Job CreateJob(string description);
         void Finish();

@@ -32,10 +32,13 @@ namespace ModelGenerator.Framework
                 .AddSingleton<IDatabaseFactory, DatabaseFactory>()
                 .AddSingleton<IFilePathFilter, TemplateFilter>()
                 .AddSingleton<IItemFilter, PathFilter>()
-                .AddSingleton<IProgressTracker, ProgressTracker>()
                 .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
                 .AddSingleton<ITypeFactory, TypeFactory>()
                 .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
+
+            collection
+                .AddTransient<IProgressTracker, ProgressTracker>()
+                .AddSingleton<Lazy<IProgressTracker>>(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
 
             collection
                 .AddTransient<IRewriter, AccessorRewriter>()

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ModelGenerator.Licensing;
 using FortisServicesConfigurator = ModelGenerator.Fortis.ServicesConfigurator;
 using FrameworkServicesConfigurator = ModelGenerator.Framework.ServicesConfigurator;
 using TdsServicesConfigurator = ModelGenerator.Tds.ServicesConfigurator;
@@ -72,10 +73,15 @@ namespace ModelGenerator
                 throw new Exception("Entry assembly location could not be determined.");
             }
 
-            configBuilder.AddYamlFile(Path.Combine(assemblyLocation, "appSettings.yml"));
-
-            // Load additional layer from working directory
-            configBuilder.AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.yml"), true);
+            // Load configuration files from:
+            // 1. Tool directory
+            // 2. User directory
+            // 3. Working directory
+            // 4. Working directory user overrides
+            configBuilder.AddYamlFile(Path.Combine(assemblyLocation, "appSettings.yml"))
+                .AddYamlFile(Environment.ExpandEnvironmentVariables("%USERPROFILE%/modelGenerator.yml"), true)
+                .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.yml"), true)
+                .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.user.yml"), true);
         }
 
         private static void RegisterInputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
@@ -113,6 +119,7 @@ namespace ModelGenerator
             RegisterOutputProvider(hostBuilderContext, collection);
 
             collection
+                .AddSingleton<LicenseManager>()
                 .AddSingleton<Runner>()
                 .AddHostedService<Worker>();
         }

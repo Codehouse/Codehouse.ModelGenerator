@@ -8,11 +8,11 @@ namespace ModelGenerator
 {
     public class Worker : IHostedService
     {
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cts = new ();
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<Worker> _logger;
         private readonly Runner _runner;
-        private readonly TaskCompletionSource _tcs = new TaskCompletionSource();
+        private readonly TaskCompletionSource _tcs = new ();
 
         public Worker(IHostApplicationLifetime lifetime, ILogger<Worker> logger, Runner runner)
         {
@@ -25,6 +25,7 @@ namespace ModelGenerator
         {
             _logger.LogInformation("Starting...");
             Task.Run(() => ExecuteAsync(_cts.Token).ContinueWith(t => _lifetime.StopApplication()));
+
             return Task.CompletedTask;
         }
 

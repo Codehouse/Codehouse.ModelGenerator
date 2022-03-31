@@ -16,6 +16,7 @@ using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
+using ModelGenerator.Licensing;
 
 namespace ModelGenerator
 {
@@ -25,8 +26,9 @@ namespace ModelGenerator
         private readonly ProgressStep<FileParseActivity> _fileParseActivity;
         private readonly ProgressStep<FileScanActivity> _fileScanActivity;
         private readonly ProgressStep<GenerationActivity> _generationActivity;
+        private readonly LicenseManager _licenseManager;
         private readonly ILogger<Runner> _logger;
-        private readonly IProgressTracker _progressTracker;
+        private readonly Lazy<IProgressTracker> _progressTrackerFactory;
         private readonly IOptions<Settings> _settings;
         private readonly ISourceProvider _sourceProvider;
         private readonly ProgressStep<TemplateActivity> _templateActivity;
@@ -34,6 +36,7 @@ namespace ModelGenerator
 
         public Runner(
             IOptions<Settings> settings,
+            LicenseManager licenseManager,
             ISourceProvider sourceProvider,
             ProgressStep<DatabaseActivity> databaseActivity,
             ProgressStep<FileParseActivity> fileParseActivity,
@@ -42,9 +45,10 @@ namespace ModelGenerator
             ProgressStep<TemplateActivity> templateActivity,
             ProgressStep<TypeActivity> typeActivity,
             ILogger<Runner> logger,
-            IProgressTracker progressTracker)
+            Lazy<IProgressTracker> progressTrackerFactory)
         {
             _settings = settings;
+            _licenseManager = licenseManager;
             _sourceProvider = sourceProvider;
             _databaseActivity = databaseActivity;
             _fileParseActivity = fileParseActivity;
@@ -53,17 +57,23 @@ namespace ModelGenerator
             _templateActivity = templateActivity;
             _typeActivity = typeActivity;
             _logger = logger;
-            _progressTracker = progressTracker;
+            _progressTrackerFactory = progressTrackerFactory;
         }
 
         public async Task RunAsync(CancellationToken stoppingToken)
         {
-            if (!CheckVersion())
+            if (!CheckLicense())
             {
                 return;
             }
             
-            using var job = _progressTracker.CreateJob("Overall progress");
+            if (!CheckVersion())
+            {
+                return;
+            }
+
+            using var progressTracker = _progressTrackerFactory.Value;
+            using var job = progressTracker.CreateJob("Overall progress");
             job.MaxValue = 6;
             job.Start();
 
@@ -75,10 +85,35 @@ namespace ModelGenerator
             var generationReport = await GenerateCode(job, databaseReport.Result, templateReport.Result, typeSetReport.Result, stoppingToken);
 
             job.Stop();
-            _progressTracker.Finish();
+            progressTracker.Finish();
 
             GC.Collect(3);
             PrintReports(fileSetReport, itemSetReport, databaseReport, templateReport, typeSetReport, generationReport);
+        }
+
+        private bool CheckLicense()
+        {
+            var licenseResult = _licenseManager.CheckLicense();
+            switch (licenseResult.Status)
+            {
+                case LicenseStatuses.Valid:
+                    WriteLicenseDetail(licenseResult);
+                    return true;
+                case LicenseStatuses.Invalid:
+                    Console.WriteLine("Your license could not be validated.  Please check the log for more information.");
+                    return false;
+                case LicenseStatuses.Expired:
+                    Console.WriteLine("Your license has expired.");
+                    WriteLicenseDetail(licenseResult);
+                    return false;
+                case LicenseStatuses.Missing:
+                    Console.WriteLine("Your license could not be located.  Please check the log for more information.");
+                    return false;
+                default:
+                    // This should not happen.
+                    Console.WriteLine("There was a problem verifying your license.  Please contact Codehouse.");
+                    return false;
+            }
         }
 
         private bool CheckVersion()
@@ -166,7 +201,7 @@ namespace ModelGenerator
             _logger.LogInformation(step.Activity.Description);
             step.Activity.SetInput(input);
 
-            await step.ExecuteAsync(stoppingToken);
+            await step.ExecuteAsync(_progressTrackerFactory.Value, stoppingToken);
             job.Increment();
 
             var report = step.Activity.GetOutput();
@@ -177,6 +212,17 @@ namespace ModelGenerator
             }
 
             return report;
+        }
+
+        private void WriteLicenseDetail(LicenseCheckResult licenseResult)
+        {
+            var expiry = licenseResult.Expires.HasValue
+                ? licenseResult.Expires.Value.ToLocalTime().ToString("s")
+                : "Never";
+            Console.WriteLine("License information:");
+            Console.WriteLine($"  Licensed to: {licenseResult.Licensee ?? "Unknown"}");
+            Console.WriteLine($"  Entitlement: {licenseResult.Entitlement ?? "Unknown"}");
+            Console.WriteLine($"  Expires:     {expiry}");
         }
     }
 }

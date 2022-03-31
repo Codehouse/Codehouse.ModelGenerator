@@ -7,17 +7,15 @@ namespace ModelGenerator.Framework.Progress
         where T : IActivity
     {
         public T Activity { get; }
-        private readonly IProgressTracker _tracker;
 
-        public ProgressStep(T activity, IProgressTracker tracker)
+        public ProgressStep(T activity)
         {
             Activity = activity;
-            _tracker = tracker;
         }
 
-        public async Task ExecuteAsync(CancellationToken cancellationToken)
+        public async Task ExecuteAsync(IProgressTracker tracker, CancellationToken cancellationToken)
         {
-            using var job = _tracker.CreateJob(Activity.Description);
+            using var job = tracker.CreateJob(Activity.Description);
             job.Start();
             await Activity.ExecuteAsync(job, cancellationToken);
             job.Stop();
