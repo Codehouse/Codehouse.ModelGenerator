@@ -58,7 +58,7 @@ namespace ModelGenerator.Tests.Framework.CodeGeneration
 
             var result = attribute.AddSimpleArguments(argument);
 
-            result.ArgumentList.Arguments.Single().Expression.ToString().ShouldBeEquivalentTo(argument.ToString());
+            result.ArgumentList!.Arguments.Single().Expression.ToString().ShouldBeEquivalentTo(argument.ToString());
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace ModelGenerator.Tests.Framework.CodeGeneration
 
             var result = attribute.AddSimpleArguments();
 
-            result.ArgumentList.Arguments.ShouldBeEmpty();
+            result.ArgumentList!.Arguments.ShouldBeEmpty();
         }
     }
 }
