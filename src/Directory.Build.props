@@ -2,11 +2,6 @@
     <PropertyGroup>
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <PackageVersion>0.1.1</PackageVersion>
-        <AssemblyVersion>0.1.1</AssemblyVersion>
-        <FileVersion>0.1.1</FileVersion>
-        <Copyright>Codehouse</Copyright>
-        <Company>Codehouse</Company>
         <Product>Codehouse Model Generator</Product>
     </PropertyGroup>
 </Project>

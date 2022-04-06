@@ -7,7 +7,7 @@ steps:
   inputs:
     Path: '$(Build.SourcesDirectory)'
     FileNames: |
-      src\*\*\*.csproj
+      src\*\*.csproj
     InsertAttributes: true
     Company: 'Codehouse'
     Copyright: 'Copyright Codehouse $(date:YYYY)'
