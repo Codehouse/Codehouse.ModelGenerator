@@ -3,7 +3,9 @@ namespace LicenseGenerator;
 
 public static class ConsoleHelpers
 {
-    public record Option(string Shortcut, string Name, string Value);
+    public record Option<T>(string Shortcut, string Name, T Value);
+
+    public record Option(string Shortcut, string Name, string Value) : Option<string>(Shortcut, Name, Value);
     
     private class ColourSwitcher : IDisposable
     {
@@ -47,7 +49,7 @@ public static class ConsoleHelpers
         return Choose(promptText, options).Value;
     }
 
-    public static Option Choose(string promptText, params Option[] options)
+    public static Option<T> Choose<T>(string promptText, params Option<T>[] options)
     {
         WriteLine(promptText + ":");
         for (int i = 0; i < options.Length; i++)
@@ -55,7 +57,7 @@ public static class ConsoleHelpers
             WriteLine($"\t[{options[i].Shortcut}] - {options[i].Name}");
         }
 
-        Option? selection = null;
+        Option<T>? selection = null;
         while (selection == null)
         {
             var selectedValue = Prompt("Choose an option");
@@ -63,6 +65,12 @@ public static class ConsoleHelpers
         }
 
         return selection;
+    }
+
+    public static bool Confirm(string promptText)
+    {
+        var value = Prompt(promptText + " [y/n]");
+        return string.Equals("y", value, StringComparison.OrdinalIgnoreCase);
     }
     
     public static string Prompt(string promptText)
@@ -88,5 +96,22 @@ public static class ConsoleHelpers
     public static IDisposable SwitchColours(ConsoleColor? foreground = null, ConsoleColor? background = null)
     {
         return new ColourSwitcher(foreground, background);
+    }
+
+    public static void WrapAndIndent(string value, int indent = 2, int width = 32)
+    {
+        var range = value.AsMemory();
+        for (int i = 0; i < value.Length; i += width)
+        {
+            Write(new string(' ', 2));
+            if (i + width >= value.Length)
+            {
+                WriteLine(range.Slice(i));
+            }
+            else
+            {
+                WriteLine(range.Slice(i, width));
+            }
+        }
     }
 }

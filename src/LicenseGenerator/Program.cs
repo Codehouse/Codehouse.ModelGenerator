@@ -1,59 +1,67 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using LicenseGenerator;
-using Microsoft.IdentityModel.Tokens;
+﻿using LicenseGenerator;
+using Microsoft.Extensions.Configuration;
+using static System.Console;
 using static LicenseGenerator.ConsoleHelpers;
 
-var licensee = Prompt("Licensee name");
-var entitlement = Prompt("Entitlement description");
-var lifetime = Prompt("License lifetime (timespan)", TimeSpan.Parse);
-var audience = Choose("Software tool (audience)", Constants.Audiences);
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", false)
+    .AddCommandLine(args)
+    .Build();
 
-var notBefore = DateTime.UtcNow;
-var expiry = notBefore.Add(lifetime);
-var issuer = "Codehouse";
-
-//Generating security key
-var securityKey = KeyManager.GetPrivateKey();
-var tokenHandler = new JwtSecurityTokenHandler();
-var tokenDescriptor = new SecurityTokenDescriptor
+var helpCommands = new[] {"help", "-help", "--help", "-?", "--?", "/?"};
+if (args.Length == 1 && helpCommands.Contains(args[0], StringComparer.OrdinalIgnoreCase))
 {
-    Subject = new ClaimsIdentity(new List<Claim>
+    WriteLine("Usage instructions:");
+    WriteLine($"  LicenseGenerator.exe [--{ConfigManager.KeyNames.Licensee} string]");
+    WriteLine($"                       [--{ConfigManager.KeyNames.Entitlement} string]");
+    WriteLine($"                       [--{ConfigManager.KeyNames.Lifetime} timespan]");
+    WriteLine($"                       [--{ConfigManager.KeyNames.Products} comma-separated-string]");
+    WriteLine($"                       [--{ConfigManager.KeyNames.Key} id-or-name]");
+    
+    WriteLine();
+    WriteLine("Valid product names:");
+    foreach (var product in ConfigManager.GetAvailableProducts(configuration))
     {
-        new ("sub",licensee),
-        new ("entitlement", entitlement)
-    }),
-    Audience = audience,
-    Expires = expiry,
-    IssuedAt = DateTime.UtcNow,
-    NotBefore = notBefore,
-    Issuer = issuer,
-    SigningCredentials = new SigningCredentials(securityKey, Constants.Signing.Algorithm)
-};
+        WriteLine("\t" + product);
+    }
+    
+    WriteLine();
+    WriteLine("Valid keys:");
+    var keys = ConfigManager.GetKeys(configuration);
+    foreach (var key in keys)
+    {
+        WriteLine($"\t{key.KeyId} - {key.Name}");
+    }
+    
+    return 0;
+}
 
-var createdToken = tokenHandler.CreateToken(tokenDescriptor);
-var tokenString = tokenHandler.WriteToken(createdToken);
-Console.WriteLine(tokenString);
-Console.WriteLine();
-
-// Validating security key
-Console.WriteLine("Verifying...");
-var validationParameters = new TokenValidationParameters
-{
-    ValidIssuer = Constants.Issuer,
-    ValidAudience = audience,
-    IssuerSigningKey = KeyManager.GetPublicKey()
-};
 try
 {
-    var result = tokenHandler.ValidateToken(tokenString, validationParameters, out SecurityToken _);
-    Console.WriteLine("Token is valid.");
-}
-catch (Exception ex)
-{
-    Console.WriteLine("Token is invalid");
-    Console.WriteLine(ex);
-}
+    var licenseRequest = LicenseRequest.Create(configuration);
+    licenseRequest.Print();
 
-Console.WriteLine("Writing token to license.dat");
-File.WriteAllText("license.dat", tokenString);
+    var license = LicenseFactory.CreateLicense(licenseRequest);
+    WriteLine("Generated license:");
+    WrapAndIndent(license);
+    
+    WriteLine();
+    WriteLine("Verifying...");
+    if (LicenseFactory.ValidateLicense(licenseRequest, license))
+    {
+        WriteLine("Writing token to license.dat");
+        File.WriteAllText("license.dat", license);
+    }
+    else
+    {
+        WriteLine("Token was invalid for unspecified reason.");
+        return 1;
+    }
+
+    return 0;
+}
+catch (Exception e)
+{
+    WriteLine(e);
+    return 1;
+}

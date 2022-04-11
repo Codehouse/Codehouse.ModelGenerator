@@ -5,25 +5,25 @@ namespace LicenseGenerator;
 
 public static class KeyManager
 {
-    public static ECDsaSecurityKey GetPrivateKey()
+    public static ECDsaSecurityKey GetPrivateKey(Key key)
     {
         var ecDsaAlgorithm = CreateAlgorithm();
 
-        var privateKeyBytes = Convert.FromBase64String(Constants.Signing.PrivateKey);
+        var privateKeyBytes = Convert.FromBase64String(key.PrivateKey);
         ecDsaAlgorithm.ImportECPrivateKey(privateKeyBytes, out _);
-        return new ECDsaSecurityKey(ecDsaAlgorithm){KeyId = "ff2bc7022c474b29a86d477ceac4cc5f"};
+        return new ECDsaSecurityKey(ecDsaAlgorithm){KeyId = key.KeyId};
     }
 
-    public static ECDsaSecurityKey GetPublicKey()
+    public static ECDsaSecurityKey GetPublicKey(Key key)
     {
         var ecDsaAlgorithm = CreateAlgorithm();
 
-        var publicKeyBytes = Convert.FromBase64String(Constants.Signing.PublicKey);
+        var publicKeyBytes = Convert.FromBase64String(key.PublicKey);
         ecDsaAlgorithm.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
-        return new ECDsaSecurityKey(ecDsaAlgorithm){KeyId = "ff2bc7022c474b29a86d477ceac4cc5f"};
+        return new ECDsaSecurityKey(ecDsaAlgorithm){KeyId = key.KeyId};
     }
 
-    private static ECDsa? CreateAlgorithm()
+    private static ECDsa CreateAlgorithm()
     {
         var ecDsaAlgorithm = ECDsa.Create();
         if (ecDsaAlgorithm == null)
