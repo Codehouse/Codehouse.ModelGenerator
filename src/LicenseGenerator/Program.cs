@@ -14,7 +14,7 @@ if (args.Length == 1 && helpCommands.Contains(args[0], StringComparer.OrdinalIgn
     WriteLine("Usage instructions:");
     WriteLine($"  LicenseGenerator.exe [--{ConfigManager.KeyNames.Licensee} string]");
     WriteLine($"                       [--{ConfigManager.KeyNames.Entitlement} string]");
-    WriteLine($"                       [--{ConfigManager.KeyNames.Lifetime} timespan]");
+    WriteLine($"                       [--{ConfigManager.KeyNames.Lifetime} duration/timespan]");
     WriteLine($"                       [--{ConfigManager.KeyNames.Products} comma-separated-string]");
     WriteLine($"                       [--{ConfigManager.KeyNames.Key} id-or-name]");
     

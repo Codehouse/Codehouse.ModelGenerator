@@ -80,11 +80,40 @@ public static class ConsoleHelpers
         return ReadLine()?.Trim() ?? string.Empty;
     }
     
-    public static T Prompt<T>(string promptText, Func<string, T> converter)
+    public static T Prompt<T>(string promptText, Func<string, T?> converter)
+        where T : class
     {
         try
         {
-            return converter.Invoke(Prompt(promptText));
+            var result = converter.Invoke(Prompt(promptText));
+            if (result is null)
+            {
+                WriteLine("Invalid input.");
+                return Prompt(promptText, converter);
+            }
+
+            return result;
+        }
+        catch (Exception)
+        {
+            WriteLine("Invalid input.");
+            return Prompt(promptText, converter);
+        }
+    }
+    
+    public static T Prompt<T>(string promptText, Func<string, T?> converter)
+        where T : struct
+    {
+        try
+        {
+            var result = converter.Invoke(Prompt(promptText));
+            if (!result.HasValue)
+            {
+                WriteLine("Invalid input.");
+                return Prompt(promptText, converter);
+            }
+
+            return result.Value;
         }
         catch (Exception)
         {

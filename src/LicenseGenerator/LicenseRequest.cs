@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Iso8601DurationHelper;
+using Microsoft.Extensions.Configuration;
 using static System.Console;
 using static LicenseGenerator.ConsoleHelpers;
 
 namespace LicenseGenerator;
 
-public record LicenseRequest(string Licensee, string Entitlement, TimeSpan Lifetime, string[] Products, Key Key)
+public record LicenseRequest(string Licensee, string Entitlement, Duration Lifetime, string[] Products, Key Key)
 {
     public static LicenseRequest Create(IConfiguration configuration)
     {
@@ -20,10 +21,8 @@ public record LicenseRequest(string Licensee, string Entitlement, TimeSpan Lifet
             entitlement = Prompt("Entitlement description");
         }
 
-        if (!TimeSpan.TryParse(configuration[ConfigManager.KeyNames.Lifetime], out var lifetime))
-        {
-            lifetime = Prompt("License lifetime (timespan)", TimeSpan.Parse);
-        }
+        var lifetime = ParseLifetime(configuration[ConfigManager.KeyNames.Lifetime])
+                       ?? Prompt("License lifetime (duration or timespan)", ParseLifetime);
 
         var availableProducts = ConfigManager.GetAvailableProducts(configuration);
         var products = configuration[ConfigManager.KeyNames.Products]?.Split(",");
@@ -74,6 +73,38 @@ public record LicenseRequest(string Licensee, string Entitlement, TimeSpan Lifet
         
         return string.Equals(k.KeyId, value, StringComparison.OrdinalIgnoreCase)
                || string.Equals(k.Name, value, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Duration? ParseLifetime(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return null;
+        }
+
+        if (value.StartsWith('P'))
+        {
+            if (Duration.TryParse(value, out var duration))
+            {
+                return duration;
+            }
+        }
+        else
+        {
+            if (TimeSpan.TryParse(value, out var timeSpan))
+            {
+                if (timeSpan.TotalSeconds > uint.MaxValue)
+                {
+                    using var switcher = SwitchColours(ConsoleColor.DarkRed);
+                    WriteLine("Timestamp could not be converted into seconds, days have been used instead.  Please double check the license expiry.");
+                    return Duration.FromDays((uint) timeSpan.TotalDays);
+                }
+                
+                return Duration.FromSeconds((uint) timeSpan.TotalSeconds);
+            }
+        }
+
+        return null;
     }
 
     private static IEnumerable<string> SelectProducts(string[] availableProducts)

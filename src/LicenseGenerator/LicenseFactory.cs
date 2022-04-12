@@ -16,7 +16,7 @@ public static class LicenseFactory
     public static string CreateLicense(LicenseRequest request)
     {
         var notBefore = DateTime.UtcNow.Date;
-        var expiry = notBefore.Add(request.Lifetime);
+        var expiry = notBefore + request.Lifetime;
 
         var securityKey = KeyManager.GetPrivateKey(request.Key);
         var tokenHandler = new JwtSecurityTokenHandler();
