@@ -156,6 +156,13 @@ XmlDocumentation:
     /// <para>Path: {{t.Path}}</para>
     /// </summary>
 
+Scs:
+  ItemFolder: 'items'
+  ModelFolder: 'code'
+  Sources:
+    - 'src\sitecore\*\*\*.module.json'
+  
+
 Tds:
   # Root folder (leave blank for working directory)
   Root: ''

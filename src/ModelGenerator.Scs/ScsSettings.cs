@@ -1,10 +1,14 @@
 ﻿using System;
 using System.IO;
 
-namespace ModelGenerator.Tds
+namespace ModelGenerator.Scs
 {
-    public class TdsSettings
+    public class ScsSettings
     {
+        public string ItemFolder { get; set; } = string.Empty;
+        public string ModelFolder { get; set; } = string.Empty;
+        
+        // TODO: Reduce duplication with TDS settings
         public string Root
         {
             get => _root ?? Directory.GetCurrentDirectory();

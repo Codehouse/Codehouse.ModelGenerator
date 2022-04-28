@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ModelGenerator.Licensing;
 using FortisServicesConfigurator = ModelGenerator.Fortis.ServicesConfigurator;
 using FrameworkServicesConfigurator = ModelGenerator.Framework.ServicesConfigurator;
+using ScsServicesConfigurator = ModelGenerator.Scs.ServicesConfigurator;
 using TdsServicesConfigurator = ModelGenerator.Tds.ServicesConfigurator;
 
 namespace ModelGenerator
@@ -89,6 +90,9 @@ namespace ModelGenerator
             var providerName = hostBuilderContext.Configuration.GetValue<InputProviderNames>("Providers:Input");
             switch (providerName)
             {
+                case InputProviderNames.Scs:
+                    ScsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                    break;
                 case InputProviderNames.Tds:
                     TdsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                     break;
