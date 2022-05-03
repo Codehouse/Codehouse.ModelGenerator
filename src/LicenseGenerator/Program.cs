@@ -1,4 +1,5 @@
-﻿using LicenseGenerator;
+﻿using System.IO;
+using LicenseGenerator;
 using Microsoft.Extensions.Configuration;
 using static System.Console;
 using static LicenseGenerator.ConsoleHelpers;
@@ -17,6 +18,7 @@ if (args.Length == 1 && helpCommands.Contains(args[0], StringComparer.OrdinalIgn
     WriteLine($"                       [--{ConfigManager.KeyNames.Lifetime} duration/timespan]");
     WriteLine($"                       [--{ConfigManager.KeyNames.Products} comma-separated-string]");
     WriteLine($"                       [--{ConfigManager.KeyNames.Key} id-or-name]");
+    WriteLine($"                       [--{ConfigManager.KeyNames.Output} path]");
     
     WriteLine();
     WriteLine("Valid product names:");
@@ -47,14 +49,34 @@ try
     
     WriteLine();
     WriteLine("Verifying...");
-    if (LicenseFactory.ValidateLicense(licenseRequest, license))
-    {
-        WriteLine("Writing token to license.dat");
-        File.WriteAllText("license.dat", license);
-    }
-    else
+    if (!LicenseFactory.ValidateLicense(licenseRequest, license))
     {
         WriteLine("Token was invalid for unspecified reason.");
+        return 1;
+    }
+
+    WriteLine();
+    WriteLine("Outputting...");
+    var output = Path.GetFullPath(configuration[ConfigManager.KeyNames.Output]);
+    if (File.Exists(output))
+    {
+        var attributes = File.GetAttributes(output);
+        if (attributes.HasFlag(FileAttributes.Directory))
+        {
+            output = Path.Combine(output, "license.dat");
+        }
+    }
+
+    WriteLine($"Writing token to {output}");
+    try
+    {
+        File.WriteAllText(output, license);
+        WriteLine("Done.");
+    }
+    catch (Exception ex)
+    {
+        WriteLine("Could not write file.");
+        WriteLine(ex);
         return 1;
     }
 

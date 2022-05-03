@@ -12,6 +12,7 @@ public static class ConfigManager
         public const string Keys = nameof(Keys);
         public const string Licensee = nameof(Licensee);
         public const string Lifetime = nameof(Lifetime);
+        public const string Output = nameof(Output);
         public const string Products = nameof(Products);
     }
     
