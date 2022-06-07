@@ -86,10 +86,10 @@ namespace ModelGenerator
 
         private static void RegisterInputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            var providerName = hostBuilderContext.Configuration.GetValue<ProviderNames>("Providers:Input");
+            var providerName = hostBuilderContext.Configuration.GetValue<InputProviderNames>("Providers:Input");
             switch (providerName)
             {
-                case ProviderNames.Tds:
+                case InputProviderNames.Tds:
                     TdsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                     break;
                 default:
@@ -97,16 +97,20 @@ namespace ModelGenerator
             }
         }
 
-        private static void RegisterOutputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
+        private static void RegisterOutputProviders(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            var providerName = hostBuilderContext.Configuration.GetValue<ProviderNames>("Providers:Output");
-            switch (providerName)
+            var providerNames = hostBuilderContext.Configuration.GetValue<OutputProviderNames[]>("Providers:Output")
+                ?? new []{ hostBuilderContext.Configuration.GetValue<OutputProviderNames>("Providers:Output") };
+            foreach (var providerName in providerNames)
             {
-                case ProviderNames.Fortis:
-                    FortisServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
-                    break;
-                default:
-                    throw new Exception($"Unsupported output provider: {providerName}");
+                switch (providerName)
+                {
+                    case OutputProviderNames.Fortis:
+                        FortisServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                        break;
+                    default:
+                        throw new Exception($"Unsupported output provider: {providerName}");
+                }
             }
         }
 
@@ -116,7 +120,7 @@ namespace ModelGenerator
 
             FrameworkServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
             RegisterInputProvider(hostBuilderContext, collection);
-            RegisterOutputProvider(hostBuilderContext, collection);
+            RegisterOutputProviders(hostBuilderContext, collection);
 
             collection
                 .AddSingleton<LicenseManager>()

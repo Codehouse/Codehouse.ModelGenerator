@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using ModelGenerator.Fortis.CodeGeneration;
 using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
+using ModelGenerator.Framework.CodeGeneration.FileTypes;
 
 namespace ModelGenerator.Fortis
 {
@@ -15,13 +16,15 @@ namespace ModelGenerator.Fortis
                 .Configure<FortisSettings>(opts => configuration.GetSection("Fortis").Bind(opts))
                 .AddSingleton(sp => sp.GetRequiredService<IOptions<FortisSettings>>().Value);
 
-            collection.AddSingleton<FieldNameResolver>()
+            collection.AddSingleton<IFortisFieldNameResolver, FortisFieldNameResolver>()
                       .AddSingleton<FieldTypeResolver>()
-                      .AddSingleton<FortisClassGenerator>()
-                      .AddSingleton<IFileGenerator, FortisFileGenerator>()
-                      .AddSingleton<FortisIdGenerator>()
-                      .AddSingleton<FortisInterfaceGenerator>()
                       .AddSingleton<TypeNameResolver>();
+
+            collection.AddSingleton<IUsingGenerator<DefaultFile>, FortisUsingGenerator>()
+                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisClassGenerator>()
+                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisInterfaceGenerator>()
+                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisFieldIdGenerator>()
+                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisTemplateIdGenerator>();
         }
     }
 }

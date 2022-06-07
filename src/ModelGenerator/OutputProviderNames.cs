@@ -1,9 +1,8 @@
 ﻿namespace ModelGenerator
 {
-    public enum ProviderNames
+    public enum OutputProviderNames
     {
         Unspecified,
-        Fortis,
-        Tds
+        Fortis
     }
 }

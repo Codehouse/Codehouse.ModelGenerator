@@ -1,36 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
-using ModelGenerator.Framework.Progress;
+using ModelGenerator.Framework.CodeGeneration.FileTypes;
 using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Framework.CodeGeneration
 {
-    public class CodeGenerator : ICodeGenerator
+    public abstract class FileGeneratorBase<TFile> : IFileGenerator<TFile> where TFile : IFileType
     {
-        private readonly IFileGenerator _fileGenerator;
-        private readonly ILogger<CodeGenerator> _logger;
+        private readonly ILogger<FileGeneratorBase<TFile>> _logger;
         private readonly Func<IEnumerable<IRewriter>> _rewriterFactory;
 
-        public CodeGenerator(IFileGenerator fileGenerator, ILogger<CodeGenerator> logger, Func<IEnumerable<IRewriter>> rewriterFactory)
+        protected FileGeneratorBase(
+            ILogger<FileGeneratorBase<TFile>> logger,
+            Func<IEnumerable<IRewriter>> rewriterFactory)
         {
-            _fileGenerator = fileGenerator;
             _logger = logger;
             _rewriterFactory = rewriterFactory;
         }
 
-        public FileInfo? GenerateFile(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelFile modelFile)
+        public bool CanGenerate(IFileType file)
         {
-            var syntax = GenerateCode(ragBuilder, context, modelFile);
+            return file is TFile;
+        }
+        
+        public FileInfo? GenerateFile(TFile file)
+        {
+            var syntax = GenerateCode(file);
             if (syntax == null)
             {
                 return null;
             }
 
-            return WriteCode(modelFile, syntax);
+            return WriteCode(file.Model, syntax);
+        }
+
+        protected abstract CompilationUnitSyntax? GenerateCode(TFile file);
+
+        protected NamespaceDeclarationSyntax? GenerateTypeAndNamespace(string @namespace, IEnumerable<NamespacedType> types)
+        {
+            var typeSyntax = types
+                             .OrderBy(t => t.TypeName)
+                             .Select(t => t.Type)
+                             .Cast<MemberDeclarationSyntax>()
+                             .ToArray();
+
+            return typeSyntax.Any()
+                       ? SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace))
+                                      .AddMembers(typeSyntax)
+                       : null;
         }
 
         private SyntaxNode FormatCode(SyntaxNode rootNode)
@@ -55,19 +78,6 @@ namespace ModelGenerator.Framework.CodeGeneration
             return rootNode;
         }
 
-        private CompilationUnitSyntax? GenerateCode(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelFile modelFile)
-        {
-            try
-            {
-                return _fileGenerator.GenerateCode(ragBuilder, context, modelFile);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Could not generate code for file {modelFile.FileName} in {modelFile.RootPath}");
-                throw;
-            }
-        }
-
         private FileInfo WriteCode(ModelFile modelFile, SyntaxNode syntax)
         {
             var filePath = Path.Combine(modelFile.RootPath, modelFile.FileName);
@@ -82,6 +92,16 @@ namespace ModelGenerator.Framework.CodeGeneration
 
             file.Flush();
             return new FileInfo(filePath);
+        }
+
+        FileInfo? IFileGenerator.GenerateFile(IFileType file)
+        {
+            if (file is TFile typedFile)
+            {
+                return GenerateFile(typedFile);
+            }
+
+            throw new NotSupportedException("The provided file type was not compatible with the generator.");
         }
     }
 }

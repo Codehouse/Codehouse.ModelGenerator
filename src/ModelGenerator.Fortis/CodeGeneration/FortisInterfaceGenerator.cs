@@ -17,14 +17,16 @@ namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class FortisInterfaceGenerator : FortisTypeGeneratorBase
     {
-        private readonly FieldNameResolver _fieldNameResolver;
+        public override string Tag => "Fortis.Interface";
+
+        private readonly IFortisFieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly FortisSettings _settings;
         private readonly TypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
-        public FortisInterfaceGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, IXmlDocumentationGenerator xmlDocGenerator)
-            : base(settings)
+        public FortisInterfaceGenerator(IFortisFieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, IXmlDocumentationGenerator xmlDocGenerator)
+            : base(settings, typeNameResolver)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
@@ -33,17 +35,19 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _xmlDocGenerator = xmlDocGenerator;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GenerateCode(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelType model)
+        protected override (string? Name, TypeDeclarationSyntax? Class) GenerateTypeDeclaration(ScopedRagBuilder<string> statusTracker, GenerationContext context, ModelFile model)
         {
-            var type = InterfaceDeclaration(_typeNameResolver.GetInterfaceName(model.Template))
-                       .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                       .If(_settings.Quirks.PartialInterfaces, i => i.AddModifiers(Token(SyntaxKind.PartialKeyword)))
-                       .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
-                       .AddSingleAttributes(CreateTemplateMappingAttribute(context, model.Template))
-                       .AddMembers(GenerateFields(model, model.Template.OwnFields))
-                       .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
+            var modelType = model.Types.Single();
+            var typeName = _typeNameResolver.GetInterfaceName(modelType.Template);
+            var typeDeclaration = InterfaceDeclaration(typeName)
+                .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                .If(_settings.Quirks.PartialInterfaces, i => i.AddModifiers(Token(SyntaxKind.PartialKeyword)))
+                .AddBaseListTypes(GenerateBaseTypes(context, modelType.Template))
+                .AddSingleAttributes(CreateTemplateMappingAttribute(context, modelType.Template))
+                .AddMembers(GenerateFields(modelType, modelType.Template.OwnFields))
+                .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(modelType.Template));
 
-            yield return type;
+            return (typeName, typeDeclaration);
         }
 
         private AttributeSyntax CreateTemplateMappingAttribute(GenerationContext context, Template template)
