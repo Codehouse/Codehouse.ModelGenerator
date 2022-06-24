@@ -13,7 +13,7 @@ namespace ModelGenerator.Framework.CodeGeneration
     public class DefaultFileGenerator<TFile> : FileGeneratorBase<TFile>
         where TFile : IFileType
     {
-        private ILogger<DefaultFileGenerator<TFile>> _logger;
+        private readonly ILogger<DefaultFileGenerator<TFile>> _logger;
         private readonly CodeGenerationSettings _settings;
         private readonly ITypeGenerator<TFile>[] _typeGenerators;
         private readonly IEnumerable<IUsingGenerator<TFile>> _usingGenerators;
@@ -59,51 +59,43 @@ namespace ModelGenerator.Framework.CodeGeneration
                     .SelectMany(ug => ug.GenerateUsings(file))
                     .ToArray();
 
-                var types = _typeGenerators.Select(tg => tg.GenerateType(file))
-                    .WhereNotNull()
-                    .ToArray();
-                if (!types.Any())
+                var namespaces = GenerateNamespaces(file);
+                if (!namespaces.Any())
                 {
                     _logger.LogWarning("No types were generated for the file {fileName} in {path}", file.Model.FileName, file.Model.RootPath);
                     return null;
                 }
 
-                _logger.LogDebug("Generated type order for {fileName}: {types}", file.Model.FileName, string.Join(' ', types.Select(t => t.TypeName)));
+                // The file comment needs to be applied to the first namespace
+                namespaces[0] = namespaces[0].WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty));
 
-
-                var unit = CompilationUnit()
-                           .AddUsings(usings);
-                
-                var namespaces = GroupTypesByNamespace(types);
-                var isFirst = true;
-                
-                
-                _logger.LogDebug("Grouped type order for {fileName}: {types}", file.Model.FileName, string.Join(',', namespaces.Select(g => "[" + string.Join(' ', g.Select(t => t.TypeName)) + "]" )));
-                
-                foreach (var typeGroup in namespaces)
-                {
-                    var @namespace = GenerateTypeAndNamespace(typeGroup.First().Namespace, typeGroup);
-                    if (@namespace == null)
-                    {
-                        continue;
-                    }
-
-                    if (isFirst)
-                    {
-                        isFirst = false;
-                        @namespace = @namespace.WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty));
-                    }
-
-                    unit = unit.AddMembers(@namespace);
-                }
-
-                return unit;
+                return CompilationUnit()
+                           .AddUsings(usings)
+                           .AddMembers(namespaces);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Could not generate code for file {fileName} in {rootPath}", file.Model.FileName, file.Model.RootPath);
                 throw;
             }
+        }
+
+        private NamespaceDeclarationSyntax[] GenerateNamespaces(TFile file)
+        {
+            var types = _typeGenerators.Select(tg => tg.GenerateType(file))
+                                       .WhereNotNull()
+                                       .ToArray();
+            if (!types.Any())
+            {
+                _logger.LogWarning("No types were generated for the file {fileName} in {path}", file.Model.FileName, file.Model.RootPath);
+                return Array.Empty<NamespaceDeclarationSyntax>();
+            }
+
+            var typeGroups = GroupTypesByNamespace(types);
+            return typeGroups.Where(typeGroup => typeGroup.Any())
+                             .Select(typeGroup => GenerateTypeAndNamespace(typeGroup[0].Namespace, typeGroup))
+                             .WhereNotNull()
+                             .ToArray();
         }
 
         private IEnumerable<NamespacedType[]> GroupTypesByNamespace(NamespacedType[] types)
