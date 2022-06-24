@@ -45,7 +45,6 @@ namespace ModelGenerator.Framework.CodeGeneration
         protected NamespaceDeclarationSyntax? GenerateTypeAndNamespace(string @namespace, IEnumerable<NamespacedType> types)
         {
             var typeSyntax = types
-                             .OrderBy(t => t.TypeName)
                              .Select(t => t.Type)
                              .Cast<MemberDeclarationSyntax>()
                              .ToArray();

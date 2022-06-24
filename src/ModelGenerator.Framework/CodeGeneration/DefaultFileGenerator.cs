@@ -68,21 +68,53 @@ namespace ModelGenerator.Framework.CodeGeneration
                     return null;
                 }
 
-                var namespaces = types
-                    .GroupBy(x => x.Namespace)
-                    .Select(g => GenerateTypeAndNamespace(g.Key, g))
-                    .Cast<MemberDeclarationSyntax>()
-                    .ToArray();
+                _logger.LogDebug("Generated type order for {fileName}: {types}", file.Model.FileName, string.Join(' ', types.Select(t => t.TypeName)));
 
-                return CompilationUnit()
-                    .WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty))
-                    .AddUsings(usings)
-                    .AddMembers(namespaces);
+
+                var unit = CompilationUnit()
+                           .AddUsings(usings);
+                
+                var namespaces = GroupTypesByNamespace(types);
+                var isFirst = true;
+                
+                
+                _logger.LogDebug("Grouped type order for {fileName}: {types}", file.Model.FileName, string.Join(',', namespaces.Select(g => "[" + string.Join(' ', g.Select(t => t.TypeName)) + "]" )));
+                
+                foreach (var typeGroup in namespaces)
+                {
+                    var @namespace = GenerateTypeAndNamespace(typeGroup.First().Namespace, typeGroup);
+                    if (@namespace == null)
+                    {
+                        continue;
+                    }
+
+                    if (isFirst)
+                    {
+                        isFirst = false;
+                        @namespace = @namespace.WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty));
+                    }
+
+                    unit = unit.AddMembers(@namespace);
+                }
+
+                return unit;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Could not generate code for file {file.Model.FileName} in {file.Model.RootPath}");
+                _logger.LogError(ex, "Could not generate code for file {fileName} in {rootPath}", file.Model.FileName, file.Model.RootPath);
                 throw;
+            }
+        }
+
+        private IEnumerable<NamespacedType[]> GroupTypesByNamespace(NamespacedType[] types)
+        {
+            // Using a group by disturbs the configured order.  Also note that depending on order, the same namespace may appear twice.
+            while (types.Any())
+            {
+                var currentNamespace = types[0].Namespace;
+                var typeGroup = types.TakeWhile(t => t.Namespace == currentNamespace).ToArray();
+                types = types.Skip(typeGroup.Length).ToArray();
+                yield return typeGroup;
             }
         }
     }
