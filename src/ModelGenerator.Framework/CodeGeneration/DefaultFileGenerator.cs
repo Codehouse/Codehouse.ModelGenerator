@@ -67,11 +67,12 @@ namespace ModelGenerator.Framework.CodeGeneration
                 }
 
                 // The file comment needs to be applied to the first namespace
+                // TODO: Make this comment editable
                 namespaces[0] = namespaces[0].WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty));
 
                 return CompilationUnit()
                            .AddUsings(usings)
-                           .AddMembers(namespaces);
+                           .AddMembers(namespaces.Cast<MemberDeclarationSyntax>().ToArray());
             }
             catch (Exception ex)
             {
