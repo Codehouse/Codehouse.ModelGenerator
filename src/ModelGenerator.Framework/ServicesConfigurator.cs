@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelGenerator.Framework.Activities;
 using ModelGenerator.Framework.CodeGeneration;
+using ModelGenerator.Framework.CodeGeneration.FileTypes;
 using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
@@ -21,6 +22,7 @@ namespace ModelGenerator.Framework
             // TODO: Move configuration into Common or activity-specific sections.
             collection
                 .AddConfiguration<FieldIds>(configuration, nameof(FieldIds))
+                .AddConfiguration<CodeGenerationSettings>(configuration, "Common:CodeGeneration")
                 .AddConfiguration<ItemParsingSettings>(configuration, "Common:ItemParsing")
                 .AddConfiguration<PathFilterSettings>(configuration, "PathFilters")
                 .AddConfiguration<TemplateIds>(configuration, nameof(TemplateIds))
@@ -28,13 +30,16 @@ namespace ModelGenerator.Framework
                 .AddConfiguration<XmlDocumentationSettings>(configuration, "XmlDocumentation");
 
             collection
-                .AddSingleton<ICodeGenerator, CodeGenerator>()
                 .AddSingleton<IDatabaseFactory, DatabaseFactory>()
                 .AddSingleton<IFilePathFilter, TemplateFilter>()
                 .AddSingleton<IItemFilter, PathFilter>()
                 .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
                 .AddSingleton<ITypeFactory, TypeFactory>()
                 .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
+
+            collection
+                .AddSingleton<IFileFactory, DefaultFileFactory>()
+                .AddSingleton<IFileGenerator, DefaultFileGenerator<DefaultFile>>();
 
             collection
                 .AddTransient<IProgressTracker, ProgressTracker>()

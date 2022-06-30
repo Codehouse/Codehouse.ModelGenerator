@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.CodeGeneration;
+using ModelGenerator.Framework.CodeGeneration.FileTypes;
 using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
 
@@ -13,14 +14,20 @@ namespace ModelGenerator.Framework.Activities
     public class GenerationActivity : CollectionActivityBase<GenerationContext, FileInfo, FileInfo[]>
     {
         public override string Description => "Generate code";
-        private readonly ICodeGenerator _codeGenerator;
+        
+        private readonly IFileFactory[] _fileFactories;
+        private readonly IFileGenerator[] _fileGenerators;
         private readonly ILogger<GenerationActivity> _logger;
         private readonly RagBuilder<string> _ragBuilder = new();
 
-        public GenerationActivity(ILogger<GenerationActivity> logger, ICodeGenerator codeGenerator)
+        public GenerationActivity(
+            ILogger<GenerationActivity> logger,
+            IEnumerable<IFileFactory> fileFactories,
+            IEnumerable<IFileGenerator> fileGenerators)
         {
             _logger = logger;
-            _codeGenerator = codeGenerator;
+            _fileFactories = fileFactories.ToArray();
+            _fileGenerators = fileGenerators.ToArray();
         }
 
         protected override ICollection<FileInfo> ConvertResults(FileInfo?[]?[] results)
@@ -43,9 +50,11 @@ namespace ModelGenerator.Framework.Activities
             var typeSet = input.TypeSet;
 
             _logger.LogInformation($"Generating files for {typeSet.Name} ({typeSet.Files.Count})");
-            var tasks = typeSet.Files.Select(f => Task.Run(() => GenerateFile(input, f)));
+            var tasks = typeSet
+                        .Files
+                        .Select(f => Task.Run(() => GenerateFiles(input, f)));
             var generatedFiles = (await Task.WhenAll(tasks))
-                                 .WhereNotNull()
+                                 .SelectMany(a => a)
                                  .ToArray();
 
             var oldFiles = Directory.GetFiles(typeSet.RootPath, "*.cs", SearchOption.AllDirectories)
@@ -63,27 +72,42 @@ namespace ModelGenerator.Framework.Activities
             return generatedFiles;
         }
 
-        private FileInfo? GenerateFile(GenerationContext context, ModelFile modelFile)
+        private IEnumerable<FileInfo> GenerateFiles(GenerationContext context, ModelFile modelFile)
         {
             using var scopedRagBuilder = _ragBuilder.CreateScope($"{context.TypeSet.Name} - {modelFile.FileName}");
+            return _fileFactories.Select(f => f.CreateFile(context, modelFile, scopedRagBuilder))
+                                 .Select(GenerateFile)
+                                 .WhereNotNull()
+                                 .ToArray();
+        }
+
+        private FileInfo? GenerateFile(IFileType file)
+        {
+            var generator = _fileGenerators.Single(g => g.CanGenerate(file));
             try
             {
-                var file = _codeGenerator.GenerateFile(scopedRagBuilder, context, modelFile);
-                if (file == null)
+                
+                var fileInfo = generator.GenerateFile(file);
+                if (fileInfo == null)
                 {
-                    scopedRagBuilder.AddFail("Did not generate a file.");
+                    file.ScopedRagBuilder.AddFail("Did not generate a file.");
                 }
-                else if (scopedRagBuilder.CanPass)
+                else if (file.ScopedRagBuilder.CanPass)
                 {
-                    _ragBuilder.AddPass(file.FullName);
+                    _ragBuilder.AddPass(fileInfo.FullName);
+                }
+                else if (!file.ScopedRagBuilder.HasFails)
+                {
+                    _logger.LogWarning("File {filename} in set {typeSet} could not pass, but also contained no errors.", file.Model.FileName, file.Context.TypeSet.Name);
+                    file.ScopedRagBuilder.AddFail("Generation may have failed - check logs");
                 }
 
-                return file;
+                return fileInfo;
             }
             catch (Exception ex)
             {
-                scopedRagBuilder.AddFail("Error while generating file.", ex);
-                _logger.LogError(ex, $"Could not generate file {modelFile.FileName}");
+                file.ScopedRagBuilder.AddFail("Error while generating file.", ex);
+                _logger.LogError(ex, $"Could not generate file {file.Model.FileName}");
                 return null;
             }
         }

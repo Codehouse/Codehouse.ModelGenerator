@@ -29,6 +29,12 @@ Common:
     # Intern values for the specified field types
     InternFieldValues:
       - 'Type'
+  CodeGeneration:
+    TypeGenerationOrder:
+      - 'Fortis.Interface'
+      - 'Fortis.Class'
+      - 'Fortis.TemplateIds'
+      - 'Fortis.FieldIds'
 
 Fortis:
   FieldTypeMappings:

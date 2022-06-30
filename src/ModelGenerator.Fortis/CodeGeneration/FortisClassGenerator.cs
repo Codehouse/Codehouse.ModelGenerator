@@ -16,15 +16,17 @@ namespace ModelGenerator.Fortis.CodeGeneration
 {
     public class FortisClassGenerator : FortisTypeGeneratorBase
     {
-        private readonly FieldNameResolver _fieldNameResolver;
+        public override string Tag => "Fortis.Class";
+
+        private readonly IFortisFieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly FortisSettings _settings;
         private readonly TypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
         private const string SitecorePredefinedQueryAttribute = "PredefinedQuery";
 
-        public FortisClassGenerator(FieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
-            : base(settings)
+        public FortisClassGenerator(IFortisFieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
+            : base(settings, typeNameResolver)
         {
             _fieldNameResolver = fieldNameResolver;
             _fieldTypeResolver = fieldTypeResolver;
@@ -33,33 +35,35 @@ namespace ModelGenerator.Fortis.CodeGeneration
             _xmlDocGenerator = xmlDocGenerator;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GenerateCode(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelType model)
+        protected override (string? Name, TypeDeclarationSyntax? Class) GenerateTypeDeclaration(ScopedRagBuilder<string> statusTracker, GenerationContext context, ModelFile model)
         {
-            var type = ClassDeclaration(_typeNameResolver.GetClassName(model.Template))
-                       .AddModifiers(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.PartialKeyword))
-                       .AddBaseListTypes(GenerateBaseTypes(context, model.Template))
-                       .AddSingleAttributes(
-                           CreateTemplateMappingAttribute(context, model.Template),
-                           Attribute(ParseName(SitecorePredefinedQueryAttribute))
-                               .AddArgumentListArguments(
-                                   AttributeArgument(StringLiteral("TemplateId")),
-                                   AttributeArgument(
-                                       MemberAccessExpression(
-                                           SyntaxKind.SimpleMemberAccessExpression,
-                                           IdentifierName("ComparisonType"),
-                                           IdentifierName("Equal"))),
-                                   AttributeArgument(IdLiteral(model.Template.Id)),
-                                   AttributeArgument(TypeOfExpression(ParseTypeName("Guid")))
-                               )
-                       )
-                       .AddMembers(context.Templates.GetAllFields(model.Template.Id)
-                                          .SelectMany(f => GenerateProperty(context, model, f))
-                                          .ToArray())
-                       .AddMembers(GenerateClassFields(context, model).ToArray())
-                       .AddMembers(GenerateConstructors(context, model).ToArray())
-                       .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
+            var modelType = model.Types.Single();
+            var typeName = _typeNameResolver.GetClassName(modelType.Template);
+            var typeDeclaration =  ClassDeclaration(typeName)
+                .AddModifiers(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.PartialKeyword))
+                .AddBaseListTypes(GenerateBaseTypes(context, modelType.Template))
+                .AddSingleAttributes(
+                    CreateTemplateMappingAttribute(context, modelType.Template),
+                    Attribute(ParseName(SitecorePredefinedQueryAttribute))
+                        .AddArgumentListArguments(
+                            AttributeArgument(StringLiteral("TemplateId")),
+                            AttributeArgument(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName("ComparisonType"),
+                                    IdentifierName("Equal"))),
+                            AttributeArgument(IdLiteral(modelType.Template.Id)),
+                            AttributeArgument(TypeOfExpression(ParseTypeName("Guid")))
+                        )
+                )
+                .AddMembers(context.Templates.GetAllFields(modelType.Template.Id)
+                    .SelectMany(f => GenerateProperty(context, modelType, f))
+                    .ToArray())
+                .AddMembers(GenerateClassFields(context, modelType).ToArray())
+                .AddMembers(GenerateConstructors(context, modelType).ToArray())
+                .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(modelType.Template));
 
-            yield return type;
+            return (typeName, typeDeclaration);
         }
 
         private AttributeSyntax CreateTemplateMappingAttribute(GenerationContext context, Template template)
