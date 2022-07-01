@@ -13,8 +13,8 @@ namespace ModelGenerator.Scs.FileParsing
         public string Name => _name ??= GetNameFromPath(Path);
         public Guid Parent { get; set; }
         public string Path { get; set; } = string.Empty;
-        public Guid Template { get; set; }
         public ScsField[] SharedFields { get; set; } = Array.Empty<ScsField>();
+        public Guid Template { get; set; }
 
         private string? _name;
 

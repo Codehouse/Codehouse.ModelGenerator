@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
+using ModelGenerator.Framework.Progress;
 
-namespace ModelGenerator.Framework.FileParsing
+namespace ModelGenerator.Framework.FileParsing.ItemFilters
 {
     public class TemplateFilter : IItemFilter
     {
@@ -17,7 +18,7 @@ namespace ModelGenerator.Framework.FileParsing
             };
         }
 
-        public bool Accept(Item item)
+        public bool Accept(ScopedRagBuilder<string> tracker, Item item)
         {
             return _validIds.Contains(item.TemplateId);
         }

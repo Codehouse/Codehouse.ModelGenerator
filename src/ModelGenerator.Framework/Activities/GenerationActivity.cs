@@ -96,11 +96,6 @@ namespace ModelGenerator.Framework.Activities
                 {
                     _ragBuilder.AddPass(fileInfo.FullName);
                 }
-                else if (!file.ScopedRagBuilder.HasFails)
-                {
-                    _logger.LogWarning("File {filename} in set {typeSet} could not pass, but also contained no errors.", file.Model.FileName, file.Context.TypeSet.Name);
-                    file.ScopedRagBuilder.AddFail("Generation may have failed - check logs");
-                }
 
                 return fileInfo;
             }

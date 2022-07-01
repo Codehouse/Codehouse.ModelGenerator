@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
+using ModelGenerator.Framework.Progress;
 
-namespace ModelGenerator.Framework.FileParsing
+namespace ModelGenerator.Framework.FileParsing.ItemFilters
 {
     public class PathFilter : IItemFilter
     {
@@ -12,7 +13,7 @@ namespace ModelGenerator.Framework.FileParsing
             _settings = settings;
         }
 
-        public bool Accept(Item item)
+        public bool Accept(ScopedRagBuilder<string> tracker, Item item)
         {
             return _settings.Exclude.All(excludedPath => !item.Path.StartsWith(excludedPath, StringComparison.OrdinalIgnoreCase));
         }
