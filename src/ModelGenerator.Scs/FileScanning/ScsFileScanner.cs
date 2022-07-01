@@ -30,7 +30,9 @@ namespace ModelGenerator.Scs.FileScanning
         }
         public async Task<FileSet?> ScanSourceAsync(RagBuilder<string> ragBuilder, string path)
         {
-            var module = await ReadModule(ragBuilder, path);
+            using var tracker = ragBuilder.CreateScope(Path.GetFileName(path));
+            
+            var module = await ReadModule(tracker, path);
             if (module == null)
             {
                 return null;
@@ -44,15 +46,20 @@ namespace ModelGenerator.Scs.FileScanning
             }
 
             var items = module.Items.Includes
-                .SelectMany(i => ScanItemSource(i, moduleFolder, ragBuilder.CreateScope(module.Namespace)))
+                .SelectMany(i => ScanItemSource(i, moduleFolder, tracker))
                 .ToImmutableList();
+
+            if (tracker.CanPass)
+            {
+                tracker.AddPass();
+            }
 
             return new FileSet(items,
                 module.Namespace,
                 Path.Combine(moduleFolder, _settings.ItemFolder),
                 Path.GetFullPath(Path.Combine(moduleFolder, _settings.ModelFolder)),
                 module.Namespace,
-                module.Namespace,
+                _settings.BaseNamespace + "." + module.Namespace,
                 ImmutableArray<string>.Empty);
         }
 
@@ -82,7 +89,7 @@ namespace ModelGenerator.Scs.FileScanning
             }
         }
 
-        public async Task<Module?> ReadModule(RagBuilder<string> ragBuilder, string path)
+        public async Task<Module?> ReadModule(OwnedScopedRagBuilder<string> ragBuilder, string path)
         {
             try
             {
@@ -90,14 +97,14 @@ namespace ModelGenerator.Scs.FileScanning
                 var module = JsonSerializer.Deserialize<Module>(moduleFileContent, _jsonSerializerOptions);
                 if (module == null)
                 {
-                    ragBuilder.AddFail(new RagStatus<string>($"SCS module {Path.GetFileName(path)} could not be read."));
+                    ragBuilder.AddFail("SCS module {could not be read.");
                 }
 
                 return module;
             }
             catch (Exception ex)
             {
-                ragBuilder.AddFail(new RagStatus<string>($"Error while parsing SCS module {Path.GetFileName(path)}", ex));
+                ragBuilder.AddFail("Error while parsing SCS module", ex);
                 return null;
             }
         }

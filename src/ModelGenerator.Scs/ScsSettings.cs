@@ -5,6 +5,7 @@ namespace ModelGenerator.Scs
 {
     public class ScsSettings
     {
+        public string BaseNamespace { get; set; } = string.Empty;
         public string ItemFolder { get; set; } = string.Empty;
         public string ModelFolder { get; set; } = string.Empty;
         

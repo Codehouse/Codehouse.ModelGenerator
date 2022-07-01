@@ -17,12 +17,14 @@ namespace ModelGenerator.Scs.FileParsing
     {
         private readonly IDeserializer _deserialiser;
         private readonly ILogger<ScsFileParser> _log;
+        private readonly IItemFilter[] _itemFilters;
 
-        public ScsFileParser(ILogger<ScsFileParser> log)
+        public ScsFileParser(ILogger<ScsFileParser> log, IEnumerable<IItemFilter> itemFilters)
         {
             _deserialiser = new DeserializerBuilder()
                 .WithNamingConvention(PascalCaseNamingConvention.Instance)
                 .Build();
+            _itemFilters = itemFilters.ToArray();
             _log = log;
         }
         public async Task<Item[]> ParseFile(ScopedRagBuilder<string> scopedRagBuilder, FileSet fileSet, ItemFile file)
@@ -34,7 +36,9 @@ namespace ModelGenerator.Scs.FileParsing
             }
             
             var item = ConvertScsItem(scsItem, scopedRagBuilder, fileSet, file);
-            return new[] {item};
+            return _itemFilters.All(f => f.Accept(scopedRagBuilder, item))
+                       ? new[] {item}
+                       : Array.Empty<Item>();
         }
 
         private Item ConvertScsItem(ScsItem scsItem, ScopedRagBuilder<string> scopedRagBuilder, FileSet fileSet, ItemFile file)
