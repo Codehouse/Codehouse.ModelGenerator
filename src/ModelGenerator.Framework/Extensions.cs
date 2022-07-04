@@ -14,8 +14,8 @@ namespace ModelGenerator.Framework
             where T : class
         {
             return collection
-                   .Configure<T>(opts => configuration.GetSection(name).Bind(opts))
-                   .AddSingleton(sp => sp.GetRequiredService<IOptions<T>>().Value);
+                  .Configure<T>(opts => configuration.GetSection(name).Bind(opts))
+                  .AddSingleton(sp => sp.GetRequiredService<IOptions<T>>().Value);
         }
 
         public static string ToSitecoreId(this Guid id)

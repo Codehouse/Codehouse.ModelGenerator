@@ -22,8 +22,8 @@ namespace ModelGenerator.Scs.FileParsing
         public ScsFileParser(ILogger<ScsFileParser> log, IEnumerable<IItemFilter> itemFilters)
         {
             _deserialiser = new DeserializerBuilder()
-                            .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                            .Build();
+                           .WithNamingConvention(PascalCaseNamingConvention.Instance)
+                           .Build();
             _itemFilters = itemFilters.ToArray();
             _log = log;
         }
@@ -38,8 +38,8 @@ namespace ModelGenerator.Scs.FileParsing
 
             var item = ConvertScsItem(scsItem, scopedRagBuilder, fileSet, file);
             return _itemFilters.All(f => f.Accept(scopedRagBuilder, item))
-                       ? new[] {item}
-                       : Array.Empty<Item>();
+                ? new[] {item}
+                : Array.Empty<Item>();
         }
 
         private Field ConvertScsField(ScsField scsField, ScopedRagBuilder<string> scopedRagBuilder)
@@ -55,17 +55,17 @@ namespace ModelGenerator.Scs.FileParsing
         private Item ConvertScsItem(ScsItem scsItem, ScopedRagBuilder<string> scopedRagBuilder, FileSet fileSet, ItemFile file)
         {
             var sharedFields = ConvertScsFields(scsItem.SharedFields, scopedRagBuilder)
-                .ToImmutableList();
+               .ToImmutableList();
 
             // TODO: SCS is missing version revision
             // TODO: Item model completely ignores distinction between shared and unversioned fields.
             var versions = scsItem.Languages
                                   .SelectMany(l => l.Versions, (l, v) => new
-                                  {
-                                      l.Language,
-                                      v.Version,
-                                      Fields = ConvertScsFields(v.Fields.Union(l.Fields), scopedRagBuilder).ToImmutableDictionary(f => f.Id)
-                                  })
+                                   {
+                                       l.Language,
+                                       v.Version,
+                                       Fields = ConvertScsFields(v.Fields.Union(l.Fields), scopedRagBuilder).ToImmutableDictionary(f => f.Id)
+                                   })
                                   .Select(v => new LanguageVersion(v.Fields, v.Language, v.Version, Guid.Empty))
                                   .ToImmutableList();
 

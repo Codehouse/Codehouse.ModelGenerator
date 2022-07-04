@@ -24,14 +24,14 @@ namespace ModelGenerator.Framework.ItemModelling
         {
             var templateItems = database.GetItemsWhere(i => i.TemplateId == _templateIds.Template);
             var templateSets = templateItems
-                               .GroupBy(i => database.GetItemSetForItem(i.Id))
-                               .Select(g => CreateTemplateSet(database, g))
-                               .Prepend(GetWellKnownTemplates())
-                               .ToArray();
+                              .GroupBy(i => database.GetItemSetForItem(i.Id))
+                              .Select(g => CreateTemplateSet(database, g))
+                              .Prepend(GetWellKnownTemplates())
+                              .ToArray();
 
             var templates = templateSets
-                            .SelectMany(s => s.Templates.Values)
-                            .ToImmutableDictionary(t => t.Id);
+                           .SelectMany(s => s.Templates.Values)
+                           .ToImmutableDictionary(t => t.Id);
 
             var collection = new TemplateCollection(_templateIds, templates, templateSets);
 
@@ -48,9 +48,9 @@ namespace ModelGenerator.Framework.ItemModelling
         protected string CreateNamespaceFromPath(string path, int trimFromStart, int trimFromEnd)
         {
             var pathParts = path
-                            .Split('/', StringSplitOptions.RemoveEmptyEntries)
-                            .Skip(trimFromStart)
-                            .SkipLast(trimFromEnd);
+                           .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                           .Skip(trimFromStart)
+                           .SkipLast(trimFromEnd);
             return string.Join('.', pathParts).Replace(" ", string.Empty);
         }
 
@@ -64,7 +64,7 @@ namespace ModelGenerator.Framework.ItemModelling
         {
             var sections = database.GetChildren(templateItem.Id).Where(f => f.TemplateId == _templateIds.TemplateSection);
             var fields = sections
-                         .SelectMany(section => database.GetChildren(section.Id), (section, fieldItem) => new TemplateField
+                        .SelectMany(section => database.GetChildren(section.Id), (section, fieldItem) => new TemplateField
                          (
                              fieldItem.GetVersionedField(_fieldIds.DisplayName)?.Value ?? fieldItem.Name,
                              fieldItem.GetUnversionedField(_fieldIds.FieldType)?.Value ?? throw new FrameworkException($"Field {fieldItem.Path} has no field type."),
@@ -74,8 +74,8 @@ namespace ModelGenerator.Framework.ItemModelling
                              section.Name,
                              templateItem.Id
                          ))
-                         .OrderBy(f => f.Name)
-                         .ToImmutableList();
+                        .OrderBy(f => f.Name)
+                        .ToImmutableList();
 
             var baseTemplates = templateItem.SharedFields
                                             .SingleOrDefault(f => f.Id == _fieldIds.BaseTemplates)

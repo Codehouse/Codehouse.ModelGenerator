@@ -14,7 +14,7 @@ namespace ModelGenerator.Framework.CodeGeneration
         public static AccessorDeclarationSyntax AutoGet()
         {
             return AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
+               .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
 
         public static FieldDeclarationSyntax FieldDeclaration(TypeSyntax typeName, string name)
@@ -48,7 +48,7 @@ namespace ModelGenerator.Framework.CodeGeneration
         public static AttributeSyntax SitecoreIndexField(string fieldName)
         {
             return Attribute(ParseName(SitecoreIndexFieldAttribute))
-                .AddArgumentListArguments(
+               .AddArgumentListArguments(
                     AttributeArgument(StringLiteral(fieldName.ToLowerInvariant()))
                 );
         }

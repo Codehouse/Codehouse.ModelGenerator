@@ -13,8 +13,8 @@ namespace ModelGenerator.Fortis
         public static void Configure(IServiceCollection collection, IConfiguration configuration)
         {
             collection
-                .Configure<FortisSettings>(opts => configuration.GetSection("Fortis").Bind(opts))
-                .AddSingleton(sp => sp.GetRequiredService<IOptions<FortisSettings>>().Value);
+               .Configure<FortisSettings>(opts => configuration.GetSection("Fortis").Bind(opts))
+               .AddSingleton(sp => sp.GetRequiredService<IOptions<FortisSettings>>().Value);
 
             collection.AddSingleton<IFortisFieldNameResolver, FortisFieldNameResolver>()
                       .AddSingleton<FieldTypeResolver>()

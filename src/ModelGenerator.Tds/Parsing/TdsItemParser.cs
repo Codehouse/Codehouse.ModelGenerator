@@ -41,14 +41,14 @@ namespace ModelGenerator.Tds.Parsing
             from properties in Token.EqualTo(TdsItemTokens.PropertyName)
                                     .Apply(_tokenizer.PropertyName)
                                     .Then(name =>
-                                        // Have found some properties that are missing a value, so made content optional.
-                                        Token.EqualTo(TdsItemTokens.Content).OptionalOrDefault(Token<TdsItemTokens>.Empty)
-                                             .Then(value =>
-                                                 Token.EqualTo(TdsItemTokens.NewLine)
-                                                      .Select(_ => KeyValuePair.Create(
-                                                          name.ToStringValue(),
-                                                          // As content is optional, must check if it's empty first.
-                                                          value.HasValue ? value.ToStringValue() : string.Empty))))
+                                         // Have found some properties that are missing a value, so made content optional.
+                                         Token.EqualTo(TdsItemTokens.Content).OptionalOrDefault(Token<TdsItemTokens>.Empty)
+                                              .Then(value =>
+                                                   Token.EqualTo(TdsItemTokens.NewLine)
+                                                        .Select(_ => KeyValuePair.Create(
+                                                             name.ToStringValue(),
+                                                             // As content is optional, must check if it's empty first.
+                                                             value.HasValue ? value.ToStringValue() : string.Empty))))
                                     .Many()
             from separator in Token.EqualTo(TdsItemTokens.NewLine)
             select new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
@@ -69,6 +69,11 @@ namespace ModelGenerator.Tds.Parsing
             _tokenizer = tokenizer;
         }
 
+        private static string GetFieldValue(Token<TdsItemTokens>[] lines)
+        {
+            return string.Join("", lines.SkipLast(1).Select(t => t.ToStringValue()));
+        }
+
         public TdsItem[] ParseTokens(TokenList<TdsItemTokens> tokenList)
         {
             var parsed = TdsFile.TryParse(tokenList);
@@ -78,11 +83,6 @@ namespace ModelGenerator.Tds.Parsing
             }
 
             return parsed.Value;
-        }
-
-        private static string GetFieldValue(Token<TdsItemTokens>[] lines)
-        {
-            return string.Join("", lines.SkipLast(1).Select(t => t.ToStringValue()));
         }
 
         private Field CreateField(Dictionary<string, string> properties, string value)
@@ -127,7 +127,7 @@ namespace ModelGenerator.Tds.Parsing
         private IEnumerable<Field> FilterIncludedFields(IEnumerable<Field> fields)
         {
             return fields
-                .Where(f => _settings.IncludedFields.Contains(f.Name, StringComparer.OrdinalIgnoreCase));
+               .Where(f => _settings.IncludedFields.Contains(f.Name, StringComparer.OrdinalIgnoreCase));
         }
     }
 }

@@ -80,9 +80,9 @@ namespace ModelGenerator
             // 3. Working directory
             // 4. Working directory user overrides
             configBuilder.AddYamlFile(Path.Combine(assemblyLocation, "appSettings.yml"))
-                .AddYamlFile(Environment.ExpandEnvironmentVariables("%USERPROFILE%/modelGenerator.yml"), true)
-                .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.yml"), true)
-                .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.user.yml"), true);
+                         .AddYamlFile(Environment.ExpandEnvironmentVariables("%USERPROFILE%/modelGenerator.yml"), true)
+                         .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.yml"), true)
+                         .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.user.yml"), true);
         }
 
         private static void RegisterInputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
@@ -104,7 +104,7 @@ namespace ModelGenerator
         private static void RegisterOutputProviders(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             var providerNames = hostBuilderContext.Configuration.GetValue<OutputProviderNames[]>("Providers:Output")
-                ?? new []{ hostBuilderContext.Configuration.GetValue<OutputProviderNames>("Providers:Output") };
+                             ?? new[] {hostBuilderContext.Configuration.GetValue<OutputProviderNames>("Providers:Output")};
             foreach (var providerName in providerNames)
             {
                 switch (providerName)
@@ -127,9 +127,9 @@ namespace ModelGenerator
             RegisterOutputProviders(hostBuilderContext, collection);
 
             collection
-                .AddSingleton<LicenseManager>()
-                .AddSingleton<Runner>()
-                .AddHostedService<Worker>();
+               .AddSingleton<LicenseManager>()
+               .AddSingleton<Runner>()
+               .AddHostedService<Worker>();
         }
     }
 }

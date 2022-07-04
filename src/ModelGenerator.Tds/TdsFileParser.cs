@@ -36,9 +36,9 @@ namespace ModelGenerator.Tds
         {
             var rawItem = await File.ReadAllTextAsync(file.Path);
             return ParseItems(scopedRagBuilder, fileSet, file, rawItem)
-                   .WhereNotNull()
-                   .Where(i => _itemFilters.All(f => f.Accept(scopedRagBuilder, i)))
-                   .ToArray();
+                  .WhereNotNull()
+                  .Where(i => _itemFilters.All(f => f.Accept(scopedRagBuilder, i)))
+                  .ToArray();
         }
 
         private ImmutableDictionary<HintTypes, string> ParseHints(ItemFile file)
@@ -50,7 +50,7 @@ namespace ModelGenerator.Tds
 
             return new Dictionary<HintTypes, string>
             {
-                { HintTypes.Namespace, file.Properties["CodeGenNamespace"] }
+                {HintTypes.Namespace, file.Properties["CodeGenNamespace"]}
             }.ToImmutableDictionary();
         }
 
@@ -62,17 +62,17 @@ namespace ModelGenerator.Tds
                 var tokens = _tokenizer.Tokenize(rawItem);
                 return _parser.ParseTokens(tokens)
                               .Select(i => new Item(
-                                  hints,
-                                  i.Id,
-                                  i.Name,
-                                  i.Parent,
-                                  i.Path,
-                                  file.Path,
-                                  fileSet.Id,
-                                  i.SharedFields,
-                                  i.TemplateId,
-                                  i.TemplateName,
-                                  i.Versions))
+                                   hints,
+                                   i.Id,
+                                   i.Name,
+                                   i.Parent,
+                                   i.Path,
+                                   file.Path,
+                                   fileSet.Id,
+                                   i.SharedFields,
+                                   i.TemplateId,
+                                   i.TemplateName,
+                                   i.Versions))
                               .ToArray();
             }
             catch (ParseException ex)

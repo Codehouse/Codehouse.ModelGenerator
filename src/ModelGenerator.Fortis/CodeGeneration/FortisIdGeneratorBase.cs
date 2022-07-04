@@ -22,9 +22,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
         protected PropertyDeclarationSyntax GenerateIdProperty(string name, Guid value)
         {
             return PropertyDeclaration(IdentifierName(nameof(Guid)), name)
-                   .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
-                   .AddAccessorListAccessors(AutoGet())
-                   .WithInitializer(
+                  .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
+                  .AddAccessorListAccessors(AutoGet())
+                  .WithInitializer(
                        EqualsValueClause(
                            InvocationExpression(
                                    MemberAccessExpression(
@@ -33,17 +33,17 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                        IdentifierName("Parse")
                                    )
                                )
-                               .AddArgumentListArguments(Argument(IdLiteral(value)))
+                              .AddArgumentListArguments(Argument(IdLiteral(value)))
                        )
                    )
-                   .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
+                  .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
 
         protected override string GetNamespace(GenerationContext context, ModelType modelType)
         {
             return _settings.Quirks.LocalNamespaceForIds
-                       ? base.GetNamespace(context, modelType)
-                       : context.TypeSet.Namespace;
+                ? base.GetNamespace(context, modelType)
+                : context.TypeSet.Namespace;
         }
     }
 }

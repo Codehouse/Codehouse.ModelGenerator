@@ -14,7 +14,7 @@ namespace ModelGenerator.Tests.Framework.CodeGeneration
         public void AddArgumentList_GivenNames_AddsAppropriateArguments()
         {
             var constructor = SyntaxFactory.ConstructorInitializer(SyntaxKind.BaseConstructorInitializer);
-            var names = new[] { "foo", "bar", "bas" };
+            var names = new[] {"foo", "bar", "bas"};
 
             var result = constructor.AddArgumentList(names);
 
@@ -42,7 +42,7 @@ namespace ModelGenerator.Tests.Framework.CodeGeneration
         public void AddArgumentList_GivenNull_AddsNullLiteralArgument()
         {
             var constructor = SyntaxFactory.ConstructorInitializer(SyntaxKind.BaseConstructorInitializer);
-            var names = new string?[] { null, null };
+            var names = new string?[] {null, null};
 
             var result = constructor.AddArgumentList(names);
 

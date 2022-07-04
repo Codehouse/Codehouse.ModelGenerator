@@ -15,9 +15,9 @@ namespace ModelGenerator.Framework
 
             try
             {
-                return field.Value.Split(new []{'|', '\n'}, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(Guid.Parse)
-                    .ToArray();
+                return field.Value.Split(new[] {'|', '\n'}, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(Guid.Parse)
+                            .ToArray();
             }
             catch (Exception ex)
             {

@@ -6,14 +6,18 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace ModelGenerator.Framework.CodeGeneration
 {
     /// <summary>
-    /// <para>This rewriter applies itself in two main places: properties and fields.</para>
-    /// <para>With fields, the declarations are all simple and do not require interstitial spacing.
-    /// Instead, this simply ensures that there is a line of whitespace separating the fields from
-    /// whichever members are declared next.</para>
-    /// <para>With properties, the default normalisation does not consistently introduce spacing
-    /// between properties, which typically are annotated with attributes and also XmlDoc blocks.
-    /// This class ensures that there are two EOL syntax trivia elements trailing each property
-    /// declaration, provided that it is not the last member of a class.</para>
+    ///     <para>This rewriter applies itself in two main places: properties and fields.</para>
+    ///     <para>
+    ///         With fields, the declarations are all simple and do not require interstitial spacing.
+    ///         Instead, this simply ensures that there is a line of whitespace separating the fields from
+    ///         whichever members are declared next.
+    ///     </para>
+    ///     <para>
+    ///         With properties, the default normalisation does not consistently introduce spacing
+    ///         between properties, which typically are annotated with attributes and also XmlDoc blocks.
+    ///         This class ensures that there are two EOL syntax trivia elements trailing each property
+    ///         declaration, provided that it is not the last member of a class.
+    ///     </para>
     /// </summary>
     public class SpacingRewriter : CSharpSyntaxRewriter, IRewriter
     {

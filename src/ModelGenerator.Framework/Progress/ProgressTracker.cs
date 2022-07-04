@@ -51,9 +51,9 @@ namespace ModelGenerator.Framework.Progress
         public ProgressTracker()
         {
             var progress = AnsiConsole
-                           .Progress()
-                           .HideCompleted(false)
-                           .Columns(
+                          .Progress()
+                          .HideCompleted(false)
+                          .Columns(
                                new TaskDescriptionColumn(),
                                new ProgressBarColumn(),
                                new PercentageColumn(),

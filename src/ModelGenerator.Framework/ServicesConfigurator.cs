@@ -22,36 +22,36 @@ namespace ModelGenerator.Framework
         {
             // TODO: Move configuration into Common or activity-specific sections.
             collection
-                .AddConfiguration<FieldIds>(configuration, nameof(FieldIds))
-                .AddConfiguration<CodeGenerationSettings>(configuration, "Common:CodeGeneration")
-                .AddConfiguration<ItemParsingSettings>(configuration, "Common:ItemParsing")
-                .AddConfiguration<PathFilterSettings>(configuration, "PathFilters")
-                .AddConfiguration<TemplateIds>(configuration, nameof(TemplateIds))
-                .AddConfiguration<Settings>(configuration, nameof(Settings))
-                .AddConfiguration<XmlDocumentationSettings>(configuration, "XmlDocumentation");
+               .AddConfiguration<FieldIds>(configuration, nameof(FieldIds))
+               .AddConfiguration<CodeGenerationSettings>(configuration, "Common:CodeGeneration")
+               .AddConfiguration<ItemParsingSettings>(configuration, "Common:ItemParsing")
+               .AddConfiguration<PathFilterSettings>(configuration, "PathFilters")
+               .AddConfiguration<TemplateIds>(configuration, nameof(TemplateIds))
+               .AddConfiguration<Settings>(configuration, nameof(Settings))
+               .AddConfiguration<XmlDocumentationSettings>(configuration, "XmlDocumentation");
 
             collection
-                .AddSingleton<IDatabaseFactory, DatabaseFactory>()
-                .AddSingleton<IFilePathFilter, TemplateFilter>()
-                .AddSingleton<IItemFilter, PathFilter>()
-                .AddSingleton<IItemFilter, FieldItemHaseTypeFilter>()
-                .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
-                .AddSingleton<ITypeFactory, TypeFactory>()
-                .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
+               .AddSingleton<IDatabaseFactory, DatabaseFactory>()
+               .AddSingleton<IFilePathFilter, TemplateFilter>()
+               .AddSingleton<IItemFilter, PathFilter>()
+               .AddSingleton<IItemFilter, FieldItemHaseTypeFilter>()
+               .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
+               .AddSingleton<ITypeFactory, TypeFactory>()
+               .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
 
             collection
-                .AddSingleton<IFileFactory, DefaultFileFactory>()
-                .AddSingleton<IFileGenerator, DefaultFileGenerator<DefaultFile>>();
+               .AddSingleton<IFileFactory, DefaultFileFactory>()
+               .AddSingleton<IFileGenerator, DefaultFileGenerator<DefaultFile>>();
 
             collection
-                .AddTransient<IProgressTracker, ProgressTracker>()
-                .AddSingleton(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
+               .AddTransient<IProgressTracker, ProgressTracker>()
+               .AddSingleton(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
 
             collection
-                .AddTransient<IRewriter, AccessorRewriter>()
-                .AddTransient<IRewriter, BaseTypeListRewriter>()
-                .AddTransient<IRewriter, SpacingRewriter>()
-                .AddSingleton<Func<IEnumerable<IRewriter>>>(sp => sp.GetServices<IRewriter>);
+               .AddTransient<IRewriter, AccessorRewriter>()
+               .AddTransient<IRewriter, BaseTypeListRewriter>()
+               .AddTransient<IRewriter, SpacingRewriter>()
+               .AddSingleton<Func<IEnumerable<IRewriter>>>(sp => sp.GetServices<IRewriter>);
 
             collection.AddSingleton(typeof(ProgressStep<>))
                       .AddSingleton<DatabaseActivity>()

@@ -10,9 +10,9 @@ namespace ModelGenerator.Licensing
     {
         public static LicenseCheckResult Expired(DateTime expiry)
         {
-            return new (null, null, expiry, LicenseStatuses.Expired); 
+            return new(null, null, expiry, LicenseStatuses.Expired);
         }
-        
+
         public static LicenseCheckResult Invalid()
         {
             return new(null, null, null, LicenseStatuses.Invalid);

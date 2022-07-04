@@ -161,7 +161,7 @@ Scs:
   ModelFolder: 'code'
   Sources:
     - 'src\sitecore\*\*\*.module.json'
-  
+
 
 Tds:
   # Root folder (leave blank for working directory)

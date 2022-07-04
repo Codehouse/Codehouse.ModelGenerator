@@ -40,12 +40,12 @@ namespace ModelGenerator.Fortis.CodeGeneration
             var modelType = model.Types.Single();
             var typeName = _typeNameResolver.GetInterfaceName(modelType.Template);
             var typeDeclaration = InterfaceDeclaration(typeName)
-                .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                .If(_settings.Quirks.PartialInterfaces, i => i.AddModifiers(Token(SyntaxKind.PartialKeyword)))
-                .AddBaseListTypes(GenerateBaseTypes(context, modelType.Template))
-                .AddSingleAttributes(CreateTemplateMappingAttribute(context, modelType.Template))
-                .AddMembers(GenerateFields(modelType, modelType.Template.OwnFields))
-                .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(modelType.Template));
+                                 .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                 .If(_settings.Quirks.PartialInterfaces, i => i.AddModifiers(Token(SyntaxKind.PartialKeyword)))
+                                 .AddBaseListTypes(GenerateBaseTypes(context, modelType.Template))
+                                 .AddSingleAttributes(CreateTemplateMappingAttribute(context, modelType.Template))
+                                 .AddMembers(GenerateFields(modelType, modelType.Template.OwnFields))
+                                 .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(modelType.Template));
 
             return (typeName, typeDeclaration);
         }
@@ -90,9 +90,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
             try
             {
                 return PropertyDeclaration(ParseTypeName(_fieldTypeResolver.GetFieldInterfaceType(templateField)), _fieldNameResolver.GetFieldName(templateField))
-                       .AddAccessorListAccessors(AutoGet())
-                       .AddSingleAttributes(SitecoreIndexField(templateField.Name))
-                       .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, templateField));
+                      .AddAccessorListAccessors(AutoGet())
+                      .AddSingleAttributes(SitecoreIndexField(templateField.Name))
+                      .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, templateField));
             }
             catch (Exception ex)
             {
@@ -103,8 +103,8 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private MemberDeclarationSyntax[] GenerateFields(ModelType model, IImmutableList<TemplateField> templateOwnFields)
         {
             return templateOwnFields
-                   .SelectMany(f => GenerateField(model, f))
-                   .ToArray();
+                  .SelectMany(f => GenerateField(model, f))
+                  .ToArray();
         }
 
         private PropertyDeclarationSyntax GenerateFieldValueProperty(Template template, TemplateField templateField, string valueType)
@@ -112,9 +112,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
             try
             {
                 return PropertyDeclaration(ParseTypeName(valueType), _fieldNameResolver.GetFieldValueName(templateField))
-                       .AddAccessorListAccessors(AutoGet())
-                       .AddSingleAttributes(SitecoreIndexField(templateField.Name))
-                       .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, templateField));
+                      .AddAccessorListAccessors(AutoGet())
+                      .AddSingleAttributes(SitecoreIndexField(templateField.Name))
+                      .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, templateField));
             }
             catch (Exception ex)
             {

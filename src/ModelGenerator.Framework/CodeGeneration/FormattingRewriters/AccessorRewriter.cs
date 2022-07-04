@@ -6,17 +6,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace ModelGenerator.Framework.CodeGeneration
 {
     /// <summary>
-    /// <para>This class rewrites the generated expression-bodied property accessors.</para>
-    /// <para>By default generated accessors, which are attributed, generate as follows:</para>
-    /// <code>
+    ///     <para>This class rewrites the generated expression-bodied property accessors.</para>
+    ///     <para>By default generated accessors, which are attributed, generate as follows:</para>
+    ///     <code>
     /// [Sitecore.ContentSearch.IndexField("fieldName")]
     /// public string FieldNameValue {[DebuggerStepThrough]
     ///     get => FieldName.Value; }
     /// </code>
-    /// <para>This rewriter introduces leading whitespace trivia on the attribute list,
-    /// and trailing whitespace after the accessor declaration.  This results in the
-    /// following code:</para>
-    /// <code>
+    ///     <para>
+    ///         This rewriter introduces leading whitespace trivia on the attribute list,
+    ///         and trailing whitespace after the accessor declaration.  This results in the
+    ///         following code:
+    ///     </para>
+    ///     <code>
     /// [Sitecore.ContentSearch.IndexField("description")]
     /// public string DescriptionValue {
     ///     [DebuggerStepThrough]

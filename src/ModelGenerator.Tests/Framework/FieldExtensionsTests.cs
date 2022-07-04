@@ -30,7 +30,7 @@ namespace ModelGenerator.Tests.Framework
         [Test]
         public void GetMultiReferenceValue_GivenMultipleItems_ReturnsMultipleItems()
         {
-            var ids = new[] { Guid.NewGuid(), Guid.NewGuid() };
+            var ids = new[] {Guid.NewGuid(), Guid.NewGuid()};
             var field = new Field(Guid.Empty, string.Empty, $"{ids[0].ToSitecoreId()}|{ids[1].ToSitecoreId()}");
 
             var result = field.GetMultiReferenceValue();

@@ -11,19 +11,19 @@ namespace ModelGenerator.Framework.CodeGeneration
         public static ConstructorInitializerSyntax AddArgumentList(this ConstructorInitializerSyntax syntax, params string?[] names)
         {
             var arguments = names
-                            .Select(n => n is null
+                           .Select(n => n is null
                                 ? SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
                                 : (ExpressionSyntax)SyntaxFactory.IdentifierName(n))
-                            .Select(SyntaxFactory.Argument)
-                            .ToArray();
+                           .Select(SyntaxFactory.Argument)
+                           .ToArray();
             return syntax.AddArgumentListArguments(arguments);
         }
 
         public static AttributeSyntax AddSimpleArguments(this AttributeSyntax member, params ExpressionSyntax[] expressionArguments)
         {
             var arguments = expressionArguments
-                            .Select(SyntaxFactory.AttributeArgument)
-                            .ToArray();
+                           .Select(SyntaxFactory.AttributeArgument)
+                           .ToArray();
             return member.AddArgumentListArguments(arguments);
         }
 
@@ -31,8 +31,8 @@ namespace ModelGenerator.Framework.CodeGeneration
             where T : SyntaxNode
         {
             var attributeLists = attributes
-                                 .Select(a => SyntaxFactory.AttributeList().AddAttributes(a))
-                                 .ToArray();
+                                .Select(a => SyntaxFactory.AttributeList().AddAttributes(a))
+                                .ToArray();
             SyntaxNode node = syntax switch
             {
                 AccessorDeclarationSyntax accessor => accessor.AddAttributeLists(attributeLists),

@@ -129,28 +129,28 @@ namespace ModelGenerator.Tds
                     throw new FileScanException($"Could not resolve path from project {projectFolder}");
                 }
 
-                using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings { Async = true });
+                using var xmlReader = XmlReader.Create(projectFilePath, new XmlReaderSettings {Async = true});
                 var xml = await XDocument.LoadAsync(xmlReader, LoadOptions.None, CancellationToken.None);
                 var properties = ToDictionarySafe(xml?.Root
                                                      ?.Elements(TagNames.PropertyGroup)
-                                                     .Where(e => !e.HasAttributes)
-                                                     .Elements()
-                                                     .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
+                                                      .Where(e => !e.HasAttributes)
+                                                      .Elements()
+                                                      .Select(e => KeyValuePair.Create(e.Name.LocalName, e.Value.Trim())));
 
                 var files = xml?.Root
                                ?.Elements(TagNames.ItemGroup)
-                               .Elements(TagNames.Item)
-                               .Select(e => CreateItemFile(ragBuilder, projectFolder, e))
-                               .WhereNotNull()
-                               .Where(f => EnsureItemFileExists(ragBuilder, projectFolder, f.Path))
-                               .Where(f => _filePathFilters.All(filter => filter.Accept(f.Path)))
-                               .ToImmutableList() ?? ImmutableList<ItemFile>.Empty;
+                                .Elements(TagNames.Item)
+                                .Select(e => CreateItemFile(ragBuilder, projectFolder, e))
+                                .WhereNotNull()
+                                .Where(f => EnsureItemFileExists(ragBuilder, projectFolder, f.Path))
+                                .Where(f => _filePathFilters.All(filter => filter.Accept(f.Path)))
+                                .ToImmutableList() ?? ImmutableList<ItemFile>.Empty;
 
                 var references = xml?.Root
                                     ?.Elements(TagNames.ItemGroup)
-                                    .Elements(TagNames.CodeGenReference)
-                                    .Select(e => e.Value)
-                                    .ToImmutableArray() ?? ImmutableArray<string>.Empty;
+                                     .Elements(TagNames.CodeGenReference)
+                                     .Select(e => e.Value)
+                                     .ToImmutableArray() ?? ImmutableArray<string>.Empty;
 
                 return new FileSet(
                     files,
@@ -159,7 +159,7 @@ namespace ModelGenerator.Tds
                     Path.GetFullPath(Path.Combine(projectFolder, GetDictionaryKey(projectName, properties, ElementNames.ProjectSourcePath))),
                     GetDictionaryKey(projectName, properties, ElementNames.ProjectName),
                     GetDictionaryKey(projectName, properties, ElementNames.ProjectName)
-                        .Replace(".Master", ".Models"),
+                       .Replace(".Master", ".Models"),
                     references
                 );
             }

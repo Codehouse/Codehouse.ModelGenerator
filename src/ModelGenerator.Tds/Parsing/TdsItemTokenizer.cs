@@ -57,8 +57,8 @@ namespace ModelGenerator.Tds.Parsing
         {
             var separatorParser = Span.EqualTo("----");
             return separatorParser
-                   .Then(_ => Span.EqualTo(separatorType))
-                   .Then(_ => separatorParser);
+                  .Then(_ => Span.EqualTo(separatorType))
+                  .Then(_ => separatorParser);
         }
 
         private Tokenizer<TdsItemTokens> BuildTokenizer()
@@ -69,14 +69,14 @@ namespace ModelGenerator.Tds.Parsing
                                     .Or(Span.EqualTo("\n").Try());
 
             return new TokenizerBuilder<TdsItemTokens>()
-                   .Match(BuildSeparatorParser("item"), TdsItemTokens.ItemSeparator)
-                   .Match(BuildSeparatorParser("version"), TdsItemTokens.VersionSeparator)
-                   .Match(BuildSeparatorParser("field"), TdsItemTokens.FieldSeparator)
-                   .Match(PropertyName, TdsItemTokens.PropertyName)
+                  .Match(BuildSeparatorParser("item"), TdsItemTokens.ItemSeparator)
+                  .Match(BuildSeparatorParser("version"), TdsItemTokens.VersionSeparator)
+                  .Match(BuildSeparatorParser("field"), TdsItemTokens.FieldSeparator)
+                  .Match(PropertyName, TdsItemTokens.PropertyName)
                    //.Match(propertySeparator, TdsItemTokens.PropertySeparator)
-                   .Match(contentParser, TdsItemTokens.Content)
-                   .Match(newLineParser, TdsItemTokens.NewLine)
-                   .Build();
+                  .Match(contentParser, TdsItemTokens.Content)
+                  .Match(newLineParser, TdsItemTokens.NewLine)
+                  .Build();
         }
     }
 }

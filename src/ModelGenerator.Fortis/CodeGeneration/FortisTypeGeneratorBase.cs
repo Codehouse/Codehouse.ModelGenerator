@@ -33,7 +33,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             {
                 return null;
             }
-            
+
             return new NamespacedType(
                 GetNamespace(file.Context, file.Model.Types.First()),
                 @class,
@@ -43,18 +43,13 @@ namespace ModelGenerator.Fortis.CodeGeneration
         protected AttributeSyntax CreateTemplateMappingAttribute(Guid templateId, string mappingType)
         {
             return Attribute(ParseName(FortisModelTemplateMappingAttribute))
-                .AddSimpleArguments(IdLiteral(templateId), StringLiteral(mappingType));
+               .AddSimpleArguments(IdLiteral(templateId), StringLiteral(mappingType));
         }
 
         protected abstract (string? Name, TypeDeclarationSyntax? Class) GenerateTypeDeclaration(ScopedRagBuilder<string> statusTracker, GenerationContext context, ModelFile model);
 
-        protected virtual string GetNamespace(GenerationContext context, ModelType modelType)
-        {
-            return _typeNameResolver.GetNamespace(context.TypeSet, modelType.Template);
-        }
-
         /// <summary>
-        /// Creates the appropriate GetField<T> or (T)GetField invocation for a template field.
+        ///     Creates the appropriate GetField<T> or (T)GetField invocation for a template field.
         /// </summary>
         /// <param name="isRenderingParameter">A value indicating whether the template is a rendering parameters template.</param>
         /// <param name="templateField">The template field</param>
@@ -72,12 +67,12 @@ namespace ModelGenerator.Fortis.CodeGeneration
             if (isRenderingParameter && _settings.Quirks.CastRenderingParameterFields)
             {
                 arguments = arguments.Append(Argument(StringLiteral(templateField.FieldType.ToLowerInvariant())));
-                
+
                 // (TField)GetField("FieldName", "fieldtype") for rendering parameter templates with this quirk
                 return CastExpression(
                     IdentifierName(concreteType),
                     InvocationExpression(IdentifierName("GetField"))
-                        .AddArgumentListArguments(arguments.ToArray())
+                       .AddArgumentListArguments(arguments.ToArray())
                 );
             }
 
@@ -85,9 +80,14 @@ namespace ModelGenerator.Fortis.CodeGeneration
             // GetField<TField>("FieldName") for rendering parameter templates
             return InvocationExpression(
                     GenericName(Identifier("GetField"))
-                        .AddTypeArgumentListArguments(IdentifierName(concreteType))
+                       .AddTypeArgumentListArguments(IdentifierName(concreteType))
                 )
-                .AddArgumentListArguments(arguments.ToArray());
+               .AddArgumentListArguments(arguments.ToArray());
+        }
+
+        protected virtual string GetNamespace(GenerationContext context, ModelType modelType)
+        {
+            return _typeNameResolver.GetNamespace(context.TypeSet, modelType.Template);
         }
     }
 }

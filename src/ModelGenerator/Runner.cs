@@ -66,7 +66,7 @@ namespace ModelGenerator
             {
                 return;
             }
-            
+
             if (!CheckVersion())
             {
                 return;
@@ -120,7 +120,7 @@ namespace ModelGenerator
         {
             var currentVersion = Assembly.GetEntryAssembly()?.GetName().Version
                               ?? throw new InvalidOperationException("Could not identify application version.");
-            
+
             if (string.IsNullOrEmpty(_settings.Value.MinVersion))
             {
                 var message = $"Minimum version not set in the config, set it to {currentVersion.ToString(2)}.";

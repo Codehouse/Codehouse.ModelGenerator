@@ -35,10 +35,34 @@ namespace ModelGenerator.Fortis.CodeGeneration
             {
                 return (null, null);
             }
-            
+
             return (ClassName, GenerateFieldIdClasses(statusTracker, context, model.Types));
         }
-        
+
+        private TypeDeclarationSyntax GenerateFieldIdClasses(ScopedRagBuilder<string> ragBuilder, GenerationContext context, IEnumerable<ModelType> models)
+        {
+            var innerClasses = models
+                              .Select(m => GenerateFieldIdInnerClass(ragBuilder, context, m))
+                              .ToArray();
+
+            return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(ClassName))
+                                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword))
+                                .AddMembers(innerClasses);
+        }
+
+        private TypeDeclarationSyntax GenerateFieldIdInnerClass(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelType model)
+        {
+            var typeName = _typeNameResolver.GetTypeName(model.Template);
+            var fieldProperties = model.Template.OwnFields
+                                       .Select(p => GenerateIdProperty(ragBuilder, model.Template, p, typeName))
+                                       .ToArray();
+
+            return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(typeName))
+                                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
+                                .AddMembers(fieldProperties)
+                                .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
+        }
+
         private PropertyDeclarationSyntax GenerateIdProperty(ScopedRagBuilder<string> ragBuilder, Template template, TemplateField field, string typeName)
         {
             var propertyName = _fieldNameResolver.GetFieldName(field);
@@ -47,33 +71,9 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 ragBuilder.AddWarn($"Template contains field with same name as generated field ID class ({typeName}).");
                 propertyName += "FieldId";
             }
-            
+
             return GenerateIdProperty(propertyName, field.Id)
-                .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, field));
-        }
-
-        private TypeDeclarationSyntax GenerateFieldIdClasses(ScopedRagBuilder<string> ragBuilder, GenerationContext context, IEnumerable<ModelType> models)
-        {
-            var innerClasses = models
-                .Select(m => GenerateFieldIdInnerClass(ragBuilder, context, m))
-                .ToArray();
-
-            return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(ClassName))
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword))
-                .AddMembers(innerClasses);
-        }
-
-        private TypeDeclarationSyntax GenerateFieldIdInnerClass(ScopedRagBuilder<string> ragBuilder, GenerationContext context, ModelType model)
-        {
-            var typeName = _typeNameResolver.GetTypeName(model.Template);
-            var fieldProperties = model.Template.OwnFields
-                .Select(p => GenerateIdProperty(ragBuilder, model.Template, p, typeName))
-                .ToArray();
-
-            return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(typeName))
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
-                .AddMembers(fieldProperties)
-                .WithLeadingTrivia(_xmlDocGenerator.GetTemplateComment(model.Template));
+               .WithLeadingTrivia(_xmlDocGenerator.GetFieldComment(template, field));
         }
     }
 }

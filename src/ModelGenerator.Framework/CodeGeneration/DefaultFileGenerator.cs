@@ -38,8 +38,8 @@ namespace ModelGenerator.Framework.CodeGeneration
             {
                 // TODO: Sort and deduplicate usings?
                 var usings = _usingGenerators
-                             .SelectMany(ug => ug.GenerateUsings(file))
-                             .ToArray();
+                            .SelectMany(ug => ug.GenerateUsings(file))
+                            .ToArray();
 
                 var namespaces = GenerateNamespaces(file);
                 if (!namespaces.Any())
@@ -53,8 +53,8 @@ namespace ModelGenerator.Framework.CodeGeneration
                 namespaces[0] = namespaces[0].WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty));
 
                 return CompilationUnit()
-                       .AddUsings(usings)
-                       .AddMembers(namespaces.Cast<MemberDeclarationSyntax>().ToArray());
+                      .AddUsings(usings)
+                      .AddMembers(namespaces.Cast<MemberDeclarationSyntax>().ToArray());
             }
             catch (Exception ex)
             {

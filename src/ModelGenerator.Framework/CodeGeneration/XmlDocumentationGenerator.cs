@@ -21,17 +21,17 @@ namespace ModelGenerator.Framework.CodeGeneration
         {
             // TODO: SuperXML might have a memory leak - consider switching templating.
             var xml = new Compiler()
-                      .AddKey("t", template)
-                      .AddKey("f", field)
-                      .CompileString(_settings.Field);
+                     .AddKey("t", template)
+                     .AddKey("f", field)
+                     .CompileString(_settings.Field);
             return SyntaxFactory.ParseLeadingTrivia(xml + Environment.NewLine);
         }
 
         public SyntaxTriviaList GetTemplateComment(Template template)
         {
             var xml = new Compiler()
-                      .AddKey("t", template)
-                      .CompileString(_settings.Template);
+                     .AddKey("t", template)
+                     .CompileString(_settings.Template);
             return SyntaxFactory.ParseLeadingTrivia(xml + Environment.NewLine);
         }
 

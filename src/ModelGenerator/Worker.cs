@@ -8,11 +8,11 @@ namespace ModelGenerator
 {
     public class Worker : IHostedService
     {
-        private readonly CancellationTokenSource _cts = new ();
+        private readonly CancellationTokenSource _cts = new();
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<Worker> _logger;
         private readonly Runner _runner;
-        private readonly TaskCompletionSource _tcs = new ();
+        private readonly TaskCompletionSource _tcs = new();
 
         public Worker(IHostApplicationLifetime lifetime, ILogger<Worker> logger, Runner runner)
         {
@@ -46,7 +46,7 @@ namespace ModelGenerator
             {
                 _logger.LogInformation("Executing");
                 await _runner.RunAsync(stoppingToken);
-				_logger.LogInformation("Completed");
+                _logger.LogInformation("Completed");
                 _tcs.SetResult();
             }
             catch (OperationCanceledException)

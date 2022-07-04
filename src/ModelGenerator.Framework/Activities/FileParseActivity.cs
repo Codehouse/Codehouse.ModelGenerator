@@ -39,8 +39,8 @@ namespace ModelGenerator.Framework.Activities
                 var tasks = input.Files
                                  .Select(f => Task.Run(() => ExecuteItem(input, f)));
                 var items = (await Task.WhenAll(tasks))
-                            .SelectMany(i => i)
-                            .ToDictionary(i => i.Id, i => i);
+                           .SelectMany(i => i)
+                           .ToDictionary(i => i.Id, i => i);
 
                 return new ItemSet(
                     input.Id,

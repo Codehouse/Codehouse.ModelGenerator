@@ -51,11 +51,11 @@ namespace ModelGenerator.Framework.Activities
 
             _logger.LogInformation($"Generating files for {typeSet.Name} ({typeSet.Files.Count})");
             var tasks = typeSet
-                        .Files
-                        .Select(f => Task.Run(() => GenerateFiles(input, f)));
+                       .Files
+                       .Select(f => Task.Run(() => GenerateFiles(input, f)));
             var generatedFiles = (await Task.WhenAll(tasks))
-                                 .SelectMany(a => a)
-                                 .ToArray();
+                                .SelectMany(a => a)
+                                .ToArray();
 
             var oldFiles = Directory.GetFiles(typeSet.RootPath, "*.cs", SearchOption.AllDirectories)
                                     .Except(generatedFiles.Select(f => f.FullName))

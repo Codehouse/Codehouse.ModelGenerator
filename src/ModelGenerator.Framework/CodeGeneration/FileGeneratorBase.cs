@@ -28,7 +28,7 @@ namespace ModelGenerator.Framework.CodeGeneration
         {
             return file is TFile;
         }
-        
+
         public FileInfo? GenerateFile(TFile file)
         {
             var syntax = GenerateCode(file);
@@ -45,14 +45,14 @@ namespace ModelGenerator.Framework.CodeGeneration
         protected NamespaceDeclarationSyntax? GenerateTypeAndNamespace(string @namespace, IEnumerable<NamespacedType> types)
         {
             var typeSyntax = types
-                             .Select(t => t.Type)
-                             .Cast<MemberDeclarationSyntax>()
-                             .ToArray();
+                            .Select(t => t.Type)
+                            .Cast<MemberDeclarationSyntax>()
+                            .ToArray();
 
             return typeSyntax.Any()
-                       ? SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace))
-                                      .AddMembers(typeSyntax)
-                       : null;
+                ? SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace))
+                               .AddMembers(typeSyntax)
+                : null;
         }
 
         private SyntaxNode FormatCode(SyntaxNode rootNode)
@@ -77,6 +77,16 @@ namespace ModelGenerator.Framework.CodeGeneration
             return rootNode;
         }
 
+        FileInfo? IFileGenerator.GenerateFile(IFileType file)
+        {
+            if (file is TFile typedFile)
+            {
+                return GenerateFile(typedFile);
+            }
+
+            throw new NotSupportedException("The provided file type was not compatible with the generator.");
+        }
+
         private FileInfo WriteCode(ModelFile modelFile, SyntaxNode syntax)
         {
             var filePath = Path.Combine(modelFile.RootPath, modelFile.FileName);
@@ -87,20 +97,10 @@ namespace ModelGenerator.Framework.CodeGeneration
 
             using var file = new StreamWriter(filePath, false);
             FormatCode(syntax)
-                .WriteTo(file);
+               .WriteTo(file);
 
             file.Flush();
             return new FileInfo(filePath);
-        }
-
-        FileInfo? IFileGenerator.GenerateFile(IFileType file)
-        {
-            if (file is TFile typedFile)
-            {
-                return GenerateFile(typedFile);
-            }
-
-            throw new NotSupportedException("The provided file type was not compatible with the generator.");
         }
     }
 }

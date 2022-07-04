@@ -6,6 +6,7 @@ namespace ModelGenerator.Framework.CodeGeneration
         where TFile : IFileType
     {
         string Tag { get; }
+
         NamespacedType? GenerateType(TFile file);
     }
 }

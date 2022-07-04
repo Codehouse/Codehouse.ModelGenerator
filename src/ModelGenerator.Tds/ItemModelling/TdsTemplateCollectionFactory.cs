@@ -81,11 +81,11 @@ namespace ModelGenerator.Tds.ItemModelling
         private int CountCommonFolderDepth(IEnumerable<Item> items)
         {
             var pathFragmentsCollection = items
-                                          .Where(i => i.TemplateId == _templateIds.Template)
-                                          .Select(i => i.Path)
-                                          .Select(p => p.Split("/", StringSplitOptions.RemoveEmptyEntries))
-                                          .OrderByDescending(p => p.Length)
-                                          .ToArray();
+                                         .Where(i => i.TemplateId == _templateIds.Template)
+                                         .Select(i => i.Path)
+                                         .Select(p => p.Split("/", StringSplitOptions.RemoveEmptyEntries))
+                                         .OrderByDescending(p => p.Length)
+                                         .ToArray();
 
             for (var i = 0; i < pathFragmentsCollection[0].Length; i++)
             {

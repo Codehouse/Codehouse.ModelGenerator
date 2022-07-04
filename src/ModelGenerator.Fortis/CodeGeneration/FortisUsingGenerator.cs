@@ -16,13 +16,13 @@ namespace ModelGenerator.Fortis.CodeGeneration
         {
             _settings = settings;
         }
-        
+
         public IEnumerable<UsingDirectiveSyntax> GenerateUsings(DefaultFile file)
         {
             // TODO: Add support for namespace and type aliasing
             return _settings.NamespaceImports
-                .Select(ns => UsingDirective(ParseName(ns)))
-                .ToArray();
+                            .Select(ns => UsingDirective(ParseName(ns)))
+                            .ToArray();
         }
     }
 }

@@ -53,7 +53,7 @@ namespace ModelGenerator.Framework.Progress
 
         private void PrintFullException(Exception exception)
         {
-            var exceptionLines = exception.ToString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var exceptionLines = exception.ToString().Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.RemoveEmptyEntries);
             foreach (var exceptionLine in exceptionLines)
             {
                 AnsiConsole.WriteLine($"        {exceptionLine}");

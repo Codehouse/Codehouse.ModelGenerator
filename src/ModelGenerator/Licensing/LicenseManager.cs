@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using ModelGenerator.Framework.Configuration;
 
@@ -14,13 +14,16 @@ namespace ModelGenerator.Licensing
 {
     public sealed class LicenseManager
     {
-        private readonly ILogger<LicenseManager> _logger;
-        private readonly IOptions<Settings> _settings;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<LicenseManager> _logger;
+
         private readonly IDictionary<string, string> _publicKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"ff2bc7022c474b29a86d477ceac4cc5f", "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEDsrvNTTGXLomDLPZgcfTJulPjW+Vh3q4aJ/HvmdhAFvYR7WzDdELrnB8Q1Nfq1HB1FqG7Stp+PPf05oS29rEDA=="}
         };
+
+        private readonly IOptions<Settings> _settings;
+
         private readonly IEnumerable<string> _validAlgorithms = new[]
         {
             SecurityAlgorithms.EcdsaSha256,
@@ -48,44 +51,9 @@ namespace ModelGenerator.Licensing
             return ValidateKey(key);
         }
 
-        private LicenseCheckResult ValidateKey(string key)
-        {
-            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-            var validationParams = new TokenValidationParameters
-            {
-                ClockSkew = TimeSpan.Zero,
-                ValidIssuer = "Codehouse",
-                ValidAudience = "Codehouse.ModelGenerator",
-                ValidAlgorithms = _validAlgorithms,
-                IssuerSigningKeyResolver = ResolveKey
-            };
-
-            try
-            {
-                var principal = tokenHandler.ValidateToken(key, validationParams, out SecurityToken token);
-                var name = principal.Claims.SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
-                           ?? throw new Exception("License contained no licensee.");
-                var entitlement = principal.Claims.SingleOrDefault(c => c.Type == "entitlement")?.Value
-                                  ?? throw new Exception("License contained no entitlement.");
-
-                _logger.LogInformation($"The license was valid (licensee: {name}, entitlement: {entitlement}).");
-                return new LicenseCheckResult(name, entitlement, token.ValidTo, LicenseStatuses.Valid);
-            }
-            catch (SecurityTokenExpiredException ex)
-            {
-                _logger.LogError(ex, "The license has expired.");
-                return LicenseCheckResult.Expired(ex.Expires);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "The license is invalid.");
-                return LicenseCheckResult.Invalid();
-            }
-        }
-
         /// <summary>
-        /// Gets the key directly from the configuration (allowing it to be passed in), or from
-        /// the file indicated by the configuration.
+        ///     Gets the key directly from the configuration (allowing it to be passed in), or from
+        ///     the file indicated by the configuration.
         /// </summary>
         /// <returns>The license key if found, or null.</returns>
         private string? GetCurrentKey()
@@ -134,6 +102,41 @@ namespace ModelGenerator.Licensing
             if (_publicKeys.ContainsKey(kid))
             {
                 yield return GetPublicKey(_publicKeys[kid]);
+            }
+        }
+
+        private LicenseCheckResult ValidateKey(string key)
+        {
+            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var validationParams = new TokenValidationParameters
+            {
+                ClockSkew = TimeSpan.Zero,
+                ValidIssuer = "Codehouse",
+                ValidAudience = "Codehouse.ModelGenerator",
+                ValidAlgorithms = _validAlgorithms,
+                IssuerSigningKeyResolver = ResolveKey
+            };
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(key, validationParams, out SecurityToken token);
+                var name = principal.Claims.SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
+                        ?? throw new Exception("License contained no licensee.");
+                var entitlement = principal.Claims.SingleOrDefault(c => c.Type == "entitlement")?.Value
+                               ?? throw new Exception("License contained no entitlement.");
+
+                _logger.LogInformation($"The license was valid (licensee: {name}, entitlement: {entitlement}).");
+                return new LicenseCheckResult(name, entitlement, token.ValidTo, LicenseStatuses.Valid);
+            }
+            catch (SecurityTokenExpiredException ex)
+            {
+                _logger.LogError(ex, "The license has expired.");
+                return LicenseCheckResult.Expired(ex.Expires);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "The license is invalid.");
+                return LicenseCheckResult.Invalid();
             }
         }
     }

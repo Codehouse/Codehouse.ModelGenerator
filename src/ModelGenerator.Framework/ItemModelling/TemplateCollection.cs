@@ -24,8 +24,8 @@ namespace ModelGenerator.Framework.ItemModelling
         public IEnumerable<Template> GetAllBaseTemplates(Guid templateId)
         {
             return GetAllBaseTemplates(new HashSet<Guid>(), templateId)
-                   .Where(t => Templates.ContainsKey(t))
-                   .Select(t => Templates[t]);
+                  .Where(t => Templates.ContainsKey(t))
+                  .Select(t => Templates[t]);
         }
 
         public IEnumerable<TemplateField> GetAllFields(Guid templateId)
@@ -36,9 +36,9 @@ namespace ModelGenerator.Framework.ItemModelling
             }
 
             return GetAllBaseTemplates(templateId)
-                   .Prepend(Templates[templateId])
-                   .SelectMany(t => t.OwnFields)
-                   .OrderBy(f => f.Name);
+                  .Prepend(Templates[templateId])
+                  .SelectMany(t => t.OwnFields)
+                  .OrderBy(f => f.Name);
         }
 
         public TemplateTypes GetTemplateType(Guid templateId)
