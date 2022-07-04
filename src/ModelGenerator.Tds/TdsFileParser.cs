@@ -37,7 +37,7 @@ namespace ModelGenerator.Tds
             var rawItem = await File.ReadAllTextAsync(file.Path);
             return ParseItems(scopedRagBuilder, fileSet, file, rawItem)
                    .WhereNotNull()
-                   .Where(i => _itemFilters.All(f => f.Accept(i)))
+                   .Where(i => _itemFilters.All(f => f.Accept(scopedRagBuilder, i)))
                    .ToArray();
         }
 

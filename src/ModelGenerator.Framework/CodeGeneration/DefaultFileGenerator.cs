@@ -24,30 +24,12 @@ namespace ModelGenerator.Framework.CodeGeneration
             Func<IEnumerable<IRewriter>> rewriterFactory,
             IEnumerable<ITypeGenerator<TFile>> typeGenerators,
             IEnumerable<IUsingGenerator<TFile>> usingGenerators)
-        :base(logger, rewriterFactory)
+            : base(logger, rewriterFactory)
         {
             _settings = settings;
             _logger = logger;
             _typeGenerators = OrderByConfig(typeGenerators).ToArray();
             _usingGenerators = usingGenerators;
-        }
-
-        private IEnumerable<ITypeGenerator<TFile>> OrderByConfig(IEnumerable<ITypeGenerator<TFile>> typeGenerators)
-        {
-            var set = typeGenerators.ToDictionary(t => t.Tag);
-            foreach (var tag in _settings.TypeGenerationOrder)
-            {
-                if (set.ContainsKey(tag))
-                {
-                    yield return set[tag];
-                    set.Remove(tag);
-                }
-            }
-
-            if (set.Any())
-            {
-                _logger.LogWarning("There were unordered type generators that were omitted: {generators}", string.Join(" ", set.Keys));
-            }
         }
 
         protected override CompilationUnitSyntax? GenerateCode(TFile file)
@@ -56,8 +38,8 @@ namespace ModelGenerator.Framework.CodeGeneration
             {
                 // TODO: Sort and deduplicate usings?
                 var usings = _usingGenerators
-                    .SelectMany(ug => ug.GenerateUsings(file))
-                    .ToArray();
+                             .SelectMany(ug => ug.GenerateUsings(file))
+                             .ToArray();
 
                 var namespaces = GenerateNamespaces(file);
                 if (!namespaces.Any())
@@ -71,8 +53,8 @@ namespace ModelGenerator.Framework.CodeGeneration
                 namespaces[0] = namespaces[0].WithLeadingTrivia(Comment("// Generated"), EndOfLine(string.Empty));
 
                 return CompilationUnit()
-                           .AddUsings(usings)
-                           .AddMembers(namespaces.Cast<MemberDeclarationSyntax>().ToArray());
+                       .AddUsings(usings)
+                       .AddMembers(namespaces.Cast<MemberDeclarationSyntax>().ToArray());
             }
             catch (Exception ex)
             {
@@ -108,6 +90,24 @@ namespace ModelGenerator.Framework.CodeGeneration
                 var typeGroup = types.TakeWhile(t => t.Namespace == currentNamespace).ToArray();
                 types = types.Skip(typeGroup.Length).ToArray();
                 yield return typeGroup;
+            }
+        }
+
+        private IEnumerable<ITypeGenerator<TFile>> OrderByConfig(IEnumerable<ITypeGenerator<TFile>> typeGenerators)
+        {
+            var set = typeGenerators.ToDictionary(t => t.Tag);
+            foreach (var tag in _settings.TypeGenerationOrder)
+            {
+                if (set.ContainsKey(tag))
+                {
+                    yield return set[tag];
+                    set.Remove(tag);
+                }
+            }
+
+            if (set.Any())
+            {
+                _logger.LogWarning("There were unordered type generators that were omitted: {generators}", string.Join(" ", set.Keys));
             }
         }
     }

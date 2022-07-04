@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -60,25 +61,26 @@ namespace ModelGenerator.Framework.Activities
 
         private async Task<Item[]> ExecuteItem(FileSet input, ItemFile f)
         {
-            using var scopedRagBuilder = _ragBuilder.CreateScope(f.Path);
+            using var tracker = _ragBuilder.CreateScope($"{input.Name} - {Path.GetFileNameWithoutExtension(f.Path)}");
+
             try
             {
-                var items = await _fileParser.ParseFile(scopedRagBuilder, input, f);
+                var items = await _fileParser.ParseFile(tracker, input, f);
                 if (!items.Any())
                 {
-                    scopedRagBuilder.AddWarn("File yielded no items.");
+                    tracker.AddWarn("File yielded no items.");
                 }
 
-                if (scopedRagBuilder.CanPass)
+                if (tracker.CanPass)
                 {
-                    scopedRagBuilder.AddPass();
+                    tracker.AddPass();
                 }
 
                 return items;
             }
             catch (Exception ex)
             {
-                scopedRagBuilder.AddFail("Unhandled exception parsing file", ex);
+                tracker.AddFail("Unhandled exception parsing file", ex);
                 return Array.Empty<Item>();
             }
         }

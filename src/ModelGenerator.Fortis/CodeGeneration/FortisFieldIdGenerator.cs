@@ -44,7 +44,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
             var propertyName = _fieldNameResolver.GetFieldName(field);
             if (propertyName.Equals(typeName))
             {
-                ragBuilder.AddWarn($"Template contains field with same name as generated class ({typeName}).");
+                ragBuilder.AddWarn($"Template contains field with same name as generated field ID class ({typeName}).");
                 propertyName += "FieldId";
             }
             

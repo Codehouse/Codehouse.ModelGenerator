@@ -46,6 +46,7 @@ namespace ModelGenerator
             {
                 _logger.LogInformation("Executing");
                 await _runner.RunAsync(stoppingToken);
+				_logger.LogInformation("Completed");
                 _tcs.SetResult();
             }
             catch (OperationCanceledException)
@@ -54,6 +55,7 @@ namespace ModelGenerator
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Exiting due to exception.");
                 _tcs.SetException(ex);
             }
         }

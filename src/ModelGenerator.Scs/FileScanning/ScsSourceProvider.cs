@@ -2,13 +2,13 @@
 using Microsoft.Extensions.Logging;
 using ModelGenerator.Framework.FileScanning;
 
-namespace ModelGenerator.Tds
+namespace ModelGenerator.Scs
 {
-    public class TdsSourceProvider : SourceProviderBase
+    public class ScsSourceProvider : SourceProviderBase
     {
-        private readonly TdsSettings _settings;
+        private readonly ScsSettings _settings;
 
-        public TdsSourceProvider(ILogger<TdsSourceProvider> log, TdsSettings settings) : base(log)
+        public ScsSourceProvider(ILogger<ScsSourceProvider> log, ScsSettings settings) : base(log)
         {
             _settings = settings;
         }

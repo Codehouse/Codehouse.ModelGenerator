@@ -12,6 +12,7 @@
     <ItemGroup>
         <ProjectReference Include="..\ModelGenerator.Fortis\ModelGenerator.Fortis.csproj" />
         <ProjectReference Include="..\ModelGenerator.Framework\ModelGenerator.Framework.csproj" />
+        <ProjectReference Include="..\ModelGenerator.Scs\ModelGenerator.Scs.csproj" />
         <ProjectReference Include="..\ModelGenerator.Tds\ModelGenerator.Tds.csproj" />
     </ItemGroup>
 

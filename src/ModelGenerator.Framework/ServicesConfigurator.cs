@@ -7,6 +7,7 @@ using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.CodeGeneration.FileTypes;
 using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.FileParsing;
+using ModelGenerator.Framework.FileParsing.ItemFilters;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.Progress;
@@ -33,6 +34,7 @@ namespace ModelGenerator.Framework
                 .AddSingleton<IDatabaseFactory, DatabaseFactory>()
                 .AddSingleton<IFilePathFilter, TemplateFilter>()
                 .AddSingleton<IItemFilter, PathFilter>()
+                .AddSingleton<IItemFilter, FieldItemHaseTypeFilter>()
                 .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
                 .AddSingleton<ITypeFactory, TypeFactory>()
                 .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
@@ -43,7 +45,7 @@ namespace ModelGenerator.Framework
 
             collection
                 .AddTransient<IProgressTracker, ProgressTracker>()
-                .AddSingleton<Lazy<IProgressTracker>>(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
+                .AddSingleton(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
 
             collection
                 .AddTransient<IRewriter, AccessorRewriter>()

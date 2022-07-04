@@ -6,16 +6,20 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace ModelGenerator.Framework.CodeGeneration
 {
     /// <summary>
-    /// <para>This rewriter splits base type lists with more than <see cref="_baseListLengthLimit"/>
-    /// items so that each class after the first appears on a new line.</para>
-    /// <para>Each line is indented <see cref="_baseListIndentation"/> further than the outer type
-    /// declaration.</para>
+    ///     <para>
+    ///         This rewriter splits base type lists with more than <see cref="_baseListLengthLimit" />
+    ///         items so that each class after the first appears on a new line.
+    ///     </para>
+    ///     <para>
+    ///         Each line is indented <see cref="_baseListIndentation" /> further than the outer type
+    ///         declaration.
+    ///     </para>
     /// </summary>
     public class BaseTypeListRewriter : CSharpSyntaxRewriter, IRewriter
     {
+        private int _indent;
         private const int _baseListIndentation = 4;
         private const int _baseListLengthLimit = 2;
-        private int _indent = 0;
 
         public override SyntaxNode? VisitBaseList(BaseListSyntax node)
         {
@@ -28,6 +32,7 @@ namespace ModelGenerator.Framework.CodeGeneration
                                          .Span
                                          .Length;
             }
+
             return base.VisitBaseList(node);
         }
 

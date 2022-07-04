@@ -3,6 +3,7 @@
     public enum InputProviderNames
     {
         Unspecified,
+        Scs,
         Tds
     }
 }
