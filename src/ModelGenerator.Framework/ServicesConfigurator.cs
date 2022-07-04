@@ -45,7 +45,7 @@ namespace ModelGenerator.Framework
 
             collection
                 .AddTransient<IProgressTracker, ProgressTracker>()
-                .AddSingleton<Lazy<IProgressTracker>>(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
+                .AddSingleton(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
 
             collection
                 .AddTransient<IRewriter, AccessorRewriter>()

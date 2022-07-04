@@ -7,8 +7,10 @@ namespace ModelGenerator.Scs.FileParsing
     {
         [YamlMember(Alias = "BranchID", ApplyNamingConventions = false)]
         public Guid BranchId { get; set; }
+
         [YamlMember(Alias = "ID", ApplyNamingConventions = false)]
         public Guid Id { get; set; }
+
         public ScsLanguage[] Languages { get; set; } = Array.Empty<ScsLanguage>();
         public string Name => _name ??= GetNameFromPath(Path);
         public Guid Parent { get; set; }

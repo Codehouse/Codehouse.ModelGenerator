@@ -62,20 +62,20 @@ namespace ModelGenerator.Framework.Activities
         private async Task<Item[]> ExecuteItem(FileSet input, ItemFile f)
         {
             using var tracker = _ragBuilder.CreateScope($"{input.Name} - {Path.GetFileNameWithoutExtension(f.Path)}");
-            
+
             try
             {
                 var items = await _fileParser.ParseFile(tracker, input, f);
                 if (!items.Any())
                 {
-                    tracker.AddWarn($"File yielded no items.");
+                    tracker.AddWarn("File yielded no items.");
                 }
 
                 if (tracker.CanPass)
                 {
                     tracker.AddPass();
                 }
-                
+
                 return items;
             }
             catch (Exception ex)

@@ -8,7 +8,7 @@ namespace ModelGenerator.Scs
         public string BaseNamespace { get; set; } = string.Empty;
         public string ItemFolder { get; set; } = string.Empty;
         public string ModelFolder { get; set; } = string.Empty;
-        
+
         // TODO: Reduce duplication with TDS settings
         public string Root
         {

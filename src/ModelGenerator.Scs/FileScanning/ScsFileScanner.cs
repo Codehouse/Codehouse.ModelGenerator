@@ -14,9 +14,9 @@ namespace ModelGenerator.Scs.FileScanning
 {
     public class ScsFileScanner : IFileScanner
     {
+        private readonly JsonSerializerOptions _jsonSerializerOptions;
         private readonly ILogger<ScsFileScanner> _log;
         private readonly ScsSettings _settings;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
 
         public ScsFileScanner(ILogger<ScsFileScanner> log, ScsSettings settings)
         {
@@ -28,10 +28,31 @@ namespace ModelGenerator.Scs.FileScanning
                 PropertyNameCaseInsensitive = true
             };
         }
+
+        public async Task<Module?> ReadModule(OwnedScopedRagBuilder<string> ragBuilder, string path)
+        {
+            try
+            {
+                var moduleFileContent = await File.ReadAllTextAsync(path);
+                var module = JsonSerializer.Deserialize<Module>(moduleFileContent, _jsonSerializerOptions);
+                if (module == null)
+                {
+                    ragBuilder.AddFail("SCS module {could not be read.");
+                }
+
+                return module;
+            }
+            catch (Exception ex)
+            {
+                ragBuilder.AddFail("Error while parsing SCS module", ex);
+                return null;
+            }
+        }
+
         public async Task<FileSet?> ScanSourceAsync(RagBuilder<string> ragBuilder, string path)
         {
             using var tracker = ragBuilder.CreateScope(Path.GetFileName(path));
-            
+
             var module = await ReadModule(tracker, path);
             if (module == null)
             {
@@ -46,8 +67,8 @@ namespace ModelGenerator.Scs.FileScanning
             }
 
             var items = module.Items.Includes
-                .SelectMany(i => ScanItemSource(i, moduleFolder, tracker))
-                .ToImmutableList();
+                              .SelectMany(i => ScanItemSource(i, moduleFolder, tracker))
+                              .ToImmutableList();
 
             if (tracker.CanPass)
             {
@@ -76,36 +97,16 @@ namespace ModelGenerator.Scs.FileScanning
             {
                 var files = Directory.GetFiles(itemSourceFolder, "*.yml", SearchOption.AllDirectories);
                 _log.LogInformation("Found {count} files", files.Length);
-                
+
                 if (!files.Any())
                 {
                     ragBuilder.AddWarn($"Item source {itemSource.Name} contains no files.");
                 }
-                
+
                 foreach (var file in files)
                 {
                     yield return new ItemFile(file, new Dictionary<string, string>());
                 }
-            }
-        }
-
-        public async Task<Module?> ReadModule(OwnedScopedRagBuilder<string> ragBuilder, string path)
-        {
-            try
-            {
-                var moduleFileContent = await File.ReadAllTextAsync(path);
-                var module = JsonSerializer.Deserialize<Module>(moduleFileContent, _jsonSerializerOptions);
-                if (module == null)
-                {
-                    ragBuilder.AddFail("SCS module {could not be read.");
-                }
-
-                return module;
-            }
-            catch (Exception ex)
-            {
-                ragBuilder.AddFail("Error while parsing SCS module", ex);
-                return null;
             }
         }
     }

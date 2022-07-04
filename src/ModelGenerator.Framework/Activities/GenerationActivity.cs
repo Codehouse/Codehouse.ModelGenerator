@@ -14,7 +14,7 @@ namespace ModelGenerator.Framework.Activities
     public class GenerationActivity : CollectionActivityBase<GenerationContext, FileInfo, FileInfo[]>
     {
         public override string Description => "Generate code";
-        
+
         private readonly IFileFactory[] _fileFactories;
         private readonly IFileGenerator[] _fileGenerators;
         private readonly ILogger<GenerationActivity> _logger;
@@ -72,21 +72,11 @@ namespace ModelGenerator.Framework.Activities
             return generatedFiles;
         }
 
-        private IEnumerable<FileInfo> GenerateFiles(GenerationContext context, ModelFile modelFile)
-        {
-            using var scopedRagBuilder = _ragBuilder.CreateScope($"{context.TypeSet.Name} - {modelFile.FileName}");
-            return _fileFactories.Select(f => f.CreateFile(context, modelFile, scopedRagBuilder))
-                                 .Select(GenerateFile)
-                                 .WhereNotNull()
-                                 .ToArray();
-        }
-
         private FileInfo? GenerateFile(IFileType file)
         {
             var generator = _fileGenerators.Single(g => g.CanGenerate(file));
             try
             {
-                
                 var fileInfo = generator.GenerateFile(file);
                 if (fileInfo == null)
                 {
@@ -105,6 +95,15 @@ namespace ModelGenerator.Framework.Activities
                 _logger.LogError(ex, $"Could not generate file {file.Model.FileName}");
                 return null;
             }
+        }
+
+        private IEnumerable<FileInfo> GenerateFiles(GenerationContext context, ModelFile modelFile)
+        {
+            using var scopedRagBuilder = _ragBuilder.CreateScope($"{context.TypeSet.Name} - {modelFile.FileName}");
+            return _fileFactories.Select(f => f.CreateFile(context, modelFile, scopedRagBuilder))
+                                 .Select(GenerateFile)
+                                 .WhereNotNull()
+                                 .ToArray();
         }
     }
 }

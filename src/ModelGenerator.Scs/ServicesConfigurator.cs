@@ -17,8 +17,8 @@ namespace ModelGenerator.Scs
                 .AddSingleton(sp => sp.GetRequiredService<IOptions<ScsSettings>>().Value);
 
             collection.AddSingleton<IFileParser, ScsFileParser>()
-                .AddSingleton<IFileScanner, ScsFileScanner>()
-                .AddSingleton<ISourceProvider, ScsSourceProvider>();
+                      .AddSingleton<IFileScanner, ScsFileScanner>()
+                      .AddSingleton<ISourceProvider, ScsSourceProvider>();
         }
     }
 }
