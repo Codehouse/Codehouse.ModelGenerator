@@ -33,8 +33,8 @@ Common:
     TypeGenerationOrder:
       - 'Fortis.Interface'
       - 'Fortis.Class'
-      - 'Fortis.TemplateIds'
-      - 'Fortis.FieldIds'
+      - 'Ids.Template'
+      - 'Ids.Field'
 
 Fortis:
   FieldTypeMappings:
@@ -109,10 +109,6 @@ Fortis:
     # templates) on concrete classes.
     FullInterfaceList: false
 
-    # If true will use each template's local namespace for the TemplateId
-    # and FieldId classes.
-    LocalNamespaceForIds: false
-
     # If true will mark interfaces as partial
     PartialInterfaces: true
 
@@ -124,6 +120,16 @@ Fortis:
     RenderingParameterInterface: 'IRenderingParameter'
     SitecoreItem: 'Item'
     SpawnProvider: 'ISpawnProvider'
+    
+IdClasses:
+  FieldIdsTypeName: 'FieldIds'
+  TemplateIdsTypeName: 'TemplateIds'
+  
+  # Controls "quirks" supported by this provider
+  Quirks:
+    # If true will use each template's local namespace for the TemplateId
+    # and FieldId classes.
+    LocalNamespaceForIds: false
 
 # Dictionary of well-known Sitecore template IDs
 TemplateIds:

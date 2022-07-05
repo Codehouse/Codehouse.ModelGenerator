@@ -21,6 +21,7 @@ namespace ModelGenerator.Framework
         public static void Configure(IServiceCollection collection, IConfiguration configuration)
         {
             // TODO: Move configuration into Common or activity-specific sections.
+            // Config registrations
             collection
                .AddConfiguration<FieldIds>(configuration, nameof(FieldIds))
                .AddConfiguration<CodeGenerationSettings>(configuration, "Common:CodeGeneration")
@@ -30,29 +31,36 @@ namespace ModelGenerator.Framework
                .AddConfiguration<Settings>(configuration, nameof(Settings))
                .AddConfiguration<XmlDocumentationSettings>(configuration, "XmlDocumentation");
 
+            // Service registrations
             collection
                .AddSingleton<IDatabaseFactory, DatabaseFactory>()
                .AddSingleton<IFilePathFilter, TemplateFilter>()
+               .AddSingleton<IFieldNameResolver, FieldNameResolver>()
                .AddSingleton<IItemFilter, PathFilter>()
                .AddSingleton<IItemFilter, FieldItemHaseTypeFilter>()
                .AddSingleton<ITemplateCollectionFactory, TemplateCollectionFactory>()
                .AddSingleton<ITypeFactory, TypeFactory>()
+               .AddSingleton<ITypeNameResolver, TypeNameResolver>()
                .AddSingleton<IXmlDocumentationGenerator, XmlDocumentationGenerator>();
 
+            // Default file type infrastructure
             collection
                .AddSingleton<IFileFactory, DefaultFileFactory>()
                .AddSingleton<IFileGenerator, DefaultFileGenerator<DefaultFile>>();
 
+            // Progress tracker specific registrations (note lifetimes)
             collection
                .AddTransient<IProgressTracker, ProgressTracker>()
                .AddSingleton(sp => new Lazy<IProgressTracker>(() => sp.GetRequiredService<IProgressTracker>()));
 
+            // Rewriter registrations
             collection
                .AddTransient<IRewriter, AccessorRewriter>()
                .AddTransient<IRewriter, BaseTypeListRewriter>()
                .AddTransient<IRewriter, SpacingRewriter>()
                .AddSingleton<Func<IEnumerable<IRewriter>>>(sp => sp.GetServices<IRewriter>);
 
+            // Activities
             collection.AddSingleton(typeof(ProgressStep<>))
                       .AddSingleton<DatabaseActivity>()
                       .AddSingleton<FileParseActivity>()

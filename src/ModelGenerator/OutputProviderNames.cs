@@ -3,6 +3,7 @@
     public enum OutputProviderNames
     {
         Unspecified,
-        Fortis
+        Fortis,
+        Ids
     }
 }

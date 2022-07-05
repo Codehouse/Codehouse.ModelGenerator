@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Tests", "Mod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Scs", "ModelGenerator.Scs\ModelGenerator.Scs.csproj", "{ED31FF95-D1E6-41C8-AF20-6CD3814A27D9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.IdClasses", "ModelGenerator.IdClasses\ModelGenerator.IdClasses.csproj", "{19C4806D-BEF1-4422-B891-57ACEB152842}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{ED31FF95-D1E6-41C8-AF20-6CD3814A27D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED31FF95-D1E6-41C8-AF20-6CD3814A27D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED31FF95-D1E6-41C8-AF20-6CD3814A27D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19C4806D-BEF1-4422-B891-57ACEB152842}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19C4806D-BEF1-4422-B891-57ACEB152842}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19C4806D-BEF1-4422-B891-57ACEB152842}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19C4806D-BEF1-4422-B891-57ACEB152842}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

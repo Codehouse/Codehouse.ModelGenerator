@@ -34,13 +34,6 @@ namespace ModelGenerator.Fortis.Configuration
             public bool FullInterfaceList { get; init; }
 
             /// <summary>
-            ///     Toggle whether or not to use local namespaces for field and template ID classes.
-            ///     <para>If true, field and template ID classes for a template will use that template's local namespace.</para>
-            ///     <para>If false, field and template ID classes for a template will use the template set's namespace.</para>
-            /// </summary>
-            public bool LocalNamespaceForIds { get; init; }
-
-            /// <summary>
             ///     Toggle whether or not to mark template interfaces as partial.
             ///     <para>If true, interfaces will be marked partial.</para>
             ///     <para>If false, interfaces will not be marked partial.</para>

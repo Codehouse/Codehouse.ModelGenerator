@@ -17,14 +17,12 @@ namespace ModelGenerator.Fortis
                .AddSingleton(sp => sp.GetRequiredService<IOptions<FortisSettings>>().Value);
 
             collection.AddSingleton<IFortisFieldNameResolver, FortisFieldNameResolver>()
-                      .AddSingleton<FieldTypeResolver>()
-                      .AddSingleton<TypeNameResolver>();
+                      .AddSingleton<IFortisTypeNameResolver, FortisTypeNameResolver>()
+                      .AddSingleton<FieldTypeResolver>();
 
             collection.AddSingleton<IUsingGenerator<DefaultFile>, FortisUsingGenerator>()
                       .AddSingleton<ITypeGenerator<DefaultFile>, FortisClassGenerator>()
-                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisInterfaceGenerator>()
-                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisFieldIdGenerator>()
-                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisTemplateIdGenerator>();
+                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisInterfaceGenerator>();
         }
     }
 }

@@ -1,22 +1,24 @@
 ﻿using System;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
+using ModelGenerator.Framework.CodeGeneration.FileTypes;
 using ModelGenerator.Framework.TypeConstruction;
+using ModelGenerator.IdClasses.Configuration;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
 
-namespace ModelGenerator.Fortis.CodeGeneration
+namespace ModelGenerator.IdClasses.CodeGeneration
 {
-    public abstract class FortisIdGeneratorBase : FortisTypeGeneratorBase
+    public abstract class IdTypeGeneratorBase : TypeGeneratorBase<DefaultFile>
     {
-        private readonly FortisSettings _settings;
+        private readonly IdSettings _settings;
+        private readonly ITypeNameResolver _typeNameResolver;
 
-        public FortisIdGeneratorBase(FortisSettings settings, TypeNameResolver typeNameResolver)
-            : base(settings, typeNameResolver)
+        protected IdTypeGeneratorBase(IdSettings settings, ITypeNameResolver typeNameResolver)
         {
             _settings = settings;
+            _typeNameResolver = typeNameResolver;
         }
 
         protected PropertyDeclarationSyntax GenerateIdProperty(string name, Guid value)
@@ -42,7 +44,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
         protected override string GetNamespace(GenerationContext context, ModelType modelType)
         {
             return _settings.Quirks.LocalNamespaceForIds
-                ? base.GetNamespace(context, modelType)
+                ? _typeNameResolver.GetNamespace(modelType.TemplateSet, modelType.Template)
                 : context.TypeSet.Namespace;
         }
     }

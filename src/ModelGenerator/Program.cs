@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ModelGenerator.Licensing;
 using FortisServicesConfigurator = ModelGenerator.Fortis.ServicesConfigurator;
 using FrameworkServicesConfigurator = ModelGenerator.Framework.ServicesConfigurator;
+using IdClassesServicesConfigurator = ModelGenerator.IdClasses.ServicesConfigurator;
 using ScsServicesConfigurator = ModelGenerator.Scs.ServicesConfigurator;
 using TdsServicesConfigurator = ModelGenerator.Tds.ServicesConfigurator;
 
@@ -85,10 +86,9 @@ namespace ModelGenerator
                          .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.user.yml"), true);
         }
 
-        private static void RegisterInputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
+        private static void RegisterInputProvider(ProviderSettings providers, HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            var providerName = hostBuilderContext.Configuration.GetValue<InputProviderNames>("Providers:Input");
-            switch (providerName)
+            switch (providers.Input)
             {
                 case InputProviderNames.Scs:
                     ScsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
@@ -97,20 +97,21 @@ namespace ModelGenerator
                     TdsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                     break;
                 default:
-                    throw new Exception($"Unsupported input provider: {providerName}");
+                    throw new Exception($"Unsupported input provider: {providers.Input}");
             }
         }
 
-        private static void RegisterOutputProviders(HostBuilderContext hostBuilderContext, IServiceCollection collection)
+        private static void RegisterOutputProviders(ProviderSettings providers, HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            var providerNames = hostBuilderContext.Configuration.GetValue<OutputProviderNames[]>("Providers:Output")
-                             ?? new[] {hostBuilderContext.Configuration.GetValue<OutputProviderNames>("Providers:Output")};
-            foreach (var providerName in providerNames)
+            foreach (var providerName in providers.Output)
             {
                 switch (providerName)
                 {
                     case OutputProviderNames.Fortis:
                         FortisServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                        break;
+                    case OutputProviderNames.Ids:
+                        IdClassesServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                         break;
                     default:
                         throw new Exception($"Unsupported output provider: {providerName}");
@@ -123,8 +124,10 @@ namespace ModelGenerator
             collection.AddOptions();
 
             FrameworkServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
-            RegisterInputProvider(hostBuilderContext, collection);
-            RegisterOutputProviders(hostBuilderContext, collection);
+            
+            var providers = new ProviderSettings(hostBuilderContext.Configuration);
+            RegisterInputProvider(providers, hostBuilderContext, collection);
+            RegisterOutputProviders(providers, hostBuilderContext, collection);
 
             collection
                .AddSingleton<LicenseManager>()
