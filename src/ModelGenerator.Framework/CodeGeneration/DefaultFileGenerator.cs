@@ -36,9 +36,10 @@ namespace ModelGenerator.Framework.CodeGeneration
         {
             try
             {
-                // TODO: Sort and deduplicate usings?
                 var usings = _usingGenerators
                             .SelectMany(ug => ug.GenerateUsings(file))
+                            .Distinct(new UsingSorter())
+                            .OrderBy(s => s.Name.ToString(), new UsingSorter())
                             .ToArray();
 
                 var namespaces = GenerateNamespaces(file);

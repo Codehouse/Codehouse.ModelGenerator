@@ -23,11 +23,6 @@ namespace ModelGenerator.Framework
             return id.ToString("B").ToUpperInvariant();
         }
 
-        public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> collection)
-        {
-            return Task.WhenAll(collection);
-        }
-
         public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> o)
             where T : class
         {

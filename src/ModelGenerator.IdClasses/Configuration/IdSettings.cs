@@ -16,6 +16,7 @@ namespace ModelGenerator.IdClasses.Configuration
         }
 
         public string FieldIdsTypeName { get; init; } = string.Empty;
+        public string[] NamespaceImports { get; init; } = Array.Empty<string>();
         public QuirkSettings Quirks { get; } = new();
         public string TemplateIdsTypeName { get; init; } = string.Empty;
     }

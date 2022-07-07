@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using ModelGenerator.Framework;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.CodeGeneration.FileTypes;
 using ModelGenerator.IdClasses.CodeGeneration;
@@ -12,12 +12,13 @@ namespace ModelGenerator.IdClasses
     {
         public static void Configure(IServiceCollection collection, IConfiguration configuration)
         {
-            collection
-               .Configure<IdSettings>(opts => configuration.GetSection("IdClasses").Bind(opts))
-               .AddSingleton(sp => sp.GetRequiredService<IOptions<IdSettings>>().Value);
+            // Configuration
+            collection.AddConfiguration<IdSettings>(configuration, "IdClasses");
 
+            // Generators
             collection.AddSingleton<ITypeGenerator<DefaultFile>, FieldIdGenerator>()
-                      .AddSingleton<ITypeGenerator<DefaultFile>, TemplateIdGenerator>();
+                      .AddSingleton<ITypeGenerator<DefaultFile>, TemplateIdGenerator>()
+                      .AddSingleton<IUsingGenerator<DefaultFile>, IdUsingGenerator>();
         }
     }
 }
