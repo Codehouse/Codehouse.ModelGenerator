@@ -4,6 +4,11 @@ using Microsoft.Extensions.Configuration;
 
 namespace ModelGenerator
 {
+    /// <summary>
+    /// This class reads and interprets the providers configuration
+    /// section.
+    /// </summary>
+    /// <remarks>It is not registered with the DI container</remarks>
     public class ProviderSettings
     {
         public InputProviderNames Input { get; set; }

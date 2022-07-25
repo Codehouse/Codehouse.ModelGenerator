@@ -11,6 +11,16 @@ using ModelGenerator.Framework.TypeConstruction;
 
 namespace ModelGenerator.Framework.CodeGeneration
 {
+    /// <summary>
+    /// Base class that should be used for <see cref="IFileGenerator"/>
+    /// implementations.
+    /// <para>
+    ///     Manages the actual creation of the file and writing any generated
+    ///     code to it, but also ensures that any registered code rewriters
+    ///     will be run on the code before it is written to disk. 
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TFile"></typeparam>
     public abstract class FileGeneratorBase<TFile> : IFileGenerator<TFile> where TFile : IFileType
     {
         private readonly ILogger<FileGeneratorBase<TFile>> _logger;

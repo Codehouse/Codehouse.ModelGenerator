@@ -10,6 +10,26 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace ModelGenerator.Framework.CodeGeneration
 {
+    // TODO: Rename to StandardFileGenerator
+    /// <summary>
+    /// <para>
+    /// Represents a "standard" file generator, and makes assumptions accordingly.
+    /// </para>
+    /// <para>
+    /// This generator will collect usings for the specified <typeparamref name="TFile"/>,
+    /// deduplicate and sort them according to standard rules.
+    /// </para>
+    /// <para>
+    /// This generator will collect types for the specified <typeparamref name="TFile"/>,
+    /// sort them according to the order defined in the configuration, and then group any
+    /// adjacent types with the same namespace into a single namespace directive.
+    /// </para>
+    /// <para>
+    /// If any custom file types do not need specific generation logic, they may register
+    /// further instances of this for a fully working implementation.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TFile">The file type</typeparam>
     public class DefaultFileGenerator<TFile> : FileGeneratorBase<TFile>
         where TFile : IFileType
     {

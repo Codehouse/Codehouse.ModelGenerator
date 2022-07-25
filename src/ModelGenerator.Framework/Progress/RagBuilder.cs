@@ -4,6 +4,14 @@ using System.Linq;
 
 namespace ModelGenerator.Framework.Progress
 {
+    /// <summary>
+    /// A RAG (red-amber-green) builder, aligning to failures, warnings
+    /// and passes.
+    /// <para>Can be used to provide information for playback to users, in
+    /// particular warnings if something wasn't right, or failures if something
+    /// went wrong</para>
+    /// </summary>
+    /// <typeparam name="T">Scope type</typeparam>
     public class RagBuilder<T>
     {
         private readonly ConcurrentBag<RagStatus<T>> _fails = new();

@@ -20,6 +20,15 @@ using ModelGenerator.Licensing;
 
 namespace ModelGenerator
 {
+    /// <summary>
+    /// This class handles the overall orchestration of the model generator activities
+    /// and processes.
+    /// <para>
+    ///     This includes doing various precondition checks (e.g. licensing), managing
+    ///     the progress indicators, chaining the various activities, and displaying
+    ///     any necessary output.
+    /// </para>
+    /// </summary>
     public class Runner
     {
         private readonly ProgressStep<DatabaseActivity> _databaseActivity;
@@ -60,6 +69,11 @@ namespace ModelGenerator
             _progressTrackerFactory = progressTrackerFactory;
         }
 
+        /// <summary>
+        /// Runs the runner, with the given <paramref name="stoppingToken"/>
+        /// allowing the process to be aborted.
+        /// </summary>
+        /// <param name="stoppingToken">A cancellation token</param>
         public async Task RunAsync(CancellationToken stoppingToken)
         {
             if (!CheckLicense())
@@ -82,7 +96,7 @@ namespace ModelGenerator
             var databaseReport = await ConstructDatabase(job, itemSetReport.Result, stoppingToken);
             var templateReport = await ConstructTemplates(job, databaseReport.Result, stoppingToken);
             var typeSetReport = await CreateTypeSets(job, templateReport.Result, stoppingToken);
-            var generationReport = await GenerateCode(job, databaseReport.Result, templateReport.Result, typeSetReport.Result, stoppingToken);
+            var generationReport = await GenerateCode(job, templateReport.Result, typeSetReport.Result, stoppingToken);
 
             job.Stop();
             progressTracker.Finish();
@@ -91,6 +105,11 @@ namespace ModelGenerator
             PrintReports(fileSetReport, itemSetReport, databaseReport, templateReport, typeSetReport, generationReport);
         }
 
+        /// <summary>
+        /// Checks the license currently indicated by the configuration
+        /// for validity, and displays the detail if detail is available.
+        /// </summary>
+        /// <returns>A value indicating whether the license is valid</returns>
         private bool CheckLicense()
         {
             var licenseResult = _licenseManager.CheckLicense();
@@ -116,6 +135,12 @@ namespace ModelGenerator
             }
         }
 
+        /// <summary>
+        /// Checks whether the application version matches the minimum version
+        /// required by the application configuration.
+        /// </summary>
+        /// <returns>True if the version matches, false otherwise</returns>
+        /// <exception cref="InvalidOperationException">If the entry assembly cannot be resolved.</exception>
         private bool CheckVersion()
         {
             var currentVersion = Assembly.GetEntryAssembly()?.GetName().Version
@@ -169,9 +194,9 @@ namespace ModelGenerator
             return RunStep<TypeActivity, IImmutableList<TypeSet>, TemplateCollection>(job, _typeActivity, templates, stoppingToken);
         }
 
-        private Task<IReport<ICollection<FileInfo>>> GenerateCode(Job job, IDatabase database, TemplateCollection templates, IEnumerable<TypeSet> typeSets, CancellationToken stoppingToken)
+        private Task<IReport<ICollection<FileInfo>>> GenerateCode(Job job, TemplateCollection templates, IEnumerable<TypeSet> typeSets, CancellationToken stoppingToken)
         {
-            var contexts = typeSets.Select(t => new GenerationContext(database, templates, t));
+            var contexts = typeSets.Select(t => new GenerationContext(templates, t));
 
             return RunStep<GenerationActivity, ICollection<FileInfo>, IEnumerable<GenerationContext>>(job, _generationActivity, contexts, stoppingToken);
         }
@@ -195,14 +220,27 @@ namespace ModelGenerator
             }
         }
 
-        private async Task<IReport<TResult>> RunStep<TActivity, TResult, TInput>(Job job, ProgressStep<TActivity> step, TInput input, CancellationToken stoppingToken)
+        /// <summary>
+        /// Runs the step for a given <typeparamref name="TActivity"/> activity
+        /// asynchronously, and returns the result wrapped inside a report object.
+        /// </summary>
+        /// <param name="overallJob">The "overall progress" job</param>
+        /// <param name="step">A <see cref="ProgressStep{T}"/> type referencing the desired <typeparamref name="TActivity"/></param>
+        /// <param name="input">The activity input</param>
+        /// <param name="stoppingToken">A cancellation token</param>
+        /// <typeparam name="TActivity">The activity type</typeparam>
+        /// <typeparam name="TResult">The activity output type</typeparam>
+        /// <typeparam name="TInput">The activity input type</typeparam>
+        /// <returns>The activity result wrapped inside a report object.</returns>
+        /// <exception cref="InvalidOperationException">If the step activity's output is <c>null</c></exception>
+        private async Task<IReport<TResult>> RunStep<TActivity, TResult, TInput>(Job overallJob, ProgressStep<TActivity> step, TInput input, CancellationToken stoppingToken)
             where TActivity : IActivity<TInput, TResult>
         {
             _logger.LogInformation(step.Activity.Description);
             step.Activity.SetInput(input);
 
             await step.ExecuteAsync(_progressTrackerFactory.Value, stoppingToken);
-            job.Increment();
+            overallJob.Increment();
 
             var report = step.Activity.GetOutput();
             if (report.Result == null)
@@ -214,6 +252,10 @@ namespace ModelGenerator
             return report;
         }
 
+        /// <summary>
+        /// Writes the license detail to stdout.
+        /// </summary>
+        /// <param name="licenseResult">The result of the license check</param>
         private void WriteLicenseDetail(LicenseCheckResult licenseResult)
         {
             var expiry = licenseResult.Expires.HasValue

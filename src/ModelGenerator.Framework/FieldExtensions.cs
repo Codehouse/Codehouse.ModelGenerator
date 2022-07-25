@@ -10,7 +10,7 @@ namespace ModelGenerator.Framework
         {
             if (field == null || string.IsNullOrEmpty(field.Value))
             {
-                return new Guid[0];
+                return Array.Empty<Guid>();
             }
 
             try

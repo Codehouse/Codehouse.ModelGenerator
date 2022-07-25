@@ -60,6 +60,13 @@ namespace ModelGenerator
             });
         }
 
+        /// <summary>
+        /// Loads the configuration for the application from defined locations
+        /// in a defined order (see method body).
+        /// </summary>
+        /// <param name="context">The builder context</param>
+        /// <param name="configBuilder">The configuration builder</param>
+        /// <exception cref="Exception">Throws an exception if the assembly location could not be resolved.</exception>
         private static void LoadConfiguration(HostBuilderContext context, IConfigurationBuilder configBuilder)
         {
             var entryAssembly = Assembly.GetEntryAssembly();
@@ -86,6 +93,14 @@ namespace ModelGenerator
                          .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.user.yml"), true);
         }
 
+        /// <summary>
+        /// Registers the services (using the appropriate services configurator) for
+        /// the selected input provider
+        /// </summary>
+        /// <param name="providers">The provider settings from the configuration</param>
+        /// <param name="hostBuilderContext">The host builder</param>
+        /// <param name="collection">The current service collection</param>
+        /// <exception cref="Exception">Thrown if the provider is not recognised</exception>
         private static void RegisterInputProvider(ProviderSettings providers, HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             switch (providers.Input)
@@ -101,6 +116,14 @@ namespace ModelGenerator
             }
         }
 
+        /// <summary>
+        /// Registers the services (using the appropriate services configurator) for
+        /// the selected output providers
+        /// </summary>
+        /// <param name="providers">The provider settings from the configuration</param>
+        /// <param name="hostBuilderContext">The host builder</param>
+        /// <param name="collection">The current service collection</param>
+        /// <exception cref="Exception">Thrown if the provider is not recognised</exception>
         private static void RegisterOutputProviders(ProviderSettings providers, HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             foreach (var providerName in providers.Output)
@@ -119,6 +142,11 @@ namespace ModelGenerator
             }
         }
 
+        /// <summary>
+        /// Registers features and services.
+        /// </summary>
+        /// <param name="hostBuilderContext">Host builder</param>
+        /// <param name="collection">Service collection</param>
         private static void RegisterServices(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             collection.AddOptions();
@@ -129,6 +157,8 @@ namespace ModelGenerator
             RegisterInputProvider(providers, hostBuilderContext, collection);
             RegisterOutputProviders(providers, hostBuilderContext, collection);
 
+            // These should be registered last just to ensure that they cannot be tampered with
+            // by any of the provider configurators.
             collection
                .AddSingleton<LicenseManager>()
                .AddSingleton<Runner>()

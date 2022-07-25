@@ -5,6 +5,12 @@ using Spectre.Console;
 
 namespace ModelGenerator.Framework.Progress
 {
+    /// <summary>
+    /// A RAG (red-amber-green) report, which can be generated from a
+    /// <see cref="RagBuilder{T}"/>.
+    /// </summary>
+    /// <typeparam name="TResult">The result of the activity</typeparam>
+    /// <typeparam name="TItem">The type of the scopes</typeparam>
     public class RagReport<TResult, TItem> : IReport<TResult>
     {
         public ICollection<RagStatus<TItem>> Fails { get; }
