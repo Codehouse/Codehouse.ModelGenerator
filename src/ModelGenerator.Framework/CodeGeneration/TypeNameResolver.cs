@@ -7,7 +7,7 @@ namespace ModelGenerator.Framework.CodeGeneration
 {
     public class TypeNameResolver : ITypeNameResolver
     {
-        private Settings _settings;
+        private readonly Settings _settings;
 
         public TypeNameResolver(Settings settings)
         {

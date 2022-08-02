@@ -4,4 +4,10 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <Product>Codehouse Model Generator</Product>
     </PropertyGroup>
+	
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>ModelGenerator.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 </Project>

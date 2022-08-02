@@ -34,6 +34,19 @@ namespace ModelGenerator
                 Console.WriteLine(ex);
             }
         }
+        
+        internal static TEnum ParseProviderName<TEnum>(string? providerName)
+            where TEnum : struct
+        {
+            try
+            {
+                return Enum.Parse<TEnum>(providerName!, true);
+            }
+            catch (Exception)
+            {
+                throw ProviderNameException.InvalidProvider(providerName, typeof(TEnum));
+            }
+        }
 
         private static void ConfigureLogging(HostBuilderContext context, ILoggingBuilder logBuilder)
         {
@@ -103,7 +116,8 @@ namespace ModelGenerator
         /// <exception cref="Exception">Thrown if the provider is not recognised</exception>
         private static void RegisterInputProvider(ProviderSettings providers, HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            switch (providers.Input)
+            var inputProvider = ParseProviderName<InputProviderNames>(providers.Input);
+            switch (inputProvider)
             {
                 case InputProviderNames.Scs:
                     ScsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
@@ -112,7 +126,7 @@ namespace ModelGenerator
                     TdsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                     break;
                 default:
-                    throw new Exception($"Unsupported input provider: {providers.Input}");
+                    throw ProviderNameException.UnsupportedProvider(providers.Input, typeof(InputProviderNames));
             }
         }
 
@@ -128,7 +142,8 @@ namespace ModelGenerator
         {
             foreach (var providerName in providers.Output)
             {
-                switch (providerName)
+                var outputProvider = ParseProviderName<OutputProviderNames>(providerName);
+                switch (outputProvider)
                 {
                     case OutputProviderNames.Fortis:
                         FortisServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
@@ -137,7 +152,7 @@ namespace ModelGenerator
                         IdClassesServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                         break;
                     default:
-                        throw new Exception($"Unsupported output provider: {providerName}");
+                        throw ProviderNameException.UnsupportedProvider(providerName, typeof(OutputProviderNames));
                 }
             }
         }

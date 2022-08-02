@@ -11,71 +11,32 @@ namespace ModelGenerator.Tests.Application
     [TestFixture]
     public class ProviderSettingsTests
     {
-        private readonly string _validOutputProvider = OutputProviderNames.Ids.ToString();
-        private const string InvalidProvider = "Foo";
+        private const string ValidOutputProvider = "Ids";
         private const string ValidInputProvider = "Tds";
-
-        [Test]
-        public void GivenInvalidInputProvider_ThrowsException()
-        {
-            Assert.Throws<InvalidOperationException>(() => CreateSettings(InvalidProvider, _validOutputProvider));
-        }
-
-        [Test]
-        public void GivenSingleInvalidOutputProvider_ThrowsException()
-        {
-            Assert.Throws<InvalidOperationException>(() => CreateSettings(ValidInputProvider, InvalidProvider));
-        }
-
-        [Test]
-        public void GivenMultipleInvalidOutputProvider_GivesNoEntries()
-        {
-            var settings = CreateSettings(ValidInputProvider, new[] {InvalidProvider, InvalidProvider});
-            settings.Output.ShouldBeEmpty();
-        }
-
-        [Test]
-        public void GivenMissingInputProvider_ThrowsException()
-        {
-            Assert.Throws<InvalidOperationException>(() => CreateSettings(null, _validOutputProvider));
-        }
 
         [Test]
         public void GivenSingleOutputProvider_ReturnsSingleCorrectProvider()
         {
-            var settings = CreateSettings(ValidInputProvider, _validOutputProvider);
+            var settings = CreateSettings(null, ValidOutputProvider);
 
-            settings.Output.ShouldHaveSingleItem().ShouldBe(OutputProviderNames.Ids);
+            settings.Output.ShouldHaveSingleItem().ShouldBe(ValidOutputProvider);
         }
 
         [Test]
-        public void GivenMultipleOutputProvider_ReturnsSingleCorrectProvider()
+        public void GivenMultipleOutputProvider_ReturnsProviders()
         {
-            var settings = CreateSettings(ValidInputProvider, new[] {_validOutputProvider, _validOutputProvider});
+            var settings = CreateSettings(null, new[] {ValidOutputProvider, ValidOutputProvider});
 
             settings.Output.Count.ShouldBe(2);
-            settings.Output.ShouldContain(OutputProviderNames.Ids);
+            settings.Output.ShouldContain(ValidOutputProvider);
         }
 
         [Test]
         public void GivenSingleInputProvider_ReturnsCorrectProvider()
         {
-            var settings = CreateSettings(ValidInputProvider, _validOutputProvider);
+            var settings = CreateSettings(ValidInputProvider, null);
 
-            settings.Input.ShouldBe(InputProviderNames.Tds);
-        }
-
-        [Test]
-        public void GivenSingleMissingOutputProvider_ThrowsException()
-        {
-            Assert.Throws<InvalidOperationException>(() => CreateSettings(ValidInputProvider, null));
-        }
-
-        [Test]
-        public void GivenMultipleMissingOutputProvider_GivesNoEntries()
-        {
-            var settings = CreateSettings(ValidInputProvider, new string?[] {null, null});
-            settings.Output.ShouldBeEmpty();
+            settings.Input.ShouldBe(InputProviderNames.Tds.ToString());
         }
 
         private ProviderSettings CreateSettings(string? input, object? output)

@@ -11,8 +11,8 @@ namespace ModelGenerator
     /// <remarks>It is not registered with the DI container</remarks>
     public class ProviderSettings
     {
-        public InputProviderNames Input { get; set; }
-        public List<OutputProviderNames> Output { get; set; } = new();
+        public string? Input { get; set; }
+        public List<string?> Output { get; set; } = new();
 
         public ProviderSettings(IConfiguration configuration)
         {
@@ -21,8 +21,8 @@ namespace ModelGenerator
             // For backwards compatibility, the output provider may be a single value.
             if (Output.Count == 0)
             {
-                var singleOutput = configuration.GetValue<OutputProviderNames>("Providers:Output");
-                if (singleOutput != OutputProviderNames.Unspecified)
+                var singleOutput = configuration.GetValue<string>("Providers:Output");
+                if (!string.IsNullOrWhiteSpace(singleOutput))
                 {
                     Output.Add(singleOutput);
                 }
