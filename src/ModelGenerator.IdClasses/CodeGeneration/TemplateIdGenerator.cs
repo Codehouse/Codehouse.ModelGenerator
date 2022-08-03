@@ -2,24 +2,26 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
+using ModelGenerator.IdClasses.Configuration;
 
-namespace ModelGenerator.Fortis.CodeGeneration
+namespace ModelGenerator.IdClasses.CodeGeneration
 {
-    public class FortisTemplateIdGenerator : FortisIdGeneratorBase
+    public class TemplateIdGenerator : IdTypeGeneratorBase 
     {
-        public override string Tag => "Fortis.TemplateIds";
+        public override string Tag => "Ids.Template";
 
-        private readonly TypeNameResolver _typeNameResolver;
+        private readonly IdSettings _settings;
+        private readonly ITypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
-        private const string ClassName = "TemplateIds";
 
-        public FortisTemplateIdGenerator(FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator) : base(settings, typeNameResolver)
+        public TemplateIdGenerator(IdSettings settings, ITypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
+            : base(settings, typeNameResolver)
         {
+            _settings = settings;
             _typeNameResolver = typeNameResolver;
             _xmlDocGenerator = xmlDocGenerator;
         }
@@ -30,10 +32,10 @@ namespace ModelGenerator.Fortis.CodeGeneration
                                   .Select(m => GenerateIdProperty(m.Template))
                                   .ToArray();
 
-            var type = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(ClassName))
+            var type = SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(_settings.TemplateIdsTypeName))
                                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword))
                                     .AddMembers(properties);
-            return (ClassName, type);
+            return (_settings.TemplateIdsTypeName, type);
         }
 
         private PropertyDeclarationSyntax GenerateIdProperty(Template template)

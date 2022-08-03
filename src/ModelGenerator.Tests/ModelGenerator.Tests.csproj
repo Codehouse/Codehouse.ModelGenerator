@@ -16,8 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Application" />
       <Folder Include="Fortis" />
+      <Folder Include="IdClasses" />
       <Folder Include="Tds" />
     </ItemGroup>
 

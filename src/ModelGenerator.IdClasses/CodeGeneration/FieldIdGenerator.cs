@@ -3,25 +3,25 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
+using ModelGenerator.IdClasses.Configuration;
 
-namespace ModelGenerator.Fortis.CodeGeneration
+namespace ModelGenerator.IdClasses.CodeGeneration
 {
-    public class FortisFieldIdGenerator : FortisIdGeneratorBase
+    public class FieldIdGenerator : IdTypeGeneratorBase
     {
-        public override string Tag => "Fortis.FieldIds";
+        public override string Tag => "Ids.Field";
 
-        private readonly IFortisFieldNameResolver _fieldNameResolver;
-        private readonly FortisSettings _settings;
-        private readonly TypeNameResolver _typeNameResolver;
+        private readonly IFieldNameResolver _fieldNameResolver;
+        private readonly IdSettings _settings;
+        private readonly ITypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
-        private const string ClassName = "FieldIds";
 
-        public FortisFieldIdGenerator(IFortisFieldNameResolver fieldNameResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator) : base(settings, typeNameResolver)
+        public FieldIdGenerator(IFieldNameResolver fieldNameResolver, IdSettings settings, ITypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
+            : base(settings, typeNameResolver)
         {
             _fieldNameResolver = fieldNameResolver;
             _settings = settings;
@@ -36,7 +36,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                 return (null, null);
             }
 
-            return (ClassName, GenerateFieldIdClasses(statusTracker, context, model.Types));
+            return (_settings.FieldIdsTypeName, GenerateFieldIdClasses(statusTracker, context, model.Types));
         }
 
         private TypeDeclarationSyntax GenerateFieldIdClasses(ScopedRagBuilder<string> ragBuilder, GenerationContext context, IEnumerable<ModelType> models)
@@ -45,7 +45,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                               .Select(m => GenerateFieldIdInnerClass(ragBuilder, context, m))
                               .ToArray();
 
-            return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(ClassName))
+            return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(_settings.FieldIdsTypeName))
                                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword))
                                 .AddMembers(innerClasses);
         }

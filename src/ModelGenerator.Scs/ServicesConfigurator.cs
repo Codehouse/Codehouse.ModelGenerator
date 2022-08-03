@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ModelGenerator.Framework;
 using ModelGenerator.Framework.FileParsing;
 using ModelGenerator.Framework.FileScanning;
 using ModelGenerator.Scs.FileParsing;
@@ -12,10 +13,10 @@ namespace ModelGenerator.Scs
     {
         public static void Configure(IServiceCollection collection, IConfiguration configuration)
         {
-            collection
-               .Configure<ScsSettings>(opts => configuration.GetSection("Scs").Bind(opts))
-               .AddSingleton(sp => sp.GetRequiredService<IOptions<ScsSettings>>().Value);
+            // Configuration
+            collection.AddConfiguration<ScsSettings>(configuration, "Scs");
 
+            // Services & overrides
             collection.AddSingleton<IFileParser, ScsFileParser>()
                       .AddSingleton<IFileScanner, ScsFileScanner>()
                       .AddSingleton<ISourceProvider, ScsSourceProvider>();

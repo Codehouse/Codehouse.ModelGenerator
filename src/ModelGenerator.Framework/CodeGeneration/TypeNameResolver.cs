@@ -1,25 +1,17 @@
 ﻿using System.Linq;
-using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.Configuration;
 using ModelGenerator.Framework.ItemModelling;
 using ModelGenerator.Framework.TypeConstruction;
 
-namespace ModelGenerator.Fortis.CodeGeneration
+namespace ModelGenerator.Framework.CodeGeneration
 {
-    public class TypeNameResolver
+    public class TypeNameResolver : ITypeNameResolver
     {
-        private readonly FortisSettings _fortisSettings;
         private readonly Settings _settings;
 
-        public TypeNameResolver(FortisSettings fortisSettings, Settings settings)
+        public TypeNameResolver(Settings settings)
         {
-            _fortisSettings = fortisSettings;
             _settings = settings;
-        }
-
-        public string GetClassName(Template template)
-        {
-            return GetTypeName(template) + "Item";
         }
 
         public string GetFullyQualifiedInterfaceName(Template template, TemplateSet set)

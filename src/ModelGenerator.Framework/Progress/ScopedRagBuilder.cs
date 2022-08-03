@@ -4,6 +4,11 @@ using System.Collections.Generic;
 
 namespace ModelGenerator.Framework.Progress
 {
+    /// <summary>
+    /// Can be used to collect a number of status messages all belonging to
+    /// a single scope, without needing to specify that scope for each entry.
+    /// </summary>
+    /// <typeparam name="T">The scope type</typeparam>
     public class ScopedRagBuilder<T>
     {
         public bool CanPass => !HasFails && !HasWarns;

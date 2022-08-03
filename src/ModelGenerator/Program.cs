@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ModelGenerator.Licensing;
 using FortisServicesConfigurator = ModelGenerator.Fortis.ServicesConfigurator;
 using FrameworkServicesConfigurator = ModelGenerator.Framework.ServicesConfigurator;
+using IdClassesServicesConfigurator = ModelGenerator.IdClasses.ServicesConfigurator;
 using ScsServicesConfigurator = ModelGenerator.Scs.ServicesConfigurator;
 using TdsServicesConfigurator = ModelGenerator.Tds.ServicesConfigurator;
 
@@ -31,6 +32,19 @@ namespace ModelGenerator
             {
                 Console.WriteLine("Unhandled exception:");
                 Console.WriteLine(ex);
+            }
+        }
+        
+        internal static TEnum ParseProviderName<TEnum>(string? providerName)
+            where TEnum : struct
+        {
+            try
+            {
+                return Enum.Parse<TEnum>(providerName!, true);
+            }
+            catch (Exception)
+            {
+                throw ProviderNameException.InvalidProvider(providerName, typeof(TEnum));
             }
         }
 
@@ -59,6 +73,13 @@ namespace ModelGenerator
             });
         }
 
+        /// <summary>
+        /// Loads the configuration for the application from defined locations
+        /// in a defined order (see method body).
+        /// </summary>
+        /// <param name="context">The builder context</param>
+        /// <param name="configBuilder">The configuration builder</param>
+        /// <exception cref="Exception">Throws an exception if the assembly location could not be resolved.</exception>
         private static void LoadConfiguration(HostBuilderContext context, IConfigurationBuilder configBuilder)
         {
             var entryAssembly = Assembly.GetEntryAssembly();
@@ -85,10 +106,18 @@ namespace ModelGenerator
                          .AddYamlFile(Path.Combine(context.HostingEnvironment.ContentRootPath, "modelGenerator.user.yml"), true);
         }
 
-        private static void RegisterInputProvider(HostBuilderContext hostBuilderContext, IServiceCollection collection)
+        /// <summary>
+        /// Registers the services (using the appropriate services configurator) for
+        /// the selected input provider
+        /// </summary>
+        /// <param name="providers">The provider settings from the configuration</param>
+        /// <param name="hostBuilderContext">The host builder</param>
+        /// <param name="collection">The current service collection</param>
+        /// <exception cref="Exception">Thrown if the provider is not recognised</exception>
+        private static void RegisterInputProvider(ProviderSettings providers, HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            var providerName = hostBuilderContext.Configuration.GetValue<InputProviderNames>("Providers:Input");
-            switch (providerName)
+            var inputProvider = ParseProviderName<InputProviderNames>(providers.Input);
+            switch (inputProvider)
             {
                 case InputProviderNames.Scs:
                     ScsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
@@ -97,35 +126,54 @@ namespace ModelGenerator
                     TdsServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                     break;
                 default:
-                    throw new Exception($"Unsupported input provider: {providerName}");
+                    throw ProviderNameException.UnsupportedProvider(providers.Input, typeof(InputProviderNames));
             }
         }
 
-        private static void RegisterOutputProviders(HostBuilderContext hostBuilderContext, IServiceCollection collection)
+        /// <summary>
+        /// Registers the services (using the appropriate services configurator) for
+        /// the selected output providers
+        /// </summary>
+        /// <param name="providers">The provider settings from the configuration</param>
+        /// <param name="hostBuilderContext">The host builder</param>
+        /// <param name="collection">The current service collection</param>
+        /// <exception cref="Exception">Thrown if the provider is not recognised</exception>
+        private static void RegisterOutputProviders(ProviderSettings providers, HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
-            var providerNames = hostBuilderContext.Configuration.GetValue<OutputProviderNames[]>("Providers:Output")
-                             ?? new[] {hostBuilderContext.Configuration.GetValue<OutputProviderNames>("Providers:Output")};
-            foreach (var providerName in providerNames)
+            foreach (var providerName in providers.Output)
             {
-                switch (providerName)
+                var outputProvider = ParseProviderName<OutputProviderNames>(providerName);
+                switch (outputProvider)
                 {
                     case OutputProviderNames.Fortis:
                         FortisServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
                         break;
+                    case OutputProviderNames.Ids:
+                        IdClassesServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
+                        break;
                     default:
-                        throw new Exception($"Unsupported output provider: {providerName}");
+                        throw ProviderNameException.UnsupportedProvider(providerName, typeof(OutputProviderNames));
                 }
             }
         }
 
+        /// <summary>
+        /// Registers features and services.
+        /// </summary>
+        /// <param name="hostBuilderContext">Host builder</param>
+        /// <param name="collection">Service collection</param>
         private static void RegisterServices(HostBuilderContext hostBuilderContext, IServiceCollection collection)
         {
             collection.AddOptions();
 
             FrameworkServicesConfigurator.Configure(collection, hostBuilderContext.Configuration);
-            RegisterInputProvider(hostBuilderContext, collection);
-            RegisterOutputProviders(hostBuilderContext, collection);
+            
+            var providers = new ProviderSettings(hostBuilderContext.Configuration);
+            RegisterInputProvider(providers, hostBuilderContext, collection);
+            RegisterOutputProviders(providers, hostBuilderContext, collection);
 
+            // These should be registered last just to ensure that they cannot be tampered with
+            // by any of the provider configurators.
             collection
                .AddSingleton<LicenseManager>()
                .AddSingleton<Runner>()

@@ -22,10 +22,10 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly IFortisFieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly FortisSettings _settings;
-        private readonly TypeNameResolver _typeNameResolver;
+        private readonly IFortisTypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
 
-        public FortisInterfaceGenerator(IFortisFieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, TypeNameResolver typeNameResolver, FortisSettings settings, IXmlDocumentationGenerator xmlDocGenerator)
+        public FortisInterfaceGenerator(IFortisFieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, IFortisTypeNameResolver typeNameResolver, FortisSettings settings, IXmlDocumentationGenerator xmlDocGenerator)
             : base(settings, typeNameResolver)
         {
             _fieldNameResolver = fieldNameResolver;

@@ -4,6 +4,7 @@ using Spectre.Console;
 
 namespace ModelGenerator.Framework.Progress
 {
+    ///<inheritdoc cref="IProgressTracker"/>
     public class ProgressTracker : IProgressTracker
     {
         private class ContextContainer

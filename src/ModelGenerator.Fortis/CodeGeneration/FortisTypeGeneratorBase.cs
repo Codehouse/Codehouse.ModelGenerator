@@ -5,39 +5,22 @@ using ModelGenerator.Fortis.Configuration;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.CodeGeneration.FileTypes;
 using ModelGenerator.Framework.ItemModelling;
-using ModelGenerator.Framework.Progress;
 using ModelGenerator.Framework.TypeConstruction;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using static ModelGenerator.Framework.CodeGeneration.SyntaxHelper;
 
 namespace ModelGenerator.Fortis.CodeGeneration
 {
-    public abstract class FortisTypeGeneratorBase : ITypeGenerator<DefaultFile>
+    public abstract class FortisTypeGeneratorBase : TypeGeneratorBase<DefaultFile>
     {
-        public abstract string Tag { get; }
-
         private readonly FortisSettings _settings;
-        private readonly TypeNameResolver _typeNameResolver;
+        private readonly IFortisTypeNameResolver _typeNameResolver;
         private const string FortisModelTemplateMappingAttribute = "TemplateMapping";
 
-        protected FortisTypeGeneratorBase(FortisSettings settings, TypeNameResolver typeNameResolver)
+        protected FortisTypeGeneratorBase(FortisSettings settings, IFortisTypeNameResolver typeNameResolver)
         {
             _settings = settings;
             _typeNameResolver = typeNameResolver;
-        }
-
-        public NamespacedType? GenerateType(DefaultFile file)
-        {
-            var (name, @class) = GenerateTypeDeclaration(file.ScopedRagBuilder, file.Context, file.Model);
-            if (string.IsNullOrEmpty(name) || @class is null)
-            {
-                return null;
-            }
-
-            return new NamespacedType(
-                GetNamespace(file.Context, file.Model.Types.First()),
-                @class,
-                name);
         }
 
         protected AttributeSyntax CreateTemplateMappingAttribute(Guid templateId, string mappingType)
@@ -45,8 +28,6 @@ namespace ModelGenerator.Fortis.CodeGeneration
             return Attribute(ParseName(FortisModelTemplateMappingAttribute))
                .AddSimpleArguments(IdLiteral(templateId), StringLiteral(mappingType));
         }
-
-        protected abstract (string? Name, TypeDeclarationSyntax? Class) GenerateTypeDeclaration(ScopedRagBuilder<string> statusTracker, GenerationContext context, ModelFile model);
 
         /// <summary>
         ///     Creates the appropriate GetField<T> or (T)GetField invocation for a template field.
@@ -85,7 +66,7 @@ namespace ModelGenerator.Fortis.CodeGeneration
                .AddArgumentListArguments(arguments.ToArray());
         }
 
-        protected virtual string GetNamespace(GenerationContext context, ModelType modelType)
+        protected override string GetNamespace(GenerationContext context, ModelType modelType)
         {
             return _typeNameResolver.GetNamespace(context.TypeSet, modelType.Template);
         }

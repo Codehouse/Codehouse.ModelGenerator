@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ModelGenerator.Fortis.CodeGeneration;
 using ModelGenerator.Fortis.Configuration;
+using ModelGenerator.Framework;
 using ModelGenerator.Framework.CodeGeneration;
 using ModelGenerator.Framework.CodeGeneration.FileTypes;
 
@@ -12,19 +13,18 @@ namespace ModelGenerator.Fortis
     {
         public static void Configure(IServiceCollection collection, IConfiguration configuration)
         {
-            collection
-               .Configure<FortisSettings>(opts => configuration.GetSection("Fortis").Bind(opts))
-               .AddSingleton(sp => sp.GetRequiredService<IOptions<FortisSettings>>().Value);
+            // Config
+            collection.AddConfiguration<FortisSettings>(configuration, "Fortis");
 
+            // Services & overrides
             collection.AddSingleton<IFortisFieldNameResolver, FortisFieldNameResolver>()
-                      .AddSingleton<FieldTypeResolver>()
-                      .AddSingleton<TypeNameResolver>();
+                      .AddSingleton<IFortisTypeNameResolver, FortisTypeNameResolver>()
+                      .AddSingleton<FieldTypeResolver>();
 
+            // Generators
             collection.AddSingleton<IUsingGenerator<DefaultFile>, FortisUsingGenerator>()
                       .AddSingleton<ITypeGenerator<DefaultFile>, FortisClassGenerator>()
-                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisInterfaceGenerator>()
-                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisFieldIdGenerator>()
-                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisTemplateIdGenerator>();
+                      .AddSingleton<ITypeGenerator<DefaultFile>, FortisInterfaceGenerator>();
         }
     }
 }

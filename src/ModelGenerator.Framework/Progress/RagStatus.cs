@@ -4,6 +4,10 @@ using Spectre.Console;
 
 namespace ModelGenerator.Framework.Progress
 {
+    /// <summary>
+    /// A struct representing a status entry in a <see cref="RagReport{TResult,TItem}"/>
+    /// </summary>
+    /// <typeparam name="T">Type of the <see cref="Value"/> (scope)</typeparam>
     public readonly struct RagStatus<T>
     {
         public Exception? Exception { get; }

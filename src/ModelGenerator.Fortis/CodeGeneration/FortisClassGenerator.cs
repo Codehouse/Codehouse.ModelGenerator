@@ -21,11 +21,11 @@ namespace ModelGenerator.Fortis.CodeGeneration
         private readonly IFortisFieldNameResolver _fieldNameResolver;
         private readonly FieldTypeResolver _fieldTypeResolver;
         private readonly FortisSettings _settings;
-        private readonly TypeNameResolver _typeNameResolver;
+        private readonly IFortisTypeNameResolver _typeNameResolver;
         private readonly IXmlDocumentationGenerator _xmlDocGenerator;
         private const string SitecorePredefinedQueryAttribute = "PredefinedQuery";
 
-        public FortisClassGenerator(IFortisFieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, TypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
+        public FortisClassGenerator(IFortisFieldNameResolver fieldNameResolver, FieldTypeResolver fieldTypeResolver, FortisSettings settings, IFortisTypeNameResolver typeNameResolver, IXmlDocumentationGenerator xmlDocGenerator)
             : base(settings, typeNameResolver)
         {
             _fieldNameResolver = fieldNameResolver;
