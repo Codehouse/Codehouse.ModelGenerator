@@ -7,6 +7,9 @@ trigger: none
 
 pool:
   vmImage: 'windows-latest'
+  name: 'Azure Pipelines'
+  demands:
+  - Pull-Requests -equals true
 
 variables:
 - template: 'build-templates/variables.yml'
