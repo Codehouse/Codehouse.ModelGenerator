@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelGenerator.Licensing;
 using FortisServicesConfigurator = ModelGenerator.Fortis.ServicesConfigurator;
 using FrameworkServicesConfigurator = ModelGenerator.Framework.ServicesConfigurator;
 using IdClassesServicesConfigurator = ModelGenerator.IdClasses.ServicesConfigurator;
@@ -175,7 +174,6 @@ namespace ModelGenerator
             // These should be registered last just to ensure that they cannot be tampered with
             // by any of the provider configurators.
             collection
-               .AddSingleton<LicenseManager>()
                .AddSingleton<Runner>()
                .AddHostedService<Worker>();
         }
