@@ -1,18 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator", "ModelGenerator\ModelGenerator.csproj", "{E720A820-0C4D-4B0B-BCC8-4249D68E0773}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModelGenerator", "ModelGenerator\ModelGenerator.csproj", "{E720A820-0C4D-4B0B-BCC8-4249D68E0773}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Tds", "ModelGenerator.Tds\ModelGenerator.Tds.csproj", "{CBB18C93-968A-4F64-9527-9EFF522DDE3E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModelGenerator.Tds", "ModelGenerator.Tds\ModelGenerator.Tds.csproj", "{CBB18C93-968A-4F64-9527-9EFF522DDE3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Fortis", "ModelGenerator.Fortis\ModelGenerator.Fortis.csproj", "{0CBD5FDE-5C93-4CC0-934D-47B678652DDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModelGenerator.Fortis", "ModelGenerator.Fortis\ModelGenerator.Fortis.csproj", "{0CBD5FDE-5C93-4CC0-934D-47B678652DDF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Framework", "ModelGenerator.Framework\ModelGenerator.Framework.csproj", "{C380E536-6B9B-4F9F-9979-86ED357EEC4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModelGenerator.Framework", "ModelGenerator.Framework\ModelGenerator.Framework.csproj", "{C380E536-6B9B-4F9F-9979-86ED357EEC4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Tests", "ModelGenerator.Tests\ModelGenerator.Tests.csproj", "{B6F98246-C7CE-4783-9F00-2FEB6AC2293C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModelGenerator.Tests", "ModelGenerator.Tests\ModelGenerator.Tests.csproj", "{B6F98246-C7CE-4783-9F00-2FEB6AC2293C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.Scs", "ModelGenerator.Scs\ModelGenerator.Scs.csproj", "{ED31FF95-D1E6-41C8-AF20-6CD3814A27D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModelGenerator.Scs", "ModelGenerator.Scs\ModelGenerator.Scs.csproj", "{ED31FF95-D1E6-41C8-AF20-6CD3814A27D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelGenerator.IdClasses", "ModelGenerator.IdClasses\ModelGenerator.IdClasses.csproj", "{19C4806D-BEF1-4422-B891-57ACEB152842}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModelGenerator.IdClasses", "ModelGenerator.IdClasses\ModelGenerator.IdClasses.csproj", "{19C4806D-BEF1-4422-B891-57ACEB152842}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LicenseGenerator", "LicenseGenerator\LicenseGenerator.csproj", "{95D8CB29-B812-488E-B143-7B57E81F2DAA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,5 +53,12 @@ Global
 		{19C4806D-BEF1-4422-B891-57ACEB152842}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19C4806D-BEF1-4422-B891-57ACEB152842}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19C4806D-BEF1-4422-B891-57ACEB152842}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95D8CB29-B812-488E-B143-7B57E81F2DAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95D8CB29-B812-488E-B143-7B57E81F2DAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95D8CB29-B812-488E-B143-7B57E81F2DAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95D8CB29-B812-488E-B143-7B57E81F2DAA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
