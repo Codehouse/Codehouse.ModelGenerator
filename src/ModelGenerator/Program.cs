@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelGenerator.Licensing;
 using FortisServicesConfigurator = ModelGenerator.Fortis.ServicesConfigurator;
 using FrameworkServicesConfigurator = ModelGenerator.Framework.ServicesConfigurator;
 using TdsServicesConfigurator = ModelGenerator.Tds.ServicesConfigurator;
@@ -119,7 +118,6 @@ namespace ModelGenerator
             RegisterOutputProvider(hostBuilderContext, collection);
 
             collection
-                .AddSingleton<LicenseManager>()
                 .AddSingleton<Runner>()
                 .AddHostedService<Worker>();
         }
