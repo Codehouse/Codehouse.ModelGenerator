@@ -1,5 +1,4 @@
 ﻿Settings:
-  License: 'X:\Development Tools\Codehouse Model Generator\license.dat'
   MinVersion: ''
   ModelFolder: 'ItemModels'
   ModelNamespace: 'Models'
