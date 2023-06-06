@@ -1,4 +1,4 @@
-name: '0.$(Date:yyyy).0.$(Rev:r)'
+name: '0.$(Date:yyyy).2.$(Rev:r)'
 pr: none
 trigger:
   batch: true
